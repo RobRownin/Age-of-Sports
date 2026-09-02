@@ -375,8 +375,6 @@ function laurelBarSVG(pct) {
 // ---------- State ----------
 let characterName = localStorage.getItem('aos_characterName') || 'Leonidas';
 
-function totalKm(list) { return list.reduce((s, a) => s + a.km, 0); }
-
 function renderActivities() {
   const list = document.getElementById('activityList');
   list.innerHTML = ACTIVITIES.slice().reverse().map(a => `
