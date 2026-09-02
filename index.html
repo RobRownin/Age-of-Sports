@@ -80,6 +80,30 @@
   nav.bottomnav button{ display:flex; align-items:center; gap:6px; border:none; background:transparent; border-radius:999px;
     padding:9px 11px; color:var(--muted); cursor:pointer; font-size:15px; }
   nav.bottomnav button.active{ background:var(--gold); color:var(--bg); padding:9px 15px; font-weight:600; font-size:12px; }
+
+  /* ---- Add-activity bottom sheet ---- */
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; justify-content:center; z-index:50; }
+  .overlay.open{ display:flex; }
+  .sheet{ width:100%; max-width:480px; background:var(--surface); border-top:1px solid var(--border); border-radius:20px 20px 0 0;
+    padding:18px 20px 26px; display:flex; flex-direction:column; gap:14px; max-height:88vh; overflow-y:auto; }
+  .sheet-header{ display:flex; align-items:center; justify-content:space-between; }
+  .sheet-header h2{ font-family:'Cinzel','Times New Roman',serif; font-size:17px; margin:0; }
+  .sheet-close{ background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; }
+
+  .type-row{ display:flex; gap:8px; }
+  .type-btn{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 4px;
+    background:var(--bg); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-size:11px; cursor:pointer; font-family:inherit; }
+  .type-btn.active{ border-color:var(--gold); color:var(--text); background:rgba(201,162,39,0.12); }
+  .type-btn .ic{ font-size:18px; }
+
+  .metric-row{ display:flex; gap:8px; }
+  .metric-btn{ flex:1; padding:8px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; }
+  .metric-btn.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
+
+  .field label{ display:block; font-size:11px; color:var(--muted); margin-bottom:5px; letter-spacing:.05em; text-transform:uppercase; }
+  .field input, .field textarea{ width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; font-size:14px; font-family:inherit; outline:none; }
+  .field input:focus, .field textarea:focus{ border-color:var(--gold); }
 </style>
 </head>
 <body>
@@ -115,7 +139,7 @@
 
       <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
 
-      <button class="btn-primary" style="margin-top:6px;">+ Aktivität erfassen</button>
+      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal()">+ Aktivität erfassen</button>
       <p class="hint">Garmin-Sync folgt in einer späteren Version</p>
     </section>
 
@@ -182,22 +206,83 @@
     <button data-tab="stats" onclick="showScreen('stats')">📊</button>
     <button data-tab="character" onclick="showScreen('character')">⚔️</button>
   </nav>
+
+  <!-- ADD ACTIVITY SHEET -->
+  <div class="overlay" id="activityOverlay" onclick="if(event.target===this) closeActivityModal()">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Aktivität erfassen</h2>
+        <button class="sheet-close" onclick="closeActivityModal()">✕</button>
+      </div>
+
+      <div class="field">
+        <label>Art der Aktivität</label>
+        <div class="type-row" id="typeRow">
+          <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Lauf</button>
+          <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Rad</button>
+          <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Spaziergang</button>
+          <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Kraft</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Erfassungsart</label>
+        <div class="metric-row" id="metricRow">
+          <button class="metric-btn active" data-metric="distance" onclick="selectMetric(this)">Distanz (km)</button>
+          <button class="metric-btn" data-metric="reps" onclick="selectMetric(this)">Wiederholungen</button>
+        </div>
+      </div>
+
+      <div class="field" id="distanceField">
+        <label>Distanz (km)</label>
+        <input type="number" id="inputDistance" inputmode="decimal" step="0.1" min="0" placeholder="z. B. 5.0" />
+      </div>
+      <div class="field" id="repsField" style="display:none;">
+        <label>Wiederholungen</label>
+        <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="z. B. 40" />
+      </div>
+
+      <div class="field">
+        <label>Dauer (Minuten)</label>
+        <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="z. B. 30" />
+      </div>
+
+      <div class="field">
+        <label>Beschreibung</label>
+        <input type="text" id="inputDescription" maxlength="60" placeholder="z. B. Abendlauf am Fluss" />
+      </div>
+
+      <button class="btn-primary" onclick="submitActivity()">Speichern</button>
+    </div>
+  </div>
 </div>
 
 <script>
 // ---------- Mock data ----------
-const ACTIVITIES = [
-  { type: "run", icon: "🏃", label: "Morgenlauf Isar", km: 8.4, mins: 47, date: "Mo, 18. Aug" },
-  { type: "ride", icon: "🚴", label: "Radtour Ammersee", km: 34.2, mins: 88, date: "Di, 19. Aug" },
-  { type: "walk", icon: "🚶", label: "Spaziergang Park", km: 3.1, mins: 38, date: "Mi, 20. Aug" },
-  { type: "run", icon: "🏃", label: "Intervalle Stadion", km: 6.0, mins: 32, date: "Do, 21. Aug" },
+const DEFAULT_ACTIVITIES = [
+  { type: "run", icon: "🏃", label: "Morgenlauf Isar", km: 8.4, reps: null, mins: 47, date: "Mo, 18. Aug" },
+  { type: "ride", icon: "🚴", label: "Radtour Ammersee", km: 34.2, reps: null, mins: 88, date: "Di, 19. Aug" },
+  { type: "walk", icon: "🚶", label: "Spaziergang Park", km: 3.1, reps: null, mins: 38, date: "Mi, 20. Aug" },
+  { type: "run", icon: "🏃", label: "Intervalle Stadion", km: 6.0, reps: null, mins: 32, date: "Do, 21. Aug" },
 ];
-const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang" };
-const WEEK = [
+const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang", strength: "Kraft" };
+const DEFAULT_WEEK = [
   { day: "Mo", km: 8.4 }, { day: "Di", km: 34.2 }, { day: "Mi", km: 3.1 }, { day: "Do", km: 6.0 },
   { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
 ];
-const LIFETIME_KM = 214.7;
+// Kilometer, die VOR den oben gelisteten Aktivitäten schon gesammelt wurden (ergibt zusammen die 214,7 km von vorher)
+const BASE_LIFETIME_KM = 214.7 - totalKm(DEFAULT_ACTIVITIES);
+
+let ACTIVITIES = JSON.parse(localStorage.getItem('aos_activities') || 'null') || DEFAULT_ACTIVITIES;
+let WEEK = JSON.parse(localStorage.getItem('aos_week') || 'null') || DEFAULT_WEEK;
+
+function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
+function lifetimeKm() { return BASE_LIFETIME_KM + totalKm(ACTIVITIES); }
+
+function persist() {
+  localStorage.setItem('aos_activities', JSON.stringify(ACTIVITIES));
+  localStorage.setItem('aos_week', JSON.stringify(WEEK));
+}
 
 // ---------- Helpers ----------
 function levelFromKm(totalKm) {
@@ -205,6 +290,19 @@ function levelFromKm(totalKm) {
   const intoLevel = totalKm % 50;
   const pct = Math.min(100, Math.round((intoLevel / 50) * 100));
   return { level, pct, remaining: (50 - intoLevel).toFixed(1) };
+}
+
+function todayLabel() {
+  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const d = new Date();
+  return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}`;
+}
+
+function todayWeekIndex() {
+  // WEEK array runs Mo..So -> map JS getDay() (0=So) to that order
+  const jsDay = new Date().getDay(); // 0=So,1=Mo,...
+  return jsDay === 0 ? 6 : jsDay - 1;
 }
 
 // ---------- Avatar SVG (ancient Olympian) ----------
@@ -281,15 +379,15 @@ function totalKm(list) { return list.reduce((s, a) => s + a.km, 0); }
 
 function renderActivities() {
   const list = document.getElementById('activityList');
-  list.innerHTML = ACTIVITIES.map(a => `
+  list.innerHTML = ACTIVITIES.slice().reverse().map(a => `
     <div class="card activity-row">
       <div class="activity-icon">${a.icon}</div>
       <div style="flex:1;min-width:0;">
         <div class="activity-name">${a.label}</div>
-        <div class="activity-sub">${TYPE_LABEL[a.type]} · ${a.date}</div>
+        <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
       </div>
       <div class="activity-right">
-        <div class="activity-km">${a.km.toFixed(1)} km</div>
+        <div class="activity-km">${a.km ? a.km.toFixed(1) + ' km' : (a.reps || 0) + ' Wdh.'}</div>
         <div class="activity-mins">⏱ ${a.mins} min</div>
       </div>
     </div>`).join('');
@@ -321,7 +419,7 @@ function renderAttrs(level) {
 }
 
 function renderCharacterAndHero() {
-  const { level, pct, remaining } = levelFromKm(LIFETIME_KM);
+  const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
   document.getElementById('heroAvatar').innerHTML = avatarSVG(64);
   document.getElementById('heroLevel').textContent = 'Level ' + level;
@@ -362,6 +460,85 @@ function saveName() {
   document.getElementById('nameDisplayRow').style.display = 'flex';
   document.getElementById('nameEditRow').style.display = 'none';
   renderCharacterAndHero();
+}
+
+// ---------- Add-activity sheet ----------
+let selectedType = "run";
+let selectedMetric = "distance";
+
+function openActivityModal() {
+  document.getElementById('activityOverlay').classList.add('open');
+}
+function closeActivityModal() {
+  document.getElementById('activityOverlay').classList.remove('open');
+}
+
+function selectType(btn) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedType = btn.dataset.type;
+  // sinnvolle Standard-Erfassungsart je Aktivitätstyp vorschlagen, bleibt aber änderbar
+  const suggestedMetric = btn.dataset.metric;
+  const metricBtn = document.querySelector(`.metric-btn[data-metric="${suggestedMetric}"]`);
+  if (metricBtn) selectMetric(metricBtn);
+}
+
+function selectMetric(btn) {
+  document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMetric = btn.dataset.metric;
+  document.getElementById('distanceField').style.display = selectedMetric === 'distance' ? 'block' : 'none';
+  document.getElementById('repsField').style.display = selectedMetric === 'reps' ? 'block' : 'none';
+}
+
+function submitActivity() {
+  const duration = parseInt(document.getElementById('inputDuration').value, 10) || 0;
+  const description = document.getElementById('inputDescription').value.trim();
+  const distance = parseFloat(document.getElementById('inputDistance').value) || 0;
+  const reps = parseInt(document.getElementById('inputReps').value, 10) || 0;
+
+  if (duration <= 0) {
+    alert('Bitte eine Dauer in Minuten angeben.');
+    return;
+  }
+  if (selectedMetric === 'distance' && distance <= 0) {
+    alert('Bitte eine Distanz größer 0 angeben.');
+    return;
+  }
+  if (selectedMetric === 'reps' && reps <= 0) {
+    alert('Bitte eine Anzahl an Wiederholungen größer 0 angeben.');
+    return;
+  }
+
+  const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️" };
+  const km = selectedMetric === 'distance' ? distance : 0;
+
+  const activity = {
+    type: selectedType,
+    icon: iconMap[selectedType] || "🏅",
+    label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`,
+    km: km,
+    reps: selectedMetric === 'reps' ? reps : null,
+    mins: duration,
+    date: todayLabel(),
+  };
+
+  ACTIVITIES.push(activity);
+  if (km > 0) {
+    WEEK[todayWeekIndex()].km += km;
+  }
+  persist();
+
+  renderActivities();
+  renderStats();
+  renderCharacterAndHero();
+
+  // Formular zurücksetzen
+  document.getElementById('inputDistance').value = '';
+  document.getElementById('inputReps').value = '';
+  document.getElementById('inputDuration').value = '';
+  document.getElementById('inputDescription').value = '';
+  closeActivityModal();
 }
 
 // ---------- Init ----------
