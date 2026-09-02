@@ -103,7 +103,8 @@
   .field label{ display:block; font-size:11px; color:var(--muted); margin-bottom:5px; letter-spacing:.05em; text-transform:uppercase; }
   .field input, .field textarea{ width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px;
     padding:10px 12px; font-size:14px; font-family:inherit; outline:none; }
-  .field input:focus, .field textarea:focus{ border-color:var(--gold); }
+.field input:focus, .field textarea:focus{ border-color:var(--gold); }
+  .activity-row-btn{ display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; color:inherit; font:inherit; }
 </style>
 </head>
 <body>
@@ -207,11 +208,11 @@
     <button data-tab="character" onclick="showScreen('character')">⚔️</button>
   </nav>
 
-  <!-- ADD ACTIVITY SHEET -->
+  <!-- ADD/EDIT ACTIVITY SHEET -->
   <div class="overlay" id="activityOverlay" onclick="if(event.target===this) closeActivityModal()">
     <div class="sheet">
       <div class="sheet-header">
-        <h2>Aktivität erfassen</h2>
+        <h2 id="sheetTitle">Aktivität erfassen</h2>
         <button class="sheet-close" onclick="closeActivityModal()">✕</button>
       </div>
 
@@ -252,7 +253,8 @@
         <input type="text" id="inputDescription" maxlength="60" placeholder="z. B. Abendlauf am Fluss" />
       </div>
 
-      <button class="btn-primary" onclick="submitActivity()">Speichern</button>
+      <button class="btn-primary" id="sheetSubmitBtn" onclick="submitActivity()">Speichern</button>
+      <button class="btn-primary" id="sheetDeleteBtn" style="display:none;background:var(--red);color:var(--text);" onclick="deleteActivity()">Aktivität löschen</button>
     </div>
   </div>
 </div>
@@ -377,18 +379,24 @@ let characterName = localStorage.getItem('aos_characterName') || 'Leonidas';
 
 function renderActivities() {
   const list = document.getElementById('activityList');
-  list.innerHTML = ACTIVITIES.slice().reverse().map(a => `
-    <div class="card activity-row">
-      <div class="activity-icon">${a.icon}</div>
-      <div style="flex:1;min-width:0;">
-        <div class="activity-name">${a.label}</div>
-        <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
+  const n = ACTIVITIES.length;
+  list.innerHTML = ACTIVITIES.slice().reverse().map((a, i) => {
+    const realIndex = n - 1 - i;
+    return `
+    <button class="activity-row-btn" onclick="openEditModal(${realIndex})">
+      <div class="card activity-row">
+        <div class="activity-icon">${a.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="activity-name">${a.label}</div>
+          <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
+        </div>
+        <div class="activity-right">
+          <div class="activity-km">${a.km ? a.km.toFixed(1) + ' km' : (a.reps || 0) + ' Wdh.'}</div>
+          <div class="activity-mins">⏱ ${a.mins} min</div>
+        </div>
       </div>
-      <div class="activity-right">
-        <div class="activity-km">${a.km ? a.km.toFixed(1) + ' km' : (a.reps || 0) + ' Wdh.'}</div>
-        <div class="activity-mins">⏱ ${a.mins} min</div>
-      </div>
-    </div>`).join('');
+    </button>`;
+  }).join('');
 }
 
 function renderStats() {
@@ -460,13 +468,58 @@ function saveName() {
   renderCharacterAndHero();
 }
 
-// ---------- Add-activity sheet ----------
+// ---------- Add/Edit-activity sheet ----------
 let selectedType = "run";
 let selectedMetric = "distance";
+let editingIndex = null; // null = neue Aktivität, sonst Index in ACTIVITIES
+
+function dayAbbrFromDate(dateStr) { return dateStr.split(',')[0]; }
+function adjustWeekKm(dayAbbr, delta) {
+  const entry = WEEK.find(w => w.day === dayAbbr);
+  if (entry) entry.km = Math.max(0, entry.km + delta);
+}
+
+function resetForm() {
+  document.getElementById('inputDistance').value = '';
+  document.getElementById('inputReps').value = '';
+  document.getElementById('inputDuration').value = '';
+  document.getElementById('inputDescription').value = '';
+  document.querySelector('.type-btn[data-type="run"]').click();
+}
 
 function openActivityModal() {
+  editingIndex = null;
+  document.getElementById('sheetTitle').textContent = 'Aktivität erfassen';
+  document.getElementById('sheetSubmitBtn').textContent = 'Speichern';
+  document.getElementById('sheetDeleteBtn').style.display = 'none';
+  resetForm();
   document.getElementById('activityOverlay').classList.add('open');
 }
+
+function openEditModal(index) {
+  const a = ACTIVITIES[index];
+  if (!a) return;
+  editingIndex = index;
+
+  document.getElementById('sheetTitle').textContent = 'Aktivität bearbeiten';
+  document.getElementById('sheetSubmitBtn').textContent = 'Änderungen speichern';
+  document.getElementById('sheetDeleteBtn').style.display = 'block';
+
+  const typeBtn = document.querySelector(`.type-btn[data-type="${a.type}"]`) || document.querySelector('.type-btn[data-type="run"]');
+  typeBtn.click();
+
+  const metric = a.reps != null && a.reps > 0 ? 'reps' : 'distance';
+  const metricBtn = document.querySelector(`.metric-btn[data-metric="${metric}"]`);
+  if (metricBtn) selectMetric(metricBtn);
+
+  document.getElementById('inputDistance').value = a.km || '';
+  document.getElementById('inputReps').value = a.reps || '';
+  document.getElementById('inputDuration').value = a.mins || '';
+  document.getElementById('inputDescription').value = a.label || '';
+
+  document.getElementById('activityOverlay').classList.add('open');
+}
+
 function closeActivityModal() {
   document.getElementById('activityOverlay').classList.remove('open');
 }
@@ -511,31 +564,53 @@ function submitActivity() {
   const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️" };
   const km = selectedMetric === 'distance' ? distance : 0;
 
-  const activity = {
-    type: selectedType,
-    icon: iconMap[selectedType] || "🏅",
-    label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`,
-    km: km,
-    reps: selectedMetric === 'reps' ? reps : null,
-    mins: duration,
-    date: todayLabel(),
-  };
-
-  ACTIVITIES.push(activity);
-  if (km > 0) {
-    WEEK[todayWeekIndex()].km += km;
+  if (editingIndex === null) {
+    // Neue Aktivität
+    const activity = {
+      type: selectedType,
+      icon: iconMap[selectedType] || "🏅",
+      label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`,
+      km: km,
+      reps: selectedMetric === 'reps' ? reps : null,
+      mins: duration,
+      date: todayLabel(),
+    };
+    ACTIVITIES.push(activity);
+    if (km > 0) adjustWeekKm(dayAbbrFromDate(activity.date), km);
+  } else {
+    // Bestehende Aktivität bearbeiten
+    const a = ACTIVITIES[editingIndex];
+    const oldKm = a.km || 0;
+    a.type = selectedType;
+    a.icon = iconMap[selectedType] || "🏅";
+    a.label = description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`;
+    a.km = km;
+    a.reps = selectedMetric === 'reps' ? reps : null;
+    a.mins = duration;
+    // Datum bleibt unverändert; Wochenstatistik um die Differenz anpassen
+    if (km !== oldKm) adjustWeekKm(dayAbbrFromDate(a.date), km - oldKm);
   }
-  persist();
 
+  persist();
   renderActivities();
   renderStats();
   renderCharacterAndHero();
+  closeActivityModal();
+}
 
-  // Formular zurücksetzen
-  document.getElementById('inputDistance').value = '';
-  document.getElementById('inputReps').value = '';
-  document.getElementById('inputDuration').value = '';
-  document.getElementById('inputDescription').value = '';
+function deleteActivity() {
+  if (editingIndex === null) return;
+  if (!confirm('Diese Aktivität wirklich löschen?')) return;
+
+  const a = ACTIVITIES[editingIndex];
+  if (a.km) adjustWeekKm(dayAbbrFromDate(a.date), -a.km);
+  ACTIVITIES.splice(editingIndex, 1);
+  editingIndex = null;
+
+  persist();
+  renderActivities();
+  renderStats();
+  renderCharacterAndHero();
   closeActivityModal();
 }
 
