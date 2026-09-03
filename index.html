@@ -105,10 +105,54 @@
     padding:10px 12px; font-size:14px; font-family:inherit; outline:none; }
 .field input:focus, .field textarea:focus{ border-color:var(--gold); }
   .activity-row-btn{ display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; color:inherit; font:inherit; }
+
+  /* ---- Auth screen ---- */
+  .auth-screen{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px; }
+  .auth-box{ width:100%; max-width:340px; display:flex; flex-direction:column; gap:14px; }
+  .auth-logo{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px; }
+  .auth-tabs{ display:flex; gap:8px; }
+  .auth-tab{ flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; }
+  .auth-tab.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
+  .auth-error{ color:var(--red); font-size:12px; text-align:center; margin:0; }
+  .logout-btn{ position:absolute; top:20px; right:16px; background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; z-index:5; }
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-mode="login" onclick="setAuthMode('login')">Anmelden</button>
+      <button class="auth-tab" data-mode="register" onclick="setAuthMode('register')">Registrieren</button>
+    </div>
+
+    <div class="field">
+      <label>Benutzername</label>
+      <input id="authUsername" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label>Passwort</label>
+      <input id="authPassword" type="password" autocomplete="current-password" />
+    </div>
+
+    <p class="auth-error" id="authError" style="display:none;"></p>
+    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Anmelden</button>
+    <p class="hint" id="authHint">Noch kein Konto? Oben auf "Registrieren" tippen.</p>
+  </div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <button class="logout-btn" onclick="logout()">Abmelden</button>
+
 
   <header>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -260,30 +304,28 @@
 </div>
 
 <script>
-// ---------- Mock data ----------
-const DEFAULT_ACTIVITIES = [
-  { type: "run", icon: "🏃", label: "Morgenlauf Isar", km: 8.4, reps: null, mins: 47, date: "Mo, 18. Aug" },
-  { type: "ride", icon: "🚴", label: "Radtour Ammersee", km: 34.2, reps: null, mins: 88, date: "Di, 19. Aug" },
-  { type: "walk", icon: "🚶", label: "Spaziergang Park", km: 3.1, reps: null, mins: 38, date: "Mi, 20. Aug" },
-  { type: "run", icon: "🏃", label: "Intervalle Stadion", km: 6.0, reps: null, mins: 32, date: "Do, 21. Aug" },
-];
+// ---------- App-Datenmodell (pro Account in Firestore gespeichert) ----------
 const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang", strength: "Kraft" };
-const DEFAULT_WEEK = [
-  { day: "Mo", km: 8.4 }, { day: "Di", km: 34.2 }, { day: "Mi", km: 3.1 }, { day: "Do", km: 6.0 },
+const EMPTY_WEEK = () => [
+  { day: "Mo", km: 0 }, { day: "Di", km: 0 }, { day: "Mi", km: 0 }, { day: "Do", km: 0 },
   { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
 ];
-// Kilometer, die VOR den oben gelisteten Aktivitäten schon gesammelt wurden (ergibt zusammen die 214,7 km von vorher)
-const BASE_LIFETIME_KM = 214.7 - totalKm(DEFAULT_ACTIVITIES);
 
-let ACTIVITIES = JSON.parse(localStorage.getItem('aos_activities') || 'null') || DEFAULT_ACTIVITIES;
-let WEEK = JSON.parse(localStorage.getItem('aos_week') || 'null') || DEFAULT_WEEK;
+let ACTIVITIES = [];
+let WEEK = EMPTY_WEEK();
+let characterName = "Leonidas";
+let currentUid = null;
 
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
-function lifetimeKm() { return BASE_LIFETIME_KM + totalKm(ACTIVITIES); }
+function lifetimeKm() { return totalKm(ACTIVITIES); }
 
 function persist() {
-  localStorage.setItem('aos_activities', JSON.stringify(ACTIVITIES));
-  localStorage.setItem('aos_week', JSON.stringify(WEEK));
+  if (!currentUid || !window.fb) return;
+  window.fb.saveUserData(currentUid, {
+    characterName: characterName,
+    activities: ACTIVITIES,
+    week: WEEK,
+  }).catch((e) => console.error('Speichern fehlgeschlagen:', e));
 }
 
 // ---------- Helpers ----------
@@ -374,8 +416,7 @@ function laurelBarSVG(pct) {
   </div>`;
 }
 
-// ---------- State ----------
-let characterName = localStorage.getItem('aos_characterName') || 'Leonidas';
+// ---------- UI-Zustand ----------
 
 function renderActivities() {
   const list = document.getElementById('activityList');
@@ -462,7 +503,7 @@ function startEditName() {
 function saveName() {
   const val = document.getElementById('nameInput').value.trim();
   characterName = val.length > 0 ? val.slice(0, 20) : characterName;
-  localStorage.setItem('aos_characterName', characterName);
+  persist();
   document.getElementById('nameDisplayRow').style.display = 'flex';
   document.getElementById('nameEditRow').style.display = 'none';
   renderCharacterAndHero();
@@ -614,14 +655,165 @@ function deleteActivity() {
   closeActivityModal();
 }
 
-// ---------- Init ----------
-renderActivities();
-renderStats();
-renderCharacterAndHero();
+// ---------- Authentifizierung ----------
+let authMode = 'login';
 
+function setAuthMode(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
+  document.getElementById('authHint').textContent = mode === 'login'
+    ? 'Noch kein Konto? Oben auf "Registrieren" tippen.'
+    : 'Schon registriert? Oben auf "Anmelden" tippen.';
+  document.getElementById('authError').style.display = 'none';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function mapFirebaseError(e) {
+  const code = e && e.code ? e.code : '';
+  if (code.includes('email-already-in-use')) return 'Dieser Benutzername ist schon vergeben.';
+  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Benutzername oder Passwort falsch.';
+  if (code.includes('weak-password')) return 'Passwort ist zu schwach (mind. 6 Zeichen).';
+  if (code.includes('invalid-email')) return 'Benutzername enthält ungültige Zeichen.';
+  if (code.includes('network-request-failed')) return 'Keine Verbindung – bitte Internet prüfen.';
+  return 'Es ist ein Fehler aufgetreten (' + (code || (e && e.message) || 'unbekannt') + ').';
+}
+
+async function submitAuth() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value;
+  document.getElementById('authError').style.display = 'none';
+
+  if (username.length < 3) { showAuthError('Benutzername muss mind. 3 Zeichen haben.'); return; }
+  if (password.length < 6) { showAuthError('Passwort muss mind. 6 Zeichen haben.'); return; }
+  if (!window.fb) { showAuthError('Verbindung zu Firebase noch nicht bereit, bitte kurz warten und erneut versuchen.'); return; }
+
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  try {
+    if (authMode === 'register') {
+      await window.fb.register(username, password);
+    } else {
+      await window.fb.login(username, password);
+    }
+    localStorage.setItem('aos_lastUsername', username);
+  } catch (e) {
+    showAuthError(mapFirebaseError(e));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function logout() {
+  if (window.fb) window.fb.logout();
+}
+
+// Wird vom Firebase-Modul bei jeder Änderung des Login-Status aufgerufen
+window.handleAuthState = async function (user) {
+  if (user) {
+    currentUid = user.uid;
+    let data = null;
+    try {
+      data = await window.fb.loadUserData(user.uid);
+    } catch (e) {
+      console.error('Laden fehlgeschlagen:', e);
+    }
+    if (!data) {
+      data = { characterName: 'Leonidas', activities: [], week: EMPTY_WEEK() };
+      window.fb.saveUserData(user.uid, data).catch(() => {});
+    }
+    characterName = data.characterName || 'Leonidas';
+    ACTIVITIES = data.activities || [];
+    WEEK = data.week || EMPTY_WEEK();
+
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appRoot').style.display = 'flex';
+
+    renderActivities();
+    renderStats();
+    renderCharacterAndHero();
+    showScreen('activities');
+  } else {
+    currentUid = null;
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appRoot').style.display = 'none';
+    document.getElementById('authUsername').value = localStorage.getItem('aos_lastUsername') || '';
+    document.getElementById('authPassword').value = '';
+  }
+};
+
+// ---------- Init ----------
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
 }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCZROEvWpYcl-G-it57kMOPeKiqbLKe1xs",
+    authDomain: "age-of-sports.firebaseapp.com",
+    projectId: "age-of-sports",
+    storageBucket: "age-of-sports.firebasestorage.app",
+    messagingSenderId: "124500024791",
+    appId: "1:124500024791:web:27d917799e0afa536c3f92"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const FAKE_DOMAIN = "@ageofsports.app";
+  function usernameToEmail(username) {
+    return username.trim().toLowerCase().replace(/\s+/g, "_") + FAKE_DOMAIN;
+  }
+
+  window.fb = {
+    async register(username, password) {
+      const email = usernameToEmail(username);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        username: username.trim(),
+        characterName: "Leonidas",
+        activities: [],
+        week: [
+          { day: "Mo", km: 0 }, { day: "Di", km: 0 }, { day: "Mi", km: 0 }, { day: "Do", km: 0 },
+          { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
+        ],
+      });
+      return cred.user;
+    },
+    async login(username, password) {
+      const cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
+      return cred.user;
+    },
+    async logout() {
+      await signOut(auth);
+    },
+    async loadUserData(uid) {
+      const snap = await getDoc(doc(db, "users", uid));
+      return snap.exists() ? snap.data() : null;
+    },
+    async saveUserData(uid, data) {
+      await setDoc(doc(db, "users", uid), data, { merge: true });
+    },
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (window.handleAuthState) window.handleAuthState(user);
+  });
 </script>
 </body>
 </html>
