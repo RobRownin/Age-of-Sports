@@ -120,7 +120,17 @@
 <body>
 
 <!-- AUTH SCREEN -->
-<div class="auth-screen" id="authScreen">
+<div class="auth-screen" id="loadingScreen">
+  <div class="auth-logo">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    </svg>
+    <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+  </div>
+</div>
+
+<div class="auth-screen" id="authScreen" style="display:none;">
   <div class="auth-box">
     <div class="auth-logo">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -719,6 +729,7 @@ function logout() {
 
 // Wird vom Firebase-Modul bei jeder Änderung des Login-Status aufgerufen
 window.handleAuthState = async function (user) {
+  document.getElementById('loadingScreen').style.display = 'none';
   if (user) {
     currentUid = user.uid;
     let data = null;
