@@ -702,6 +702,10 @@ async function submitAuth() {
       await window.fb.login(username, password);
     }
     localStorage.setItem('aos_lastUsername', username);
+    // Passwortfeld sofort leeren, sonst fragt der Browser bei jedem weiteren
+    // Speichern-Klick in der App erneut, ob er das (noch befüllte) Feld sichern soll
+    document.getElementById('authPassword').value = '';
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   } catch (e) {
     showAuthError(mapFirebaseError(e));
   } finally {
@@ -733,6 +737,7 @@ window.handleAuthState = async function (user) {
 
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('appRoot').style.display = 'flex';
+    document.getElementById('authPassword').value = '';
 
     renderActivities();
     renderStats();
