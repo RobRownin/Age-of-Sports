@@ -387,48 +387,124 @@ function avatarSVG(size) {
   <svg width="${size}" height="${h}" viewBox="0 0 200 280" fill="none">
     <defs>
       <linearGradient id="skinGrad" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0" stop-color="#C9986A"/><stop offset="1" stop-color="#9C6B42"/>
+        <stop offset="0" stop-color="#DCAF7C"/><stop offset="0.5" stop-color="#C9986A"/><stop offset="1" stop-color="#8A5C38"/>
       </linearGradient>
       <linearGradient id="capeGrad" x1="0" y1="0" x2="0" y2="280" gradientUnits="userSpaceOnUse">
         <stop offset="0" stop-color="#C22A2A"/><stop offset="1" stop-color="#6E1414"/>
       </linearGradient>
+      <radialGradient id="glowGrad" cx="50%" cy="35%" r="60%">
+        <stop offset="0" stop-color="#C9A227" stop-opacity="0.18"/><stop offset="1" stop-color="#C9A227" stop-opacity="0"/>
+      </radialGradient>
     </defs>
+
+    <ellipse cx="100" cy="140" rx="95" ry="130" fill="url(#glowGrad)"/>
     <ellipse cx="100" cy="270" rx="42" ry="7" fill="#000" opacity="0.3"/>
+
+    <!-- Cape mit Faltenlinien -->
     <path d="M 128,68 C 148,82 158,116 152,158 C 148,188 138,214 132,238 C 142,214 156,190 158,160 C 162,120 152,84 128,68 Z" fill="url(#capeGrad)"/>
+    <path d="M 134,90 C 140,112 142,138 138,166" stroke="#4A0E0E" stroke-width="2" opacity="0.4" fill="none"/>
+    <path d="M 142,100 C 148,124 148,148 142,174" stroke="#4A0E0E" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <path d="M 130,110 C 134,132 134,152 130,172" stroke="#E05050" stroke-width="1" opacity="0.25" fill="none"/>
+
+    <!-- Beine -->
     <path d="M 82,152 C 78,182 76,206 80,232 C 81,242 83,252 86,262 L 100,262 C 99,236 98,206 96,178 C 95,168 94,158 92,150 Z" fill="url(#skinGrad)"/>
     <path d="M 118,152 C 122,182 124,206 120,232 C 119,242 117,252 114,262 L 100,262 C 101,236 102,206 104,178 C 105,168 106,158 108,150 Z" fill="url(#skinGrad)"/>
+    <!-- Quadrizeps-Trennung -->
+    <path d="M 88,156 C 87,172 87,188 88,200" stroke="#000" stroke-opacity="0.1" stroke-width="1.5" fill="none"/>
+    <path d="M 112,156 C 113,172 113,188 112,200" stroke="#000" stroke-opacity="0.1" stroke-width="1.5" fill="none"/>
+    <!-- Waden -->
     <path d="M 90,200 C 92,212 92,224 90,236 L 96,236 C 97,224 97,212 96,200 Z" fill="#000" opacity="0.14"/>
     <path d="M 110,200 C 108,212 108,224 110,236 L 104,236 C 103,224 103,212 104,200 Z" fill="#000" opacity="0.14"/>
-    <path d="M 78,218 L 100,222 L 100,228 L 78,224 Z" fill="#3C2E1E" opacity="0.8"/>
-    <path d="M 122,218 L 100,222 L 100,228 L 122,224 Z" fill="#3C2E1E" opacity="0.8"/>
+    <path d="M 84,206 C 82,214 82,222 84,230" stroke="#fff" stroke-opacity="0.08" stroke-width="1.5" fill="none"/>
+    <path d="M 116,206 C 118,214 118,222 116,230" stroke="#fff" stroke-opacity="0.08" stroke-width="1.5" fill="none"/>
+
+    <!-- Sandalen: gekreuzte Riemen am Schienbein -->
+    <path d="M 78,196 L 98,206" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 78,206 L 98,196" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 78,218 L 98,228" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 78,228 L 98,218" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 102,196 L 122,206" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 102,206 L 122,196" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 102,218 L 122,228" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
+    <path d="M 102,228 L 122,218" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
     <path d="M 76,262 L 100,262 L 100,272 C 100,276 92,278 84,278 C 78,278 74,276 74,270 Z" fill="#3C2E1E"/>
     <path d="M 124,262 L 100,262 L 100,272 C 100,276 108,278 116,278 C 122,278 126,276 126,270 Z" fill="#3C2E1E"/>
-    <path d="M 95,146 L 105,146 L 104,172 L 96,172 Z" fill="#4A2E1A" stroke="#3C2E1E" stroke-width="0.5"/>
-    <path d="M 106,146 L 116,146 L 115,172 L 105,172 Z" fill="#4A2E1A" stroke="#3C2E1E" stroke-width="0.5"/>
-    <path d="M 117,146 L 127,146 L 126,172 L 116,172 Z" fill="#4A2E1A" stroke="#3C2E1E" stroke-width="0.5"/>
-    <path d="M 73,146 L 83,146 L 82,172 L 72,172 Z" fill="#4A2E1A" stroke="#3C2E1E" stroke-width="0.5"/>
-    <path d="M 84,146 L 94,146 L 93,172 L 83,172 Z" fill="#4A2E1A" stroke="#3C2E1E" stroke-width="0.5"/>
+    <path d="M 78,266 L 100,266 L 100,270 L 78,270 Z" fill="#5C4426" opacity="0.6"/>
+    <path d="M 122,266 L 100,266 L 100,270 L 122,270 Z" fill="#5C4426" opacity="0.6"/>
+
+    <!-- Pteryges (Lederschurz) mit Licht/Schatten je Streifen -->
+    <path d="M 95,146 L 105,146 L 104,172 L 96,172 Z" fill="#4A2E1A"/>
+    <path d="M 95,146 L 97,146 L 96,172 L 96,172 Z" fill="#6B4426" opacity="0.5"/>
+    <path d="M 103,146 L 105,146 L 104,172 L 103,172 Z" fill="#2A1B10" opacity="0.5"/>
+    <path d="M 106,146 L 116,146 L 115,172 L 105,172 Z" fill="#4A2E1A"/>
+    <path d="M 106,146 L 108,146 L 107,172 L 106,172 Z" fill="#6B4426" opacity="0.5"/>
+    <path d="M 117,146 L 127,146 L 126,172 L 116,172 Z" fill="#4A2E1A"/>
+    <path d="M 117,146 L 119,146 L 118,172 L 117,172 Z" fill="#6B4426" opacity="0.5"/>
+    <path d="M 73,146 L 83,146 L 82,172 L 72,172 Z" fill="#4A2E1A"/>
+    <path d="M 81,146 L 83,146 L 82,172 L 81,172 Z" fill="#2A1B10" opacity="0.5"/>
+    <path d="M 84,146 L 94,146 L 93,172 L 83,172 Z" fill="#4A2E1A"/>
+    <path d="M 84,146 L 86,146 L 85,172 L 84,172 Z" fill="#6B4426" opacity="0.5"/>
     <path d="M 74,138 C 84,146 92,149 100,149 C 108,149 116,146 126,138 L 124,148 C 112,153 88,153 76,148 Z" fill="#5C3A22"/>
+
+    <!-- Torso -->
     <path d="M 70,72 C 78,64 90,60 100,60 C 110,60 122,64 130,72 L 127,102 C 128,118 127,132 122,142 C 114,148 108,150 100,150 C 92,150 86,148 78,142 C 73,132 72,118 73,102 Z" fill="url(#skinGrad)"/>
+    <!-- Schlüsselbein -->
+    <path d="M 84,74 C 90,72 96,72 100,73" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
+    <path d="M 116,74 C 110,72 104,72 100,73" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
+    <!-- Bauchmuskeln -->
     <path d="M 100,78 L 100,140" stroke="#000" stroke-opacity="0.18" stroke-width="2"/>
     <path d="M 82,86 C 88,90 94,92 100,92 C 106,92 112,90 118,86" stroke="#000" stroke-opacity="0.15" stroke-width="2" fill="none"/>
     <path d="M 86,104 L 114,104 M 87,116 L 113,116 M 88,128 L 112,128" stroke="#000" stroke-opacity="0.12" stroke-width="1.5"/>
+    <!-- Seitliche Rippen/Schräge Bauchmuskeln -->
+    <path d="M 80,96 C 82,104 83,112 82,120" stroke="#000" stroke-opacity="0.1" stroke-width="1.2" fill="none"/>
+    <path d="M 120,96 C 118,104 117,112 118,120" stroke="#000" stroke-opacity="0.1" stroke-width="1.2" fill="none"/>
     <path d="M 130,72 L 127,102 C 128,118 127,132 122,142 C 126,138 129,128 129,110 C 129,96 130,82 130,72 Z" fill="#000" opacity="0.18"/>
-    <path d="M 72,74 C 76,70 82,66 88,63 L 86,100 C 84,110 82,120 80,128 L 74,124 C 73,110 72,92 72,74 Z" fill="#fff" opacity="0.06"/>
+    <path d="M 72,74 C 76,70 82,66 88,63 L 86,100 C 84,110 82,120 80,128 L 74,124 C 73,110 72,92 72,74 Z" fill="#fff" opacity="0.08"/>
+
+    <!-- Arme -->
     <path d="M 72,74 C 62,80 55,90 52,102 C 50,110 51,118 55,124 C 58,120 61,114 65,108 C 68,116 70,124 70,132 C 74,130 78,126 79,120 C 77,108 75,96 74,86 C 74,82 73,78 72,74 Z" fill="url(#skinGrad)"/>
+    <path d="M 68,78 C 72,80 75,83 77,87" stroke="#000" stroke-opacity="0.12" stroke-width="1.5" fill="none"/>
+    <path d="M 55,96 C 58,98 62,99 66,98" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
     <path d="M 128,74 C 138,80 145,90 148,102 C 150,110 149,118 145,124 C 142,120 139,114 135,108 C 132,116 130,124 130,132 C 126,130 122,126 121,120 C 123,108 125,96 126,86 C 126,82 127,78 128,74 Z" fill="url(#skinGrad)"/>
+    <path d="M 132,78 C 128,80 125,83 123,87" stroke="#000" stroke-opacity="0.12" stroke-width="1.5" fill="none"/>
+    <path d="M 145,96 C 142,98 138,99 134,98" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
+
+    <!-- Hals -->
     <path d="M 90,58 L 110,58 L 108,68 L 92,68 Z" fill="url(#skinGrad)"/>
+
+    <!-- Kopf -->
     <ellipse cx="100" cy="38" rx="17" ry="19" fill="url(#skinGrad)"/>
+    <!-- Ohr -->
+    <ellipse cx="83" cy="40" rx="2.6" ry="5" fill="url(#skinGrad)"/>
+    <path d="M 82,37 C 84,38 84,42 82,43" stroke="#000" stroke-opacity="0.15" stroke-width="1" fill="none"/>
+    <!-- Augenbrauen -->
+    <path d="M 88,34.5 C 91,33 94,33 97,34" stroke="#2A2018" stroke-width="1.3" fill="none"/>
+    <path d="M 103,34 C 106,33 109,33 112,34.5" stroke="#2A2018" stroke-width="1.3" fill="none"/>
+    <!-- Nase -->
+    <path d="M 99,35 C 98,38 97,41 98.5,43 C 99.3,43.6 100.7,43.6 101.5,43" stroke="#000" stroke-opacity="0.2" stroke-width="1" fill="none"/>
+    <!-- Kinn/Wange -->
     <path d="M 88,44 C 91,50 96,54 100,55 C 96,52 92,48 90,42 Z" fill="#000" opacity="0.12"/>
+    <!-- Lippen -->
+    <path d="M 95,48 C 97,49 103,49 105,48" stroke="#000" stroke-opacity="0.18" stroke-width="1" fill="none"/>
+    <!-- Haar mit Textur -->
     <path d="M 82,32 C 82,19 90,10 100,10 C 110,10 118,19 118,32 C 118,25 112,20 100,20 C 88,20 82,25 82,32 Z" fill="#2A2018"/>
+    <path d="M 84,22 C 87,18 91,16 95,15" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
+    <path d="M 96,14 C 100,13 104,13 108,14" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
+    <path d="M 109,15 C 113,17 116,20 117,24" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
+    <path d="M 85,26 C 88,24 91,23 94,23" stroke="#3A2E20" stroke-width="1" opacity="0.5" fill="none"/>
+    <path d="M 106,23 C 109,23 112,24 115,26" stroke="#3A2E20" stroke-width="1" opacity="0.5" fill="none"/>
+    <!-- Lorbeerkranz -->
     <path d="M 83,26 L 117,26 L 116,30 L 84,30 Z" fill="#C9A227"/>
     <path d="M 84,22 C 86,25 86,29 84,32 C 82,29 82,25 84,22 Z" fill="#8FA84A"/>
     <path d="M 92,22 C 94,25 94,29 92,32 C 90,29 90,25 92,22 Z" fill="#8FA84A"/>
     <path d="M 100,22 C 102,25 102,29 100,32 C 98,29 98,25 100,22 Z" fill="#8FA84A"/>
     <path d="M 108,22 C 110,25 110,29 108,32 C 106,29 106,25 108,22 Z" fill="#8FA84A"/>
     <path d="M 116,22 C 118,25 118,29 116,32 C 114,29 114,25 116,22 Z" fill="#8FA84A"/>
-    <circle cx="93" cy="38" r="1.6" fill="#2A2018"/>
-    <circle cx="107" cy="38" r="1.6" fill="#2A2018"/>
+    <!-- Augen -->
+    <circle cx="93" cy="38" r="1.7" fill="#2A2018"/>
+    <circle cx="107" cy="38" r="1.7" fill="#2A2018"/>
+    <circle cx="93.5" cy="37.4" r="0.5" fill="#fff" opacity="0.5"/>
+    <circle cx="107.5" cy="37.4" r="0.5" fill="#fff" opacity="0.5"/>
   </svg>`;
 }
 
