@@ -272,15 +272,16 @@
 
       <div class="field">
         <label>Art der Aktivität</label>
-        <div class="type-row" id="typeRow">
+        <div class="type-row" id="typeRow" style="flex-wrap:wrap;">
           <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Lauf</button>
           <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Rad</button>
           <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Spaziergang</button>
           <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Kraft</button>
+          <button class="type-btn" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Schlaf</button>
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="metricField">
         <label>Erfassungsart</label>
         <div class="metric-row" id="metricRow">
           <button class="metric-btn active" data-metric="distance" onclick="selectMetric(this)">Distanz (km)</button>
@@ -315,7 +316,7 @@
 
 <script>
 // ---------- App-Datenmodell (pro Account in Firestore gespeichert) ----------
-const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang", strength: "Kraft" };
+const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang", strength: "Kraft", sleep: "Schlaf" };
 const EMPTY_WEEK = () => [
   { day: "Mo", km: 0 }, { day: "Di", km: 0 }, { day: "Mi", km: 0 }, { day: "Do", km: 0 },
   { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
@@ -428,6 +429,12 @@ function laurelBarSVG(pct) {
 
 // ---------- UI-Zustand ----------
 
+function primaryMetricDisplay(a) {
+  if (a.type === 'sleep') return (a.mins / 60).toFixed(1) + ' h';
+  if (a.km) return a.km.toFixed(1) + ' km';
+  return (a.reps || 0) + ' Wdh.';
+}
+
 function renderActivities() {
   const list = document.getElementById('activityList');
   const n = ACTIVITIES.length;
@@ -442,7 +449,7 @@ function renderActivities() {
           <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
         </div>
         <div class="activity-right">
-          <div class="activity-km">${a.km ? a.km.toFixed(1) + ' km' : (a.reps || 0) + ' Wdh.'}</div>
+          <div class="activity-km">${primaryMetricDisplay(a)}</div>
           <div class="activity-mins">⏱ ${a.mins} min</div>
         </div>
       </div>
@@ -557,11 +564,13 @@ function openEditModal(index) {
   document.getElementById('sheetDeleteBtn').style.display = 'block';
 
   const typeBtn = document.querySelector(`.type-btn[data-type="${a.type}"]`) || document.querySelector('.type-btn[data-type="run"]');
-  typeBtn.click();
+  typeBtn.click(); // setzt via selectType() bereits die passende Erfassungsart (inkl. "none" bei Schlaf)
 
-  const metric = a.reps != null && a.reps > 0 ? 'reps' : 'distance';
-  const metricBtn = document.querySelector(`.metric-btn[data-metric="${metric}"]`);
-  if (metricBtn) selectMetric(metricBtn);
+  if (a.type !== 'sleep') {
+    const metric = a.reps != null && a.reps > 0 ? 'reps' : 'distance';
+    const metricBtn = document.querySelector(`.metric-btn[data-metric="${metric}"]`);
+    if (metricBtn) selectMetric(metricBtn);
+  }
 
   document.getElementById('inputDistance').value = a.km || '';
   document.getElementById('inputReps').value = a.reps || '';
@@ -581,8 +590,18 @@ function selectType(btn) {
   selectedType = btn.dataset.type;
   // sinnvolle Standard-Erfassungsart je Aktivitätstyp vorschlagen, bleibt aber änderbar
   const suggestedMetric = btn.dataset.metric;
-  const metricBtn = document.querySelector(`.metric-btn[data-metric="${suggestedMetric}"]`);
-  if (metricBtn) selectMetric(metricBtn);
+
+  if (suggestedMetric === 'none') {
+    // Schlaf: weder Distanz noch Wiederholungen sinnvoll -> Erfassungsart komplett ausblenden
+    selectedMetric = 'none';
+    document.getElementById('metricField').style.display = 'none';
+    document.getElementById('distanceField').style.display = 'none';
+    document.getElementById('repsField').style.display = 'none';
+  } else {
+    document.getElementById('metricField').style.display = 'block';
+    const metricBtn = document.querySelector(`.metric-btn[data-metric="${suggestedMetric}"]`);
+    if (metricBtn) selectMetric(metricBtn);
+  }
 }
 
 function selectMetric(btn) {
@@ -612,7 +631,7 @@ function submitActivity() {
     return;
   }
 
-  const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️" };
+  const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️", sleep: "😴" };
   const km = selectedMetric === 'distance' ? distance : 0;
 
   if (editingIndex === null) {
