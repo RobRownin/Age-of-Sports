@@ -60,6 +60,7 @@
   .chart-day{ font-size:11px; color:var(--muted); }
 
   .char-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
+  .pixel-avatar{ image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
   .name-row{ display:flex; align-items:center; gap:6px; margin-top:6px; background:none; border:none; cursor:pointer; color:inherit; font:inherit; }
   .name-row .name{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; }
   .name-edit{ display:none; align-items:center; gap:8px; margin-top:6px; }
@@ -595,7 +596,7 @@ function renderAttrs(level) {
 function renderCharacterAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
-  document.getElementById('charAvatar').innerHTML = avatarSVG(140);
+  document.getElementById('charAvatar').innerHTML = '<img class="pixel-avatar" src="avatar-pixel.png" width="140" height="210" alt="Charakter" />';
   document.getElementById('charName').textContent = characterName;
   document.getElementById('charLevel').textContent = 'Level ' + level;
   document.getElementById('charRemain').textContent = `noch ${remaining} km bis Level ${level + 1}`;
