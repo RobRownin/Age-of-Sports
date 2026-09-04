@@ -1,5 +1,5 @@
-const CACHE_NAME = "age-of-sports-v2";
-const ASSETS = ["./manifest.json", "./icon-192.png", "./icon-512.png", "./avatar-pixel.png"];
+const CACHE_NAME = "age-of-sports-v3";
+const ASSETS = ["./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

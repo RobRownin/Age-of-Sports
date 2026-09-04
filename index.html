@@ -593,10 +593,12 @@ function renderAttrs(level) {
     </div>`).join('<div style="height:10px"></div>');
 }
 
+const AVATAR_VERSION = 2; // bei jeder Änderung der avatar-pixel.png hochzählen, erzwingt frisches Laden
+
 function renderCharacterAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
-  document.getElementById('charAvatar').innerHTML = '<img class="pixel-avatar" src="avatar-pixel.png" width="140" height="210" alt="Charakter" />';
+  document.getElementById('charAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="140" height="210" alt="Charakter" />`;
   document.getElementById('charName').textContent = characterName;
   document.getElementById('charLevel').textContent = 'Level ' + level;
   document.getElementById('charRemain').textContent = `noch ${remaining} km bis Level ${level + 1}`;
