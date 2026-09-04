@@ -178,27 +178,13 @@
 
   <main>
     <!-- ACTIVITIES -->
-    <section class="screen active" id="screen-activities">
-      <button class="hero-card" onclick="showScreen('character')">
-        <div id="heroAvatar"></div>
-        <div class="hero-info">
-          <p class="label" id="heroLevel">Level 1</p>
-          <p class="name" id="heroName">Leonidas</p>
-          <div class="mini-bar"><div id="heroBarFill" style="width:0%"></div></div>
-          <p class="hint" style="text-align:left;margin-top:4px;" id="heroRemain"></p>
-        </div>
-        <span class="chevron">›</span>
-      </button>
-
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">
+    <section class="screen" id="screen-activities">
+      <div>
         <p class="label">Diese Woche</p>
-        <h1 class="title" style="font-size:17px;">Sport</h1>
+        <h1 class="title">Sport</h1>
       </div>
 
       <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
-
-      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal('run')">+ Aktivität erfassen</button>
-      <p class="hint">Garmin-Sync folgt in einer späteren Version</p>
     </section>
 
     <!-- SLEEP -->
@@ -209,8 +195,6 @@
       </div>
 
       <div id="sleepList" style="display:flex;flex-direction:column;gap:8px;"></div>
-
-      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal('sleep')">+ Schlaf erfassen</button>
     </section>
 
     <!-- STATS -->
@@ -238,7 +222,7 @@
     </section>
 
     <!-- CHARACTER -->
-    <section class="screen" id="screen-character">
+    <section class="screen active" id="screen-character">
       <div>
         <p class="label">Charakter</p>
         <h1 class="title">Dein Olympionike</h1>
@@ -262,6 +246,8 @@
       </div>
 
       <div class="card attr-card" id="attrCard"></div>
+
+      <button class="btn-primary" onclick="openActivityModal('run')">+ Aktivität erfassen</button>
 
       <button class="duel-btn">
         <span class="left">⚔️ Wettkampf antreten</span>
@@ -532,12 +518,6 @@ function renderAttrs(level) {
 
 function renderCharacterAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
-
-  document.getElementById('heroAvatar').innerHTML = avatarSVG(64);
-  document.getElementById('heroLevel').textContent = 'Level ' + level;
-  document.getElementById('heroName').textContent = characterName;
-  document.getElementById('heroBarFill').style.width = pct + '%';
-  document.getElementById('heroRemain').textContent = `noch ${remaining} km bis Level ${level + 1}`;
 
   document.getElementById('charAvatar').innerHTML = avatarSVG(140);
   document.getElementById('charName').textContent = characterName;
@@ -901,7 +881,7 @@ window.handleAuthState = async function (user) {
     renderActivities();
     renderStats();
     renderCharacterAndHero();
-    showScreen('activities');
+    showScreen('character');
   } else {
     currentUid = null;
     document.getElementById('authScreen').style.display = 'flex';
