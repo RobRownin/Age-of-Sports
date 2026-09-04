@@ -192,13 +192,25 @@
 
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;">
         <p class="label">Diese Woche</p>
-        <h1 class="title" style="font-size:17px;">Aktivitäten</h1>
+        <h1 class="title" style="font-size:17px;">Sport</h1>
       </div>
 
       <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
 
-      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal()">+ Aktivität erfassen</button>
+      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal('run')">+ Aktivität erfassen</button>
       <p class="hint">Garmin-Sync folgt in einer späteren Version</p>
+    </section>
+
+    <!-- SLEEP -->
+    <section class="screen" id="screen-sleep">
+      <div>
+        <p class="label">Erholung</p>
+        <h1 class="title">Schlaf</h1>
+      </div>
+
+      <div id="sleepList" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+      <button class="btn-primary" style="margin-top:6px;" onclick="openActivityModal('sleep')">+ Schlaf erfassen</button>
     </section>
 
     <!-- STATS -->
@@ -261,6 +273,7 @@
 
   <nav class="bottomnav" id="bottomnav">
     <button data-tab="activities" onclick="showScreen('activities')">🔥</button>
+    <button data-tab="sleep" onclick="showScreen('sleep')">😴</button>
     <button data-tab="stats" onclick="showScreen('stats')">📊</button>
     <button data-tab="character" onclick="showScreen('character')">⚔️</button>
   </nav>
@@ -456,12 +469,8 @@ function primaryMetricDisplay(a) {
   return (a.reps || 0) + ' Wdh.';
 }
 
-function renderActivities() {
-  const list = document.getElementById('activityList');
-  const n = ACTIVITIES.length;
-  list.innerHTML = ACTIVITIES.slice().reverse().map((a, i) => {
-    const realIndex = n - 1 - i;
-    return `
+function renderActivityRow(a, realIndex) {
+  return `
     <button class="activity-row-btn" onclick="openEditModal(${realIndex})">
       <div class="card activity-row">
         <div class="activity-icon">${a.icon}</div>
@@ -475,7 +484,25 @@ function renderActivities() {
         </div>
       </div>
     </button>`;
-  }).join('');
+}
+
+function renderActivities() {
+  const list = document.getElementById('activityList');
+  const n = ACTIVITIES.length;
+  list.innerHTML = ACTIVITIES
+    .map((a, realIndex) => ({ a, realIndex }))
+    .filter(({ a }) => a.type !== 'sleep')
+    .reverse()
+    .map(({ a, realIndex }) => renderActivityRow(a, realIndex))
+    .join('');
+
+  const sleepListEl = document.getElementById('sleepList');
+  sleepListEl.innerHTML = ACTIVITIES
+    .map((a, realIndex) => ({ a, realIndex }))
+    .filter(({ a }) => a.type === 'sleep')
+    .reverse()
+    .map(({ a, realIndex }) => renderActivityRow(a, realIndex))
+    .join('') || '<p class="hint">Noch keine Schlaf-Aktivität erfasst.</p>';
 }
 
 function renderStats() {
@@ -612,22 +639,23 @@ function updateSleepDurationHint() {
   }
 }
 
-function resetForm() {
+function resetForm(defaultType) {
   document.getElementById('inputDistance').value = '';
   document.getElementById('inputReps').value = '';
   document.getElementById('inputDuration').value = '';
   setBedTime('23:00');
   setWakeTime('07:00');
   document.getElementById('inputDescription').value = '';
-  document.querySelector('.type-btn[data-type="run"]').click();
+  const btn = document.querySelector(`.type-btn[data-type="${defaultType || 'run'}"]`) || document.querySelector('.type-btn[data-type="run"]');
+  btn.click();
 }
 
-function openActivityModal() {
+function openActivityModal(defaultType) {
   editingIndex = null;
-  document.getElementById('sheetTitle').textContent = 'Aktivität erfassen';
+  document.getElementById('sheetTitle').textContent = defaultType === 'sleep' ? 'Schlaf erfassen' : 'Aktivität erfassen';
   document.getElementById('sheetSubmitBtn').textContent = 'Speichern';
   document.getElementById('sheetDeleteBtn').style.display = 'none';
-  resetForm();
+  resetForm(defaultType);
   document.getElementById('activityOverlay').classList.add('open');
 }
 
