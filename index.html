@@ -298,10 +298,22 @@
         <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="z. B. 40" />
       </div>
 
-      <div class="field">
+      <div class="field" id="durationField">
         <label>Dauer (Minuten)</label>
         <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="z. B. 30" />
       </div>
+
+      <div id="sleepTimeField" style="display:none; gap:8px; margin-bottom:0;">
+        <div class="field" style="flex:1;">
+          <label>Schlafenszeit</label>
+          <input type="time" id="inputBedTime" oninput="updateSleepDurationHint()" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Aufstehzeit</label>
+          <input type="time" id="inputWakeTime" oninput="updateSleepDurationHint()" />
+        </div>
+      </div>
+      <p class="hint" id="sleepDurationHint" style="display:none; margin-top:-6px;"></p>
 
       <div class="field">
         <label>Beschreibung</label>
@@ -537,10 +549,37 @@ function adjustWeekKm(dayAbbr, delta) {
   if (entry) entry.km = Math.max(0, entry.km + delta);
 }
 
+// Berechnet die Schlafdauer in Minuten aus "HH:MM"-Zeiten, inkl. Übergang über Mitternacht
+function computeSleepMinutes(bedStr, wakeStr) {
+  if (!bedStr || !wakeStr) return null;
+  const [bh, bm] = bedStr.split(':').map(Number);
+  const [wh, wm] = wakeStr.split(':').map(Number);
+  const bedMin = bh * 60 + bm;
+  const wakeMin = wh * 60 + wm;
+  let diff = wakeMin - bedMin;
+  if (diff <= 0) diff += 24 * 60; // über Mitternacht hinweg
+  return diff;
+}
+
+function updateSleepDurationHint() {
+  const bed = document.getElementById('inputBedTime').value;
+  const wake = document.getElementById('inputWakeTime').value;
+  const hint = document.getElementById('sleepDurationHint');
+  const mins = computeSleepMinutes(bed, wake);
+  if (mins != null) {
+    hint.style.display = 'block';
+    hint.textContent = `= ${(mins / 60).toFixed(1)} Stunden Schlaf`;
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
 function resetForm() {
   document.getElementById('inputDistance').value = '';
   document.getElementById('inputReps').value = '';
   document.getElementById('inputDuration').value = '';
+  document.getElementById('inputBedTime').value = '';
+  document.getElementById('inputWakeTime').value = '';
   document.getElementById('inputDescription').value = '';
   document.querySelector('.type-btn[data-type="run"]').click();
 }
@@ -575,7 +614,10 @@ function openEditModal(index) {
   document.getElementById('inputDistance').value = a.km || '';
   document.getElementById('inputReps').value = a.reps || '';
   document.getElementById('inputDuration').value = a.mins || '';
+  document.getElementById('inputBedTime').value = a.bedTime || '';
+  document.getElementById('inputWakeTime').value = a.wakeTime || '';
   document.getElementById('inputDescription').value = a.label || '';
+  updateSleepDurationHint();
 
   document.getElementById('activityOverlay').classList.add('open');
 }
@@ -590,6 +632,12 @@ function selectType(btn) {
   selectedType = btn.dataset.type;
   // sinnvolle Standard-Erfassungsart je Aktivitätstyp vorschlagen, bleibt aber änderbar
   const suggestedMetric = btn.dataset.metric;
+  const isSleep = selectedType === 'sleep';
+
+  document.getElementById('durationField').style.display = isSleep ? 'none' : 'block';
+  document.getElementById('sleepTimeField').style.display = isSleep ? 'flex' : 'none';
+  document.getElementById('sleepDurationHint').style.display = isSleep ? document.getElementById('sleepDurationHint').style.display : 'none';
+  if (isSleep) updateSleepDurationHint();
 
   if (suggestedMetric === 'none') {
     // Schlaf: weder Distanz noch Wiederholungen sinnvoll -> Erfassungsart komplett ausblenden
@@ -613,15 +661,30 @@ function selectMetric(btn) {
 }
 
 function submitActivity() {
-  const duration = parseInt(document.getElementById('inputDuration').value, 10) || 0;
+  const isSleep = selectedType === 'sleep';
   const description = document.getElementById('inputDescription').value.trim();
   const distance = parseFloat(document.getElementById('inputDistance').value) || 0;
   const reps = parseInt(document.getElementById('inputReps').value, 10) || 0;
 
-  if (duration <= 0) {
-    alert('Bitte eine Dauer in Minuten angeben.');
-    return;
+  let duration;
+  let bedTime = null, wakeTime = null;
+
+  if (isSleep) {
+    bedTime = document.getElementById('inputBedTime').value;
+    wakeTime = document.getElementById('inputWakeTime').value;
+    if (!bedTime || !wakeTime) {
+      alert('Bitte Schlafenszeit und Aufstehzeit angeben.');
+      return;
+    }
+    duration = computeSleepMinutes(bedTime, wakeTime);
+  } else {
+    duration = parseInt(document.getElementById('inputDuration').value, 10) || 0;
+    if (duration <= 0) {
+      alert('Bitte eine Dauer in Minuten angeben.');
+      return;
+    }
   }
+
   if (selectedMetric === 'distance' && distance <= 0) {
     alert('Bitte eine Distanz größer 0 angeben.');
     return;
@@ -643,6 +706,8 @@ function submitActivity() {
       km: km,
       reps: selectedMetric === 'reps' ? reps : null,
       mins: duration,
+      bedTime: isSleep ? bedTime : null,
+      wakeTime: isSleep ? wakeTime : null,
       date: todayLabel(),
     };
     ACTIVITIES.push(activity);
@@ -657,6 +722,8 @@ function submitActivity() {
     a.km = km;
     a.reps = selectedMetric === 'reps' ? reps : null;
     a.mins = duration;
+    a.bedTime = isSleep ? bedTime : null;
+    a.wakeTime = isSleep ? wakeTime : null;
     // Datum bleibt unverändert; Wochenstatistik um die Differenz anpassen
     if (km !== oldKm) adjustWeekKm(dayAbbrFromDate(a.date), km - oldKm);
   }
