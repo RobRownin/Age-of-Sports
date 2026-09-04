@@ -115,6 +115,9 @@
   .auth-tab.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
   .auth-error{ color:var(--red); font-size:12px; text-align:center; margin:0; }
   .logout-btn{ position:absolute; top:20px; right:16px; background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; z-index:5; }
+
+  .time-select{ background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 6px; font-size:14px; font-family:'JetBrains Mono', monospace; outline:none; flex:1; text-align:center; }
+  .time-select:focus{ border-color:var(--gold); }
 </style>
 </head>
 <body>
@@ -306,11 +309,17 @@
       <div id="sleepTimeField" style="display:none; gap:8px; margin-bottom:0;">
         <div class="field" style="flex:1;">
           <label>Schlafenszeit</label>
-          <input type="time" id="inputBedTime" oninput="updateSleepDurationHint()" />
+          <div style="display:flex; gap:4px;">
+            <select class="time-select" id="inputBedHour" onchange="updateSleepDurationHint()"></select>
+            <select class="time-select" id="inputBedMinute" onchange="updateSleepDurationHint()"></select>
+          </div>
         </div>
         <div class="field" style="flex:1;">
           <label>Aufstehzeit</label>
-          <input type="time" id="inputWakeTime" oninput="updateSleepDurationHint()" />
+          <div style="display:flex; gap:4px;">
+            <select class="time-select" id="inputWakeHour" onchange="updateSleepDurationHint()"></select>
+            <select class="time-select" id="inputWakeMinute" onchange="updateSleepDurationHint()"></select>
+          </div>
         </div>
       </div>
       <p class="hint" id="sleepDurationHint" style="display:none; margin-top:-6px;"></p>
@@ -561,9 +570,38 @@ function computeSleepMinutes(bedStr, wakeStr) {
   return diff;
 }
 
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function populateTimeSelects() {
+  const hourIds = ['inputBedHour', 'inputWakeHour'];
+  const minuteIds = ['inputBedMinute', 'inputWakeMinute'];
+  hourIds.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${pad2(h)}">${pad2(h)}</option>`).join('');
+  });
+  minuteIds.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = Array.from({ length: 12 }, (_, i) => { const m = i * 5; return `<option value="${pad2(m)}">${pad2(m)}</option>`; }).join('');
+  });
+}
+
+function getBedTimeStr() { return document.getElementById('inputBedHour').value + ':' + document.getElementById('inputBedMinute').value; }
+function getWakeTimeStr() { return document.getElementById('inputWakeHour').value + ':' + document.getElementById('inputWakeMinute').value; }
+
+function setBedTime(str) {
+  const [h, m] = (str || '23:00').split(':');
+  document.getElementById('inputBedHour').value = h;
+  document.getElementById('inputBedMinute').value = String(Math.round(Number(m) / 5) * 5).padStart(2, '0');
+}
+function setWakeTime(str) {
+  const [h, m] = (str || '07:00').split(':');
+  document.getElementById('inputWakeHour').value = h;
+  document.getElementById('inputWakeMinute').value = String(Math.round(Number(m) / 5) * 5).padStart(2, '0');
+}
+
 function updateSleepDurationHint() {
-  const bed = document.getElementById('inputBedTime').value;
-  const wake = document.getElementById('inputWakeTime').value;
+  const bed = getBedTimeStr();
+  const wake = getWakeTimeStr();
   const hint = document.getElementById('sleepDurationHint');
   const mins = computeSleepMinutes(bed, wake);
   if (mins != null) {
@@ -578,8 +616,8 @@ function resetForm() {
   document.getElementById('inputDistance').value = '';
   document.getElementById('inputReps').value = '';
   document.getElementById('inputDuration').value = '';
-  document.getElementById('inputBedTime').value = '';
-  document.getElementById('inputWakeTime').value = '';
+  setBedTime('23:00');
+  setWakeTime('07:00');
   document.getElementById('inputDescription').value = '';
   document.querySelector('.type-btn[data-type="run"]').click();
 }
@@ -614,8 +652,8 @@ function openEditModal(index) {
   document.getElementById('inputDistance').value = a.km || '';
   document.getElementById('inputReps').value = a.reps || '';
   document.getElementById('inputDuration').value = a.mins || '';
-  document.getElementById('inputBedTime').value = a.bedTime || '';
-  document.getElementById('inputWakeTime').value = a.wakeTime || '';
+  setBedTime(a.bedTime);
+  setWakeTime(a.wakeTime);
   document.getElementById('inputDescription').value = a.label || '';
   updateSleepDurationHint();
 
@@ -670,12 +708,8 @@ function submitActivity() {
   let bedTime = null, wakeTime = null;
 
   if (isSleep) {
-    bedTime = document.getElementById('inputBedTime').value;
-    wakeTime = document.getElementById('inputWakeTime').value;
-    if (!bedTime || !wakeTime) {
-      alert('Bitte Schlafenszeit und Aufstehzeit angeben.');
-      return;
-    }
+    bedTime = getBedTimeStr();
+    wakeTime = getWakeTimeStr();
     duration = computeSleepMinutes(bedTime, wakeTime);
   } else {
     duration = parseInt(document.getElementById('inputDuration').value, 10) || 0;
@@ -850,6 +884,10 @@ window.handleAuthState = async function (user) {
 };
 
 // ---------- Init ----------
+populateTimeSelects();
+setBedTime('23:00');
+setWakeTime('07:00');
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
 }
