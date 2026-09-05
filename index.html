@@ -250,6 +250,12 @@
 
       <button class="btn-primary" onclick="openActivityModal('run')">+ Aktivität erfassen</button>
 
+      <button class="duel-btn" onclick="document.getElementById('garminFileInput').click()">
+        <span class="left">⛰️ Garmin-Datei importieren (.gpx/.tcx)</span>
+        <span class="chevron">›</span>
+      </button>
+      <input type="file" id="garminFileInput" accept=".gpx,.tcx,.xml" style="display:none;" onchange="handleGarminFile(event)" />
+
       <button class="duel-btn">
         <span class="left">⚔️ Wettkampf antreten</span>
         <span class="chevron">›</span>
@@ -969,6 +975,101 @@ window.handleAuthState = async function (user) {
     document.getElementById('authPassword').value = '';
   }
 };
+
+// ---------- Garmin-Datei-Import (GPX/TCX) ----------
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function parseGPX(text) {
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  if (xml.getElementsByTagName('parsererror').length > 0) return null;
+  const pts = Array.from(xml.getElementsByTagName('trkpt'));
+  if (pts.length < 2) return null;
+
+  let km = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const lat1 = parseFloat(pts[i - 1].getAttribute('lat'));
+    const lon1 = parseFloat(pts[i - 1].getAttribute('lon'));
+    const lat2 = parseFloat(pts[i].getAttribute('lat'));
+    const lon2 = parseFloat(pts[i].getAttribute('lon'));
+    if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)) {
+      km += haversineKm(lat1, lon1, lat2, lon2);
+    }
+  }
+
+  const timeEls = xml.getElementsByTagName('time');
+  let mins = 0;
+  if (timeEls.length >= 2) {
+    const t0 = new Date(timeEls[0].textContent).getTime();
+    const t1 = new Date(timeEls[timeEls.length - 1].textContent).getTime();
+    if (!isNaN(t0) && !isNaN(t1) && t1 > t0) mins = Math.round((t1 - t0) / 60000);
+  }
+
+  const nameEl = xml.getElementsByTagName('name')[0];
+  const label = 'Garmin-Import' + (nameEl && nameEl.textContent ? ': ' + nameEl.textContent : '');
+  return { type: 'run', km, mins: Math.max(1, mins), label };
+}
+
+function parseTCX(text) {
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  if (xml.getElementsByTagName('parsererror').length > 0) return null;
+  const laps = Array.from(xml.getElementsByTagName('Lap'));
+  if (laps.length === 0) return null;
+
+  let meters = 0, seconds = 0;
+  laps.forEach((lap) => {
+    const d = lap.getElementsByTagName('DistanceMeters')[0];
+    const t = lap.getElementsByTagName('TotalTimeSeconds')[0];
+    if (d) meters += parseFloat(d.textContent) || 0;
+    if (t) seconds += parseFloat(t.textContent) || 0;
+  });
+
+  const activityEl = xml.getElementsByTagName('Activity')[0];
+  const sport = activityEl ? activityEl.getAttribute('Sport') : '';
+  const typeMap = { Running: 'run', Biking: 'ride', Cycling: 'ride', Walking: 'walk' };
+  const type = typeMap[sport] || 'run';
+  const label = 'Garmin-Import' + (sport ? ': ' + sport : '');
+
+  return { type, km: meters / 1000, mins: Math.max(1, Math.round(seconds / 60)), label };
+}
+
+function handleGarminFile(event) {
+  const file = event.target.files[0];
+  event.target.value = ''; // damit dieselbe Datei erneut wählbar ist
+  if (!file) return;
+
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.gpx') && !name.endsWith('.tcx') && !name.endsWith('.xml')) {
+    alert('Bitte eine .gpx- oder .tcx-Datei wählen. Export in Garmin Connect: Aktivität öffnen → Zahnrad → "Exportieren" → GPX oder TCX (nicht FIT).');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    let result = null;
+    try {
+      result = name.endsWith('.tcx') ? parseTCX(e.target.result) : parseGPX(e.target.result);
+    } catch (err) {
+      console.error(err);
+    }
+    if (!result || !(result.km > 0)) {
+      alert('Aus der Datei konnten keine Distanz-/Zeitdaten gelesen werden. Ist es eine gültige GPX/TCX-Aktivitätsdatei?');
+      return;
+    }
+    openActivityModal(result.type);
+    document.getElementById('inputDescription').value = result.label;
+    document.getElementById('inputDistance').value = result.km.toFixed(2);
+    document.getElementById('inputDuration').value = result.mins;
+  };
+  reader.readAsText(file);
+}
 
 // ---------- Init ----------
 populateTimeSelects();
