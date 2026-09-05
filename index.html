@@ -312,6 +312,22 @@
         <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="z. B. 30" />
       </div>
 
+      <div class="field" id="dateTimeField">
+        <label>Datum &amp; Uhrzeit</label>
+        <input type="datetime-local" id="inputDateTime" />
+      </div>
+
+      <div id="extraStatsField" style="display:flex; gap:8px; margin-bottom:0;">
+        <div class="field" style="flex:1;">
+          <label>Herzfrequenz (bpm)</label>
+          <input type="number" id="inputHeartRate" inputmode="numeric" step="1" min="0" placeholder="optional" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Höhenmeter</label>
+          <input type="number" id="inputElevation" inputmode="numeric" step="1" min="0" placeholder="optional" />
+        </div>
+      </div>
+
       <div id="sleepTimeField" style="display:none; gap:8px; margin-bottom:0;">
         <div class="field" style="flex:1;">
           <label>Schlafenszeit</label>
@@ -388,10 +404,6 @@ function formatDateTimeLabel(d) {
   const mm = String(d.getMinutes()).padStart(2, '0');
   return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}, ${hh}:${mm}`;
 }
-
-// Von einem Garmin-Import vorbelegte Metadaten (echtes Datum/Uhrzeit, Herzfrequenz, Höhenmeter),
-// bis zum nächsten Speichern/Schließen des Formulars gültig
-let pendingImport = null;
 
 function todayWeekIndex() {
   // WEEK array runs Mo..So -> map JS getDay() (0=So) to that order
@@ -722,10 +734,18 @@ function updateSleepDurationHint() {
   }
 }
 
+function toDateTimeLocalValue(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function resetForm(defaultType) {
   document.getElementById('inputDistance').value = '';
   document.getElementById('inputReps').value = '';
   document.getElementById('inputDuration').value = '';
+  document.getElementById('inputDateTime').value = toDateTimeLocalValue(new Date());
+  document.getElementById('inputHeartRate').value = '';
+  document.getElementById('inputElevation').value = '';
   setBedTime('23:00');
   setWakeTime('07:00');
   document.getElementById('inputDescription').value = '';
@@ -763,6 +783,9 @@ function openEditModal(index) {
   document.getElementById('inputDistance').value = a.km || '';
   document.getElementById('inputReps').value = a.reps || '';
   document.getElementById('inputDuration').value = a.mins || '';
+  document.getElementById('inputDateTime').value = toDateTimeLocalValue(a.dateISO ? new Date(a.dateISO) : new Date());
+  document.getElementById('inputHeartRate').value = a.avgHeartRate || '';
+  document.getElementById('inputElevation').value = a.elevationGain || '';
   setBedTime(a.bedTime);
   setWakeTime(a.wakeTime);
   document.getElementById('inputDescription').value = a.label || '';
@@ -773,7 +796,6 @@ function openEditModal(index) {
 
 function closeActivityModal() {
   document.getElementById('activityOverlay').classList.remove('open');
-  pendingImport = null;
 }
 
 function selectType(btn) {
@@ -785,6 +807,8 @@ function selectType(btn) {
   const isSleep = selectedType === 'sleep';
 
   document.getElementById('durationField').style.display = isSleep ? 'none' : 'block';
+  document.getElementById('dateTimeField').style.display = isSleep ? 'none' : 'block';
+  document.getElementById('extraStatsField').style.display = isSleep ? 'none' : 'flex';
   document.getElementById('sleepTimeField').style.display = isSleep ? 'flex' : 'none';
   document.getElementById('sleepDurationHint').style.display = isSleep ? document.getElementById('sleepDurationHint').style.display : 'none';
   if (isSleep) updateSleepDurationHint();
@@ -843,9 +867,13 @@ function submitActivity() {
   const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️", sleep: "😴" };
   const km = selectedMetric === 'distance' ? distance : 0;
 
+  const dateTimeVal = document.getElementById('inputDateTime').value;
+  const activityDate = !isSleep && dateTimeVal ? new Date(dateTimeVal) : new Date();
+  const hr = parseInt(document.getElementById('inputHeartRate').value, 10) || null;
+  const elevation = parseInt(document.getElementById('inputElevation').value, 10) || null;
+
   if (editingIndex === null) {
     // Neue Aktivität
-    const importDate = pendingImport ? pendingImport.date : new Date();
     const activity = {
       type: selectedType,
       icon: iconMap[selectedType] || "🏅",
@@ -855,17 +883,18 @@ function submitActivity() {
       mins: duration,
       bedTime: isSleep ? bedTime : null,
       wakeTime: isSleep ? wakeTime : null,
-      date: formatDateTimeLabel(importDate),
-      avgHeartRate: pendingImport ? pendingImport.avgHeartRate : null,
-      elevationGain: pendingImport ? pendingImport.elevationGain : null,
+      date: formatDateTimeLabel(activityDate),
+      dateISO: activityDate.toISOString(),
+      avgHeartRate: isSleep ? null : hr,
+      elevationGain: isSleep ? null : elevation,
     };
     ACTIVITIES.push(activity);
     if (km > 0) adjustWeekKm(dayAbbrFromDate(activity.date), km);
-    pendingImport = null;
   } else {
     // Bestehende Aktivität bearbeiten
     const a = ACTIVITIES[editingIndex];
     const oldKm = a.km || 0;
+    const oldDayAbbr = dayAbbrFromDate(a.date);
     a.type = selectedType;
     a.icon = iconMap[selectedType] || "🏅";
     a.label = description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`;
@@ -874,8 +903,16 @@ function submitActivity() {
     a.mins = duration;
     a.bedTime = isSleep ? bedTime : null;
     a.wakeTime = isSleep ? wakeTime : null;
-    // Datum bleibt unverändert; Wochenstatistik um die Differenz anpassen
-    if (km !== oldKm) adjustWeekKm(dayAbbrFromDate(a.date), km - oldKm);
+    if (!isSleep) {
+      a.date = formatDateTimeLabel(activityDate);
+      a.dateISO = activityDate.toISOString();
+    }
+    a.avgHeartRate = isSleep ? (a.avgHeartRate || null) : hr;
+    a.elevationGain = isSleep ? (a.elevationGain || null) : elevation;
+    // Wochenstatistik: alte km vom alten Tag abziehen, neue km dem (ggf. neuen) Tag zuschlagen
+    const newDayAbbr = dayAbbrFromDate(a.date);
+    adjustWeekKm(oldDayAbbr, -oldKm);
+    adjustWeekKm(newDayAbbr, km);
   }
 
   persist();
@@ -1190,15 +1227,13 @@ function handleGarminFile(event) {
       alert('Aus der Datei konnten keine Distanz-/Zeitdaten gelesen werden. Ist es eine gültige GPX/TCX-Aktivitätsdatei?');
       return;
     }
-    pendingImport = {
-      date: result.startDate || new Date(),
-      avgHeartRate: result.avgHeartRate,
-      elevationGain: result.elevationGain,
-    };
     openActivityModal(result.type);
     document.getElementById('inputDescription').value = result.label;
     document.getElementById('inputDistance').value = result.km.toFixed(2);
     document.getElementById('inputDuration').value = result.mins;
+    document.getElementById('inputDateTime').value = toDateTimeLocalValue(result.startDate || new Date());
+    if (result.avgHeartRate) document.getElementById('inputHeartRate').value = result.avgHeartRate;
+    if (result.elevationGain) document.getElementById('inputElevation').value = result.elevationGain;
   };
   reader.readAsText(file);
 }
