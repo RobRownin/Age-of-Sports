@@ -585,21 +585,27 @@ function renderActivityRow(a, realIndex) {
     </button>`;
 }
 
+function activitySortTime(a) {
+  if (a.dateISO) {
+    const t = new Date(a.dateISO).getTime();
+    if (!isNaN(t)) return t;
+  }
+  return 0; // ältere Einträge ohne gespeicherten Zeitstempel landen ganz unten
+}
+
 function renderActivities() {
+  const withIndex = ACTIVITIES.map((a, realIndex) => ({ a, realIndex }));
+  const sorted = withIndex.slice().sort((x, y) => activitySortTime(y.a) - activitySortTime(x.a));
+
   const list = document.getElementById('activityList');
-  const n = ACTIVITIES.length;
-  list.innerHTML = ACTIVITIES
-    .map((a, realIndex) => ({ a, realIndex }))
+  list.innerHTML = sorted
     .filter(({ a }) => a.type !== 'sleep')
-    .reverse()
     .map(({ a, realIndex }) => renderActivityRow(a, realIndex))
     .join('');
 
   const sleepListEl = document.getElementById('sleepList');
-  sleepListEl.innerHTML = ACTIVITIES
-    .map((a, realIndex) => ({ a, realIndex }))
+  sleepListEl.innerHTML = sorted
     .filter(({ a }) => a.type === 'sleep')
-    .reverse()
     .map(({ a, realIndex }) => renderActivityRow(a, realIndex))
     .join('') || '<p class="hint">Noch keine Schlaf-Aktivität erfasst.</p>';
 }
