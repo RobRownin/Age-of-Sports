@@ -381,6 +381,18 @@ function todayLabel() {
   return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}`;
 }
 
+function formatDateTimeLabel(d) {
+  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}, ${hh}:${mm}`;
+}
+
+// Von einem Garmin-Import vorbelegte Metadaten (echtes Datum/Uhrzeit, Herzfrequenz, Höhenmeter),
+// bis zum nächsten Speichern/Schließen des Formulars gültig
+let pendingImport = null;
+
 function todayWeekIndex() {
   // WEEK array runs Mo..So -> map JS getDay() (0=So) to that order
   const jsDay = new Date().getDay(); // 0=So,1=Mo,...
@@ -539,6 +551,11 @@ function primaryMetricDisplay(a) {
 }
 
 function renderActivityRow(a, realIndex) {
+  const extras = [];
+  if (a.avgHeartRate) extras.push(`❤ ${a.avgHeartRate} bpm`);
+  if (a.elevationGain) extras.push(`⛰ ${a.elevationGain} hm`);
+  const extraLine = extras.length > 0 ? `<div class="activity-sub" style="opacity:.75;">${extras.join(' · ')}</div>` : '';
+
   return `
     <button class="activity-row-btn" onclick="openEditModal(${realIndex})">
       <div class="card activity-row">
@@ -546,6 +563,7 @@ function renderActivityRow(a, realIndex) {
         <div style="flex:1;min-width:0;">
           <div class="activity-name">${a.label}</div>
           <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
+          ${extraLine}
         </div>
         <div class="activity-right">
           <div class="activity-km">${primaryMetricDisplay(a)}</div>
@@ -755,6 +773,7 @@ function openEditModal(index) {
 
 function closeActivityModal() {
   document.getElementById('activityOverlay').classList.remove('open');
+  pendingImport = null;
 }
 
 function selectType(btn) {
@@ -826,6 +845,7 @@ function submitActivity() {
 
   if (editingIndex === null) {
     // Neue Aktivität
+    const importDate = pendingImport ? pendingImport.date : new Date();
     const activity = {
       type: selectedType,
       icon: iconMap[selectedType] || "🏅",
@@ -835,10 +855,13 @@ function submitActivity() {
       mins: duration,
       bedTime: isSleep ? bedTime : null,
       wakeTime: isSleep ? wakeTime : null,
-      date: todayLabel(),
+      date: formatDateTimeLabel(importDate),
+      avgHeartRate: pendingImport ? pendingImport.avgHeartRate : null,
+      elevationGain: pendingImport ? pendingImport.elevationGain : null,
     };
     ACTIVITIES.push(activity);
     if (km > 0) adjustWeekKm(dayAbbrFromDate(activity.date), km);
+    pendingImport = null;
   } else {
     // Bestehende Aktivität bearbeiten
     const a = ACTIVITIES[editingIndex];
@@ -987,6 +1010,33 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Findet Elemente unabhängig vom XML-Namespace-Präfix (z. B. "gpxtpx:hr" oder "ns3:hr")
+function getByLocalName(root, localName) {
+  const all = root.getElementsByTagName('*');
+  const result = [];
+  for (let i = 0; i < all.length; i++) {
+    const tag = all[i].tagName;
+    const local = tag.includes(':') ? tag.split(':')[1] : tag;
+    if (local.toLowerCase() === localName.toLowerCase()) result.push(all[i]);
+  }
+  return result;
+}
+
+function ascentFromSeries(values) {
+  let ascent = 0;
+  for (let i = 1; i < values.length; i++) {
+    const diff = values[i] - values[i - 1];
+    if (diff > 0) ascent += diff;
+  }
+  return ascent;
+}
+
+function avg(list) {
+  const nums = list.filter((v) => typeof v === 'number' && !isNaN(v));
+  if (nums.length === 0) return null;
+  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+}
+
 function parseGPX(text) {
   const xml = new DOMParser().parseFromString(text, 'application/xml');
   if (xml.getElementsByTagName('parsererror').length > 0) return null;
@@ -994,18 +1044,38 @@ function parseGPX(text) {
   if (pts.length < 2) return null;
 
   let km = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const lat1 = parseFloat(pts[i - 1].getAttribute('lat'));
-    const lon1 = parseFloat(pts[i - 1].getAttribute('lon'));
-    const lat2 = parseFloat(pts[i].getAttribute('lat'));
-    const lon2 = parseFloat(pts[i].getAttribute('lon'));
-    if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)) {
-      km += haversineKm(lat1, lon1, lat2, lon2);
+  const elevations = [];
+  const heartRates = [];
+
+  pts.forEach((pt, i) => {
+    if (i > 0) {
+      const lat1 = parseFloat(pts[i - 1].getAttribute('lat'));
+      const lon1 = parseFloat(pts[i - 1].getAttribute('lon'));
+      const lat2 = parseFloat(pt.getAttribute('lat'));
+      const lon2 = parseFloat(pt.getAttribute('lon'));
+      if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)) {
+        km += haversineKm(lat1, lon1, lat2, lon2);
+      }
     }
-  }
+    const eleEl = getByLocalName(pt, 'ele')[0];
+    if (eleEl) {
+      const v = parseFloat(eleEl.textContent);
+      if (!isNaN(v)) elevations.push(v);
+    }
+    const hrEl = getByLocalName(pt, 'hr')[0];
+    if (hrEl) {
+      const v = parseFloat(hrEl.textContent);
+      if (!isNaN(v)) heartRates.push(v);
+    }
+  });
 
   const timeEls = xml.getElementsByTagName('time');
   let mins = 0;
+  let startDate = null;
+  if (timeEls.length >= 1) {
+    startDate = new Date(timeEls[0].textContent);
+    if (isNaN(startDate.getTime())) startDate = null;
+  }
   if (timeEls.length >= 2) {
     const t0 = new Date(timeEls[0].textContent).getTime();
     const t1 = new Date(timeEls[timeEls.length - 1].textContent).getTime();
@@ -1014,7 +1084,15 @@ function parseGPX(text) {
 
   const nameEl = xml.getElementsByTagName('name')[0];
   const label = 'Garmin-Import' + (nameEl && nameEl.textContent ? ': ' + nameEl.textContent : '');
-  return { type: 'run', km, mins: Math.max(1, mins), label };
+  return {
+    type: 'run',
+    km,
+    mins: Math.max(1, mins),
+    label,
+    startDate,
+    avgHeartRate: avg(heartRates),
+    elevationGain: elevations.length > 1 ? Math.round(ascentFromSeries(elevations)) : null,
+  };
 }
 
 function parseTCX(text) {
@@ -1024,12 +1102,43 @@ function parseTCX(text) {
   if (laps.length === 0) return null;
 
   let meters = 0, seconds = 0;
+  let hrWeightedSum = 0, hrWeightSeconds = 0;
   laps.forEach((lap) => {
     const d = lap.getElementsByTagName('DistanceMeters')[0];
     const t = lap.getElementsByTagName('TotalTimeSeconds')[0];
+    const lapSeconds = t ? parseFloat(t.textContent) || 0 : 0;
     if (d) meters += parseFloat(d.textContent) || 0;
-    if (t) seconds += parseFloat(t.textContent) || 0;
+    if (t) seconds += lapSeconds;
+
+    const avgHrEl = getByLocalName(lap, 'AverageHeartRateBpm')[0];
+    if (avgHrEl) {
+      const valEl = getByLocalName(avgHrEl, 'Value')[0];
+      if (valEl) {
+        const v = parseFloat(valEl.textContent);
+        if (!isNaN(v)) { hrWeightedSum += v * lapSeconds; hrWeightSeconds += lapSeconds; }
+      }
+    }
   });
+
+  // Höhenmeter & Herzfrequenz-Fallback aus den einzelnen Trackpoints (falls Lap-Werte fehlen)
+  const trackpoints = xml.getElementsByTagName('Trackpoint');
+  const elevations = [];
+  const pointHeartRates = [];
+  let firstTime = null;
+  for (let i = 0; i < trackpoints.length; i++) {
+    const tp = trackpoints[i];
+    const altEl = getByLocalName(tp, 'AltitudeMeters')[0];
+    if (altEl) { const v = parseFloat(altEl.textContent); if (!isNaN(v)) elevations.push(v); }
+    const hrEl = getByLocalName(tp, 'HeartRateBpm')[0];
+    if (hrEl) {
+      const valEl = getByLocalName(hrEl, 'Value')[0];
+      if (valEl) { const v = parseFloat(valEl.textContent); if (!isNaN(v)) pointHeartRates.push(v); }
+    }
+    if (!firstTime) {
+      const timeEl = getByLocalName(tp, 'Time')[0];
+      if (timeEl) firstTime = timeEl.textContent;
+    }
+  }
 
   const activityEl = xml.getElementsByTagName('Activity')[0];
   const sport = activityEl ? activityEl.getAttribute('Sport') : '';
@@ -1037,7 +1146,25 @@ function parseTCX(text) {
   const type = typeMap[sport] || 'run';
   const label = 'Garmin-Import' + (sport ? ': ' + sport : '');
 
-  return { type, km: meters / 1000, mins: Math.max(1, Math.round(seconds / 60)), label };
+  let startDate = null;
+  const idEl = activityEl ? getByLocalName(activityEl, 'Id')[0] : null;
+  const rawStart = (idEl && idEl.textContent) || (laps[0] && laps[0].getAttribute('StartTime')) || firstTime;
+  if (rawStart) {
+    const d = new Date(rawStart);
+    if (!isNaN(d.getTime())) startDate = d;
+  }
+
+  const avgHeartRate = hrWeightSeconds > 0 ? Math.round(hrWeightedSum / hrWeightSeconds) : avg(pointHeartRates);
+
+  return {
+    type,
+    km: meters / 1000,
+    mins: Math.max(1, Math.round(seconds / 60)),
+    label,
+    startDate,
+    avgHeartRate,
+    elevationGain: elevations.length > 1 ? Math.round(ascentFromSeries(elevations)) : null,
+  };
 }
 
 function handleGarminFile(event) {
@@ -1063,6 +1190,11 @@ function handleGarminFile(event) {
       alert('Aus der Datei konnten keine Distanz-/Zeitdaten gelesen werden. Ist es eine gültige GPX/TCX-Aktivitätsdatei?');
       return;
     }
+    pendingImport = {
+      date: result.startDate || new Date(),
+      avgHeartRate: result.avgHeartRate,
+      elevationGain: result.elevationGain,
+    };
     openActivityModal(result.type);
     document.getElementById('inputDescription').value = result.label;
     document.getElementById('inputDistance').value = result.km.toFixed(2);
