@@ -63,9 +63,9 @@
 
   .char-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
-  .equip-col{ display:flex; flex-direction:column; gap:10px; }
-  .equip-slot{ width:60px; height:60px; border:1px dashed var(--border); border-radius:12px; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:2px; background:var(--bg); color:var(--muted); font-size:9px; text-align:center; padding:4px; }
+  .equip-group{ border:1px solid var(--border); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:8px; background:var(--bg); }
+  .equip-slot{ width:60px; height:60px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; }
   .equip-slot .ic{ font-size:17px; opacity:.55; }
   .pixel-avatar{ image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
   .name-row{ display:flex; align-items:center; gap:6px; margin-top:6px; background:none; border:none; cursor:pointer; color:inherit; font:inherit; }
@@ -238,13 +238,13 @@
 
       <div class="card char-card">
         <div class="equip-row">
-          <div class="equip-col">
+          <div class="equip-group">
             <div class="equip-slot"><span class="ic">👕</span>Kleidung</div>
-            <div class="equip-slot"><span class="ic">❓</span>Slot 3</div>
+            <div class="equip-slot"><span class="ic">🛡️</span>Equipment</div>
           </div>
           <div id="charAvatar"></div>
-          <div class="equip-col">
-            <div class="equip-slot"><span class="ic">🛡️</span>Equipment</div>
+          <div class="equip-group">
+            <div class="equip-slot"><span class="ic">❓</span>Slot 3</div>
             <div class="equip-slot"><span class="ic">❓</span>Slot 4</div>
           </div>
         </div>
