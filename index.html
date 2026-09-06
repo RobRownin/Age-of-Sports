@@ -67,6 +67,13 @@
   .equip-slot{ width:60px; height:60px; border:1px solid var(--border); border-radius:10px; background:var(--surface); display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; }
   .equip-slot .ic{ font-size:17px; opacity:.55; }
+
+  .inv-section{ margin-bottom:4px; }
+  .inv-section-title{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; }
+  .inv-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  .inv-item-slot{ aspect-ratio:1; border:1px dashed var(--border); border-radius:10px; background:var(--surface);
+    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:16px; opacity:.5; }
+  .inv-empty-hint{ font-size:11px; color:var(--muted); margin:0 0 8px; }
   .pixel-avatar{ image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
   .name-row{ display:flex; align-items:center; gap:6px; margin-top:6px; background:none; border:none; cursor:pointer; color:inherit; font:inherit; }
   .name-row .name{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; }
@@ -279,10 +286,55 @@
       </button>
       <p class="hint">Wettkämpfe in der Arena folgen in einer späteren Version</p>
     </section>
+
+    <!-- INVENTORY -->
+    <section class="screen" id="screen-inventory">
+      <div>
+        <p class="label">Deine Sammlung</p>
+        <h1 class="title">Inventar</h1>
+      </div>
+
+      <div class="inv-section">
+        <div class="inv-section-title">👕 Kleidung</div>
+        <p class="inv-empty-hint">Noch keine Kleidungsstücke gesammelt.</p>
+        <div class="inv-grid">
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+        </div>
+      </div>
+
+      <div class="inv-section">
+        <div class="inv-section-title">🛡️ Equipment</div>
+        <p class="inv-empty-hint">Noch kein Equipment gesammelt.</p>
+        <div class="inv-grid">
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+        </div>
+      </div>
+
+      <div class="inv-section">
+        <div class="inv-section-title">🍖 Verpflegung</div>
+        <p class="inv-empty-hint">Noch keine Verpflegung gesammelt.</p>
+        <div class="inv-grid">
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+        </div>
+      </div>
+
+      <div class="inv-section">
+        <div class="inv-section-title">❓ Slot 4</div>
+        <p class="inv-empty-hint">Noch nichts gesammelt.</p>
+        <div class="inv-grid">
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <nav class="bottomnav" id="bottomnav">
     <button data-tab="character" onclick="showScreen('character')">⚔️</button>
+    <button data-tab="inventory" onclick="showScreen('inventory')">🎒</button>
     <button data-tab="activities" onclick="showScreen('activities')">🔥</button>
     <button data-tab="sleep" onclick="showScreen('sleep')">😴</button>
     <button data-tab="stats" onclick="showScreen('stats')">📊</button>
