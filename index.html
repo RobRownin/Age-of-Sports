@@ -1692,13 +1692,17 @@ if ('serviceWorker' in navigator) {
     async login(username, password) {
       const uname = normalizeUsername(username);
       const mapSnap = await getDoc(doc(db, "usernames", uname));
-      if (!mapSnap.exists()) {
-        const err = new Error("user not found");
-        err.code = "auth/user-not-found";
-        throw err;
+      if (mapSnap.exists()) {
+        const { email } = mapSnap.data();
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        return cred.user;
       }
-      const { email } = mapSnap.data();
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      // Rückwärtskompatibilität: Accounts von vor der Umstellung auf echte E-Mails
+      // wurden mit einer erfundenen Adresse angelegt und haben noch keine usernames-Zuordnung.
+      const legacyEmail = uname + "@ageofsports.app";
+      const cred = await signInWithEmailAndPassword(auth, legacyEmail, password);
+      // Zuordnung nachträglich anlegen, damit künftige Logins den regulären Weg nehmen
+      await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: legacyEmail });
       return cred.user;
     },
     async logout() {
