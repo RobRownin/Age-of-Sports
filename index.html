@@ -23,7 +23,7 @@
   .wordmark .accent{ font-family:'Cinzel',serif; color:var(--gold); font-weight:600; }
   .divider{ height:2px; margin:0 32px 6px; background:linear-gradient(90deg, transparent, var(--gold), transparent); opacity:.7; }
 
-  main{ flex:1; overflow-y:auto; padding-bottom:104px; -webkit-overflow-scrolling:touch; }
+  main{ flex:1; overflow-y:auto; padding-bottom:24px; -webkit-overflow-scrolling:touch; }
   .screen{ padding:20px; display:none; flex-direction:column; gap:12px; }
   .screen.active{ display:flex; }
 
@@ -90,11 +90,17 @@
   .duel-btn{ display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; width:100%; cursor:pointer; color:var(--text); font:inherit; }
   .duel-btn .left{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
 
-  nav.bottomnav{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:2px;
-    background:rgba(26,20,14,.95); border:1px solid var(--border); border-radius:999px; padding:8px; box-shadow:0 10px 30px rgba(0,0,0,.55); backdrop-filter:blur(6px); }
-  nav.bottomnav button{ display:flex; align-items:center; gap:6px; border:none; background:transparent; border-radius:999px;
-    padding:9px 11px; color:var(--muted); cursor:pointer; font-size:15px; }
-  nav.bottomnav button.active{ background:var(--gold); color:var(--bg); padding:9px 15px; font-weight:600; font-size:12px; }
+  .hamburger-btn{ position:absolute; top:18px; left:16px; background:none; border:none; color:var(--text); font-size:20px; cursor:pointer; z-index:5; line-height:1; padding:4px; }
+  .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:90; display:none; }
+  .drawer-overlay.open{ display:block; }
+  .drawer{ position:fixed; top:0; left:0; height:100%; width:230px; background:var(--surface); border-right:1px solid var(--border);
+    padding:24px 16px; box-sizing:border-box; transform:translateX(-100%); transition:transform .25s ease; z-index:95; display:flex; flex-direction:column; gap:4px; }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-title{ font-family:'Cinzel','Times New Roman',serif; color:var(--gold); font-size:13px; letter-spacing:.15em; text-transform:uppercase; margin:0 0 14px 4px; }
+  .drawer-item{ display:flex; align-items:center; gap:12px; background:none; border:none; color:var(--muted); font-size:14px;
+    padding:11px 10px; border-radius:10px; cursor:pointer; text-align:left; font-family:inherit; }
+  .drawer-item .ic{ font-size:17px; width:22px; text-align:center; }
+  .drawer-item.active{ background:var(--gold); color:var(--bg); font-weight:600; }
 
   /* ---- Add-activity bottom sheet ---- */
   .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; justify-content:center; z-index:50; }
@@ -179,8 +185,19 @@
 </div>
 
 <div class="app" id="appRoot" style="display:none;">
+  <button class="hamburger-btn" onclick="openDrawer()">☰</button>
   <button class="logout-btn" onclick="logout()">Abmelden</button>
 
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawerMenu">
+    <p class="drawer-title">Navigation</p>
+    <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Charakter</button>
+    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventar</button>
+    <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Sport</button>
+    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Schlaf</button>
+    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Statistik</button>
+    <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Akademie</button>
+  </nav>
 
   <header>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -351,15 +368,6 @@
       <p class="hint">Mehrere Charaktere pro Account folgen in einer späteren Version.</p>
     </section>
   </main>
-
-  <nav class="bottomnav" id="bottomnav">
-    <button data-tab="character" onclick="showScreen('character')">⚔️</button>
-    <button data-tab="inventory" onclick="showScreen('inventory')">🎒</button>
-    <button data-tab="activities" onclick="showScreen('activities')">🔥</button>
-    <button data-tab="sleep" onclick="showScreen('sleep')">😴</button>
-    <button data-tab="stats" onclick="showScreen('stats')">📊</button>
-    <button data-tab="academy" onclick="showScreen('academy')">🏛️</button>
-  </nav>
 
   <!-- ADD/EDIT ACTIVITY SHEET -->
   <div class="overlay" id="activityOverlay" onclick="if(event.target===this) closeActivityModal()">
@@ -796,9 +804,20 @@ function renderCharacterAndHero() {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
-  document.querySelectorAll('#bottomnav button').forEach(b => {
+  document.querySelectorAll('.drawer-item').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
+  closeDrawer();
+}
+
+function openDrawer() {
+  document.getElementById('drawerMenu').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawerMenu').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
 }
 
 function startEditName() {
