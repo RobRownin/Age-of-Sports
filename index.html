@@ -380,20 +380,9 @@
         <h1 class="title">Rangliste</h1>
       </div>
 
-      <div class="card" style="display:flex;align-items:center;gap:12px;">
-        <div style="width:28px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#?</div>
-        <div id="leaderboardAvatar"></div>
-        <div style="flex:1;min-width:0;">
-          <div id="leaderboardCharName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
-          <div id="leaderboardCharLevel" class="label" style="margin-top:2px;">Level 1</div>
-        </div>
-        <div style="text-align:right;">
-          <div id="leaderboardScore" style="font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--gold);font-weight:600;">0</div>
-          <div class="label" style="margin-top:1px;">Punkte</div>
-        </div>
+      <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;">
+        <p class="hint">Lädt…</p>
       </div>
-
-      <p class="hint">Die vollständige Rangliste mit allen Accounts folgt in einer späteren Version.</p>
     </section>
   </main>
 
@@ -526,6 +515,48 @@ function persist() {
     activities: ACTIVITIES,
     week: WEEK,
   }).catch((e) => console.error('Speichern fehlgeschlagen:', e));
+  syncLeaderboard();
+}
+
+function syncLeaderboard() {
+  if (!currentUid || !window.fb || !window.fb.saveLeaderboardEntry) return;
+  const { level } = levelFromKm(lifetimeKm());
+  window.fb.saveLeaderboardEntry(currentUid, {
+    characterName: characterName,
+    level: level,
+    score: computeScore(),
+  }).catch((e) => console.error('Rangliste-Update fehlgeschlagen:', e));
+}
+
+async function loadLeaderboard() {
+  const listEl = document.getElementById('leaderboardList');
+  listEl.innerHTML = '<p class="hint">Lädt…</p>';
+  if (!window.fb || !window.fb.fetchLeaderboard) {
+    listEl.innerHTML = '<p class="hint">Rangliste aktuell nicht verfügbar.</p>';
+    return;
+  }
+  try {
+    const entries = await window.fb.fetchLeaderboard();
+    if (!entries || entries.length === 0) {
+      listEl.innerHTML = '<p class="hint">Noch keine Einträge.</p>';
+      return;
+    }
+    listEl.innerHTML = entries.map((e, i) => {
+      const isMe = e.uid === currentUid;
+      return `
+      <div class="card" style="display:flex;align-items:center;gap:12px;${isMe ? 'border-color:var(--gold);' : ''}">
+        <div style="width:26px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#${i + 1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.characterName || '???'}${isMe ? ' (Du)' : ''}</div>
+          <div class="label" style="margin-top:1px;">Level ${e.level || 1}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600;">${e.score || 0}</div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = '<p class="hint">Rangliste konnte nicht geladen werden.</p>';
+  }
 }
 
 // ---------- Helpers ----------
@@ -847,11 +878,6 @@ function renderCharacterAndHero() {
   document.getElementById('academyCharName').textContent = characterName;
   document.getElementById('academyCharLevel').textContent = 'Level ' + level;
 
-  document.getElementById('leaderboardAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
-  document.getElementById('leaderboardCharName').textContent = characterName;
-  document.getElementById('leaderboardCharLevel').textContent = 'Level ' + level;
-  document.getElementById('leaderboardScore').textContent = computeScore();
-
   renderAttrs(level);
 }
 
@@ -862,6 +888,7 @@ function showScreen(name) {
     b.classList.toggle('active', b.dataset.tab === name);
   });
   closeDrawer();
+  if (name === 'leaderboard') loadLeaderboard();
 }
 
 function openDrawer() {
@@ -1249,6 +1276,7 @@ window.handleAuthState = async function (user) {
     renderActivities();
     renderStats();
     renderCharacterAndHero();
+    syncLeaderboard();
     showScreen('character');
   } else {
     currentUid = null;
@@ -1477,7 +1505,7 @@ if ('serviceWorker' in navigator) {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc
+    getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1526,6 +1554,14 @@ if ('serviceWorker' in navigator) {
     },
     async saveUserData(uid, data) {
       await setDoc(doc(db, "users", uid), data, { merge: true });
+    },
+    async saveLeaderboardEntry(uid, data) {
+      await setDoc(doc(db, "leaderboard", uid), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    async fetchLeaderboard() {
+      const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
     },
   };
 
