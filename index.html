@@ -778,7 +778,8 @@ function renderAttrs(level) {
   const attrs = [
     { name: 'Ausdauer', value: Math.min(99, 20 + level * 6) },
     { name: 'Tempo', value: Math.min(99, 15 + level * 5) },
-    { name: 'Kraft', value: Math.min(99, 10 + level * 4) },
+    { name: 'Stärke', value: Math.min(99, 10 + level * 4) },
+    { name: 'Willenskraft', value: Math.min(99, 12 + level * 4) },
   ];
   document.getElementById('attrCard').innerHTML = attrs.map(a => `
     <div class="attr-row-wrap">
