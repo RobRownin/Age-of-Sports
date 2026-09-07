@@ -22,6 +22,7 @@
   .wordmark{ font-size:14px; letter-spacing:.18em; text-transform:uppercase; }
   .wordmark .accent{ font-family:'Cinzel',serif; color:var(--gold); font-weight:600; }
   .divider{ height:2px; margin:0 32px 6px; background:linear-gradient(90deg, transparent, var(--gold), transparent); opacity:.7; }
+  .sticky-header{ position:sticky; top:0; z-index:8; background:var(--bg); }
 
   main{ flex:1; overflow-y:auto; padding-bottom:24px; -webkit-overflow-scrolling:touch; }
   .screen{ padding:20px; display:none; flex-direction:column; gap:12px; }
@@ -90,7 +91,7 @@
   .duel-btn{ display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; width:100%; cursor:pointer; color:var(--text); font:inherit; }
   .duel-btn .left{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
 
-  .hamburger-btn{ position:absolute; top:18px; left:16px; background:none; border:none; color:var(--text); font-size:20px; cursor:pointer; z-index:5; line-height:1; padding:4px; }
+  .hamburger-btn{ position:fixed; top:18px; left:16px; background:none; border:none; color:var(--text); font-size:20px; cursor:pointer; z-index:9; line-height:1; padding:4px; }
   .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:90; display:none; }
   .drawer-overlay.open{ display:block; }
   .drawer{ position:fixed; top:0; left:0; height:100%; width:230px; background:var(--surface); border-right:1px solid var(--border);
@@ -135,7 +136,7 @@
   .auth-tab{ flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; }
   .auth-tab.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
   .auth-error{ color:var(--red); font-size:12px; text-align:center; margin:0; }
-  .logout-btn{ position:absolute; top:20px; right:16px; background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; z-index:5; }
+  .logout-btn{ position:fixed; top:20px; right:16px; background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; z-index:9; }
 
   .time-select{ background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 6px; font-size:14px; font-family:'JetBrains Mono', monospace; outline:none; flex:1; text-align:center; }
   .time-select:focus{ border-color:var(--gold); }
@@ -199,14 +200,16 @@
     <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Akademie</button>
   </nav>
 
-  <header>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-    </svg>
-    <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
-  </header>
-  <div class="divider"></div>
+  <div class="sticky-header">
+    <header>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+    </header>
+    <div class="divider"></div>
+  </div>
 
   <main>
     <!-- ACTIVITIES -->
