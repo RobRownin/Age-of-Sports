@@ -187,7 +187,6 @@
 
 <div class="app" id="appRoot" style="display:none;">
   <button class="hamburger-btn" onclick="openDrawer()">☰</button>
-  <button class="logout-btn" onclick="logout()">Abmelden</button>
 
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawerMenu">
@@ -198,6 +197,7 @@
     <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Schlaf</button>
     <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Statistik</button>
     <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Akademie</button>
+    <button class="drawer-item" style="margin-top:auto;border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Abmelden</button>
   </nav>
 
   <div class="sticky-header">
