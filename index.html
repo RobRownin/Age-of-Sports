@@ -387,6 +387,10 @@
           <div id="leaderboardCharName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
           <div id="leaderboardCharLevel" class="label" style="margin-top:2px;">Level 1</div>
         </div>
+        <div style="text-align:right;">
+          <div id="leaderboardScore" style="font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--gold);font-weight:600;">0</div>
+          <div class="label" style="margin-top:1px;">Punkte</div>
+        </div>
       </div>
 
       <p class="hint">Die vollständige Rangliste mit allen Accounts folgt in einer späteren Version.</p>
@@ -494,6 +498,26 @@ let currentUid = null;
 
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
 function lifetimeKm() { return totalKm(ACTIVITIES); }
+
+// Erste Version der Punkteformel für die Rangliste - Faktoren: Distanz, Dauer,
+// Wiederholungen, Herzfrequenz (Intensitäts-Bonus), Höhenmeter und Schlaf.
+// Gewichtungen sind ein erster Entwurf und lassen sich jederzeit anpassen.
+function computeScore() {
+  let score = 0;
+  ACTIVITIES.forEach((a) => {
+    if (a.type === 'sleep') {
+      const hours = (a.mins || 0) / 60;
+      score += Math.min(hours, 9) * 5; // gedeckelt bei 9h, damit Über-Schlafen nicht überproportional zählt
+    } else {
+      score += (a.km || 0) * 10;
+      score += (a.mins || 0) * 1;
+      score += (a.reps || 0) * 0.5;
+      if (a.avgHeartRate) score += a.avgHeartRate * 0.3;
+      if (a.elevationGain) score += a.elevationGain * 0.2;
+    }
+  });
+  return Math.round(score);
+}
 
 function persist() {
   if (!currentUid || !window.fb) return;
@@ -826,6 +850,7 @@ function renderCharacterAndHero() {
   document.getElementById('leaderboardAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
   document.getElementById('leaderboardCharName').textContent = characterName;
   document.getElementById('leaderboardCharLevel').textContent = 'Level ' + level;
+  document.getElementById('leaderboardScore').textContent = computeScore();
 
   renderAttrs(level);
 }
