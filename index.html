@@ -198,6 +198,7 @@
     <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Schlaf</button>
     <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Statistik</button>
     <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Akademie</button>
+    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Rangliste</button>
     <button class="drawer-item" style="margin-top:auto;border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Abmelden</button>
   </nav>
 
@@ -370,6 +371,25 @@
 
       <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Neuen Charakter erstellen</button>
       <p class="hint">Mehrere Charaktere pro Account folgen in einer späteren Version.</p>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section class="screen" id="screen-leaderboard">
+      <div>
+        <p class="label">Wer führt?</p>
+        <h1 class="title">Rangliste</h1>
+      </div>
+
+      <div class="card" style="display:flex;align-items:center;gap:12px;">
+        <div style="width:28px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#?</div>
+        <div id="leaderboardAvatar"></div>
+        <div style="flex:1;min-width:0;">
+          <div id="leaderboardCharName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
+          <div id="leaderboardCharLevel" class="label" style="margin-top:2px;">Level 1</div>
+        </div>
+      </div>
+
+      <p class="hint">Die vollständige Rangliste mit allen Accounts folgt in einer späteren Version.</p>
     </section>
   </main>
 
@@ -802,6 +822,10 @@ function renderCharacterAndHero() {
   document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
   document.getElementById('academyCharName').textContent = characterName;
   document.getElementById('academyCharLevel').textContent = 'Level ' + level;
+
+  document.getElementById('leaderboardAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
+  document.getElementById('leaderboardCharName').textContent = characterName;
+  document.getElementById('leaderboardCharLevel').textContent = 'Level ' + level;
 
   renderAttrs(level);
 }
