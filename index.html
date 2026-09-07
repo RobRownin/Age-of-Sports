@@ -330,6 +330,26 @@
         </div>
       </div>
     </section>
+
+    <!-- ACADEMY -->
+    <section class="screen" id="screen-academy">
+      <div>
+        <p class="label">Deine Krieger</p>
+        <h1 class="title">Akademie</h1>
+      </div>
+
+      <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('character')">
+        <div id="academyAvatar"></div>
+        <div style="flex:1;min-width:0;">
+          <div id="academyCharName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
+          <div id="academyCharLevel" class="label" style="margin-top:2px;">Level 1</div>
+        </div>
+        <span class="chevron">›</span>
+      </button>
+
+      <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Neuen Charakter erstellen</button>
+      <p class="hint">Mehrere Charaktere pro Account folgen in einer späteren Version.</p>
+    </section>
   </main>
 
   <nav class="bottomnav" id="bottomnav">
@@ -338,6 +358,7 @@
     <button data-tab="activities" onclick="showScreen('activities')">🔥</button>
     <button data-tab="sleep" onclick="showScreen('sleep')">😴</button>
     <button data-tab="stats" onclick="showScreen('stats')">📊</button>
+    <button data-tab="academy" onclick="showScreen('academy')">🏛️</button>
   </nav>
 
   <!-- ADD/EDIT ACTIVITY SHEET -->
@@ -764,6 +785,10 @@ function renderCharacterAndHero() {
   document.getElementById('charLevel').textContent = 'Level ' + level;
   document.getElementById('charRemain').textContent = `noch ${remaining} km bis Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
+
+  document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
+  document.getElementById('academyCharName').textContent = characterName;
+  document.getElementById('academyCharLevel').textContent = 'Level ' + level;
 
   renderAttrs(level);
 }
