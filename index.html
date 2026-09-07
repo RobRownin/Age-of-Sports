@@ -175,6 +175,10 @@
       <label>Benutzername</label>
       <input id="authUsername" autocomplete="username" />
     </div>
+    <div class="field" id="authEmailField" style="display:none;">
+      <label>E-Mail-Adresse</label>
+      <input id="authEmail" type="email" autocomplete="email" placeholder="für Passwort-Zurücksetzen" />
+    </div>
     <div class="field">
       <label>Passwort</label>
       <input id="authPassword" type="password" autocomplete="current-password" />
@@ -182,6 +186,7 @@
 
     <p class="auth-error" id="authError" style="display:none;"></p>
     <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Anmelden</button>
+    <button class="drawer-item" id="forgotPasswordBtn" style="justify-content:center;" onclick="forgotPassword()">Passwort vergessen?</button>
     <p class="hint" id="authHint">Noch kein Konto? Oben auf "Registrieren" tippen.</p>
   </div>
 </div>
@@ -192,6 +197,7 @@
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawerMenu">
     <p class="drawer-title">Navigation</p>
+    <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
     <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Charakter</button>
     <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventar</button>
     <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Sport</button>
@@ -374,6 +380,44 @@
     </section>
 
     <!-- LEADERBOARD -->
+    <!-- ACCOUNT -->
+    <section class="screen" id="screen-account">
+      <div>
+        <p class="label">Einstellungen</p>
+        <h1 class="title">Account</h1>
+      </div>
+
+      <div class="card">
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Benutzername</label>
+        <p id="accountUsername" style="margin:0 0 4px;font-family:'Cinzel','Times New Roman',serif;font-weight:600;">Leonidas</p>
+        <p class="hint" style="text-align:left;margin:0;">Der Benutzername kann aktuell nicht geändert werden.</p>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:10px;">
+          <label>E-Mail-Adresse</label>
+          <input id="accountEmail" type="email" placeholder="deine@email.de" />
+        </div>
+        <p class="auth-error" id="accountEmailError" style="display:none;"></p>
+        <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
+        <button class="btn-primary" onclick="saveAccountEmail()">E-Mail speichern</button>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:10px;">
+          <label>Aktuelles Passwort</label>
+          <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Neues Passwort</label>
+          <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="mind. 6 Zeichen" />
+        </div>
+        <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
+        <p class="hint" id="accountPasswordSuccess" style="display:none;color:var(--gold);"></p>
+        <button class="btn-primary" onclick="saveAccountPassword()">Passwort ändern</button>
+      </div>
+    </section>
+
     <section class="screen" id="screen-leaderboard">
       <div>
         <p class="label">Wer führt?</p>
@@ -889,6 +933,7 @@ function showScreen(name) {
   });
   closeDrawer();
   if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'account') loadAccountScreen();
 }
 
 function openDrawer() {
@@ -1195,6 +1240,8 @@ function setAuthMode(mode) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
+  document.getElementById('authEmailField').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('forgotPasswordBtn').style.display = mode === 'login' ? 'flex' : 'none';
   document.getElementById('authHint').textContent = mode === 'login'
     ? 'Noch kein Konto? Oben auf "Registrieren" tippen.'
     : 'Schon registriert? Oben auf "Anmelden" tippen.';
@@ -1209,20 +1256,27 @@ function showAuthError(msg) {
 
 function mapFirebaseError(e) {
   const code = e && e.code ? e.code : '';
-  if (code.includes('email-already-in-use')) return 'Dieser Benutzername ist schon vergeben.';
+  if (code.includes('username-already-in-use')) return 'Dieser Benutzername ist schon vergeben.';
+  if (code.includes('email-already-in-use')) return 'Diese E-Mail-Adresse wird bereits verwendet.';
   if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Benutzername oder Passwort falsch.';
   if (code.includes('weak-password')) return 'Passwort ist zu schwach (mind. 6 Zeichen).';
-  if (code.includes('invalid-email')) return 'Benutzername enthält ungültige Zeichen.';
+  if (code.includes('invalid-email')) return 'Bitte eine gültige E-Mail-Adresse angeben.';
+  if (code.includes('requires-recent-login')) return 'Bitte aktuelles Passwort zur Bestätigung eingeben.';
   if (code.includes('network-request-failed')) return 'Keine Verbindung – bitte Internet prüfen.';
   return 'Es ist ein Fehler aufgetreten (' + (code || (e && e.message) || 'unbekannt') + ').';
 }
 
 async function submitAuth() {
   const username = document.getElementById('authUsername').value.trim();
+  const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   document.getElementById('authError').style.display = 'none';
 
   if (username.length < 3) { showAuthError('Benutzername muss mind. 3 Zeichen haben.'); return; }
+  if (authMode === 'register' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAuthError('Bitte eine gültige E-Mail-Adresse angeben (für Passwort-Zurücksetzen).');
+    return;
+  }
   if (password.length < 6) { showAuthError('Passwort muss mind. 6 Zeichen haben.'); return; }
   if (!window.fb) { showAuthError('Verbindung zu Firebase noch nicht bereit, bitte kurz warten und erneut versuchen.'); return; }
 
@@ -1230,7 +1284,7 @@ async function submitAuth() {
   btn.disabled = true;
   try {
     if (authMode === 'register') {
-      await window.fb.register(username, password);
+      await window.fb.register(username, email, password);
     } else {
       await window.fb.login(username, password);
     }
@@ -1246,8 +1300,86 @@ async function submitAuth() {
   }
 }
 
+async function forgotPassword() {
+  const username = document.getElementById('authUsername').value.trim();
+  document.getElementById('authError').style.display = 'none';
+  if (username.length < 3) { showAuthError('Bitte oben zuerst deinen Benutzernamen eingeben.'); return; }
+  if (!window.fb) { showAuthError('Verbindung zu Firebase noch nicht bereit, bitte kurz warten.'); return; }
+  try {
+    await window.fb.sendPasswordReset(username);
+  } catch (e) {
+    console.error(e);
+  }
+  showAuthError('Falls dieser Benutzername existiert, wurde eine E-Mail mit einem Link zum Zurücksetzen verschickt.');
+}
+
 function logout() {
   if (window.fb) window.fb.logout();
+}
+
+let currentUsername = null;
+let currentEmail = null;
+
+function loadAccountScreen() {
+  document.getElementById('accountUsername').textContent = currentUsername || '–';
+  document.getElementById('accountEmail').value = currentEmail || '';
+  document.getElementById('accountCurrentPassword').value = '';
+  document.getElementById('accountNewPassword').value = '';
+  document.getElementById('accountEmailError').style.display = 'none';
+  document.getElementById('accountEmailSuccess').style.display = 'none';
+  document.getElementById('accountPasswordError').style.display = 'none';
+  document.getElementById('accountPasswordSuccess').style.display = 'none';
+}
+
+async function saveAccountEmail() {
+  const newEmail = document.getElementById('accountEmail').value.trim();
+  const errEl = document.getElementById('accountEmailError');
+  const okEl = document.getElementById('accountEmailSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    errEl.textContent = 'Bitte eine gültige E-Mail-Adresse angeben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newEmail === currentEmail) return;
+
+  const currentPassword = prompt('Bitte aktuelles Passwort zur Bestätigung eingeben:');
+  if (!currentPassword) return;
+
+  try {
+    await window.fb.updateAccountEmail(currentUid, currentUsername, newEmail, currentPassword);
+    currentEmail = newEmail;
+    okEl.textContent = 'E-Mail-Adresse aktualisiert.';
+    okEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = mapFirebaseError(e);
+    errEl.style.display = 'block';
+  }
+}
+
+async function saveAccountPassword() {
+  const currentPassword = document.getElementById('accountCurrentPassword').value;
+  const newPassword = document.getElementById('accountNewPassword').value;
+  const errEl = document.getElementById('accountPasswordError');
+  const okEl = document.getElementById('accountPasswordSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!currentPassword) { errEl.textContent = 'Bitte aktuelles Passwort eingeben.'; errEl.style.display = 'block'; return; }
+  if (newPassword.length < 6) { errEl.textContent = 'Neues Passwort muss mind. 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
+
+  try {
+    await window.fb.updateAccountPassword(currentPassword, newPassword);
+    document.getElementById('accountCurrentPassword').value = '';
+    document.getElementById('accountNewPassword').value = '';
+    okEl.textContent = 'Passwort geändert.';
+    okEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = mapFirebaseError(e);
+    errEl.style.display = 'block';
+  }
 }
 
 // Wird vom Firebase-Modul bei jeder Änderung des Login-Status aufgerufen
@@ -1268,6 +1400,8 @@ window.handleAuthState = async function (user) {
     characterName = data.characterName || 'Leonidas';
     ACTIVITIES = data.activities || [];
     WEEK = data.week || EMPTY_WEEK();
+    currentUsername = data.username || user.email;
+    currentEmail = data.email || user.email;
 
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('appRoot').style.display = 'flex';
@@ -1502,7 +1636,8 @@ if ('serviceWorker' in navigator) {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+    sendPasswordResetEmail, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit
@@ -1521,17 +1656,29 @@ if ('serviceWorker' in navigator) {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const FAKE_DOMAIN = "@ageofsports.app";
-  function usernameToEmail(username) {
-    return username.trim().toLowerCase().replace(/\s+/g, "_") + FAKE_DOMAIN;
+  function normalizeUsername(username) {
+    return username.trim().toLowerCase().replace(/\s+/g, "_");
+  }
+
+  async function reauth(currentPassword) {
+    const user = auth.currentUser;
+    const cred = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, cred);
   }
 
   window.fb = {
-    async register(username, password) {
-      const email = usernameToEmail(username);
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+    async register(username, email, password) {
+      const uname = normalizeUsername(username);
+      const existing = await getDoc(doc(db, "usernames", uname));
+      if (existing.exists()) {
+        const err = new Error("username taken");
+        err.code = "auth/username-already-in-use";
+        throw err;
+      }
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setDoc(doc(db, "users", cred.user.uid), {
         username: username.trim(),
+        email: email.trim(),
         characterName: "Leonidas",
         activities: [],
         week: [
@@ -1539,10 +1686,19 @@ if ('serviceWorker' in navigator) {
           { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
         ],
       });
+      await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: email.trim() });
       return cred.user;
     },
     async login(username, password) {
-      const cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
+      const uname = normalizeUsername(username);
+      const mapSnap = await getDoc(doc(db, "usernames", uname));
+      if (!mapSnap.exists()) {
+        const err = new Error("user not found");
+        err.code = "auth/user-not-found";
+        throw err;
+      }
+      const { email } = mapSnap.data();
+      const cred = await signInWithEmailAndPassword(auth, email, password);
       return cred.user;
     },
     async logout() {
@@ -1562,6 +1718,23 @@ if ('serviceWorker' in navigator) {
       const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
       const snap = await getDocs(q);
       return snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+    },
+    async sendPasswordReset(username) {
+      const uname = normalizeUsername(username);
+      const mapSnap = await getDoc(doc(db, "usernames", uname));
+      if (!mapSnap.exists()) return; // absichtlich kein Fehler, um Existenz nicht zu verraten
+      const { email } = mapSnap.data();
+      await sendPasswordResetEmail(auth, email);
+    },
+    async updateAccountEmail(uid, username, newEmail, currentPassword) {
+      await reauth(currentPassword);
+      await updateEmail(auth.currentUser, newEmail.trim());
+      await setDoc(doc(db, "users", uid), { email: newEmail.trim() }, { merge: true });
+      await setDoc(doc(db, "usernames", normalizeUsername(username)), { email: newEmail.trim() }, { merge: true });
+    },
+    async updateAccountPassword(currentPassword, newPassword) {
+      await reauth(currentPassword);
+      await updatePassword(auth.currentUser, newPassword);
     },
   };
 
