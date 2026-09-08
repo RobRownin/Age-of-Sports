@@ -940,6 +940,7 @@ function showScreen(name) {
     b.classList.toggle('active', b.dataset.tab === name);
   });
   closeDrawer();
+  localStorage.setItem('aos_lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
   if (name === 'account') loadAccountScreen();
 }
@@ -1459,7 +1460,9 @@ window.handleAuthState = async function (user) {
     renderStats();
     renderCharacterAndHero();
     syncLeaderboard();
-    showScreen('character');
+    const lastScreen = localStorage.getItem('aos_lastScreen');
+    const validScreen = lastScreen && document.getElementById('screen-' + lastScreen);
+    showScreen(validScreen ? lastScreen : 'character');
   } else {
     currentUid = null;
     document.getElementById('authScreen').style.display = 'flex';
