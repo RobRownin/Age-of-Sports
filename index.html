@@ -505,10 +505,11 @@
         <div id="viewExtraRows"></div>
       </div>
 
-      <div class="card" style="text-align:center;">
-        <p class="label">Leaderboard Points</p>
+      <button class="card" style="text-align:center;width:100%;border:1px solid var(--border);cursor:pointer;" onclick="toggleScoreBreakdown()">
+        <p class="label">Leaderboard Points <span style="opacity:.6;">(tap for breakdown)</span></p>
         <p class="stat-value" id="viewScore" style="color:var(--gold);font-size:28px;">0</p>
-      </div>
+        <div id="viewScoreBreakdown" style="display:none;text-align:left;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
+      </button>
 
       <div style="display:flex;gap:8px;">
         <button class="btn-primary" style="flex:1;" onclick="editFromView()">Edit</button>
@@ -633,6 +634,48 @@ function computeActivityScore(a) {
   if (a.avgHeartRate) score += a.avgHeartRate * 0.3;
   if (a.elevationGain) score += a.elevationGain * 0.2;
   return Math.round(score);
+}
+
+function computeActivityScoreBreakdown(a) {
+  const rows = [];
+  if (a.type === 'sleep') {
+    const hours = (a.mins || 0) / 60;
+    const capped = Math.min(hours, 9);
+    rows.push({
+      label: 'Sleep',
+      calc: `${capped.toFixed(1)}h × 5${hours > 9 ? ' (capped at 9h)' : ''}`,
+      value: capped * 5,
+    });
+    return rows;
+  }
+  if (a.km) rows.push({ label: 'Distance', calc: `${a.km.toFixed(1)} km × 10`, value: a.km * 10 });
+  if (a.mins) rows.push({ label: 'Duration', calc: `${a.mins} min × 1`, value: a.mins * 1 });
+  if (a.reps) rows.push({ label: 'Reps', calc: `${a.reps} reps × 0.5`, value: a.reps * 0.5 });
+  if (a.avgHeartRate) rows.push({ label: 'Heart Rate', calc: `${a.avgHeartRate} bpm × 0.3`, value: a.avgHeartRate * 0.3 });
+  if (a.elevationGain) rows.push({ label: 'Elevation Gain', calc: `${a.elevationGain} hm × 0.2`, value: a.elevationGain * 0.2 });
+  return rows;
+}
+
+function toggleScoreBreakdown() {
+  const el = document.getElementById('viewScoreBreakdown');
+  const a = ACTIVITIES[viewingIndex];
+  if (!a) return;
+
+  if (el.style.display === 'block') {
+    el.style.display = 'none';
+    return;
+  }
+
+  const rows = computeActivityScoreBreakdown(a);
+  el.innerHTML = rows.map(r => `
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:3px 0;">
+      <span>${r.label}: ${r.calc}</span>
+      <span style="color:var(--text);font-family:'JetBrains Mono',monospace;">${r.value.toFixed(1)}</span>
+    </div>`).join('')
+    + `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold);margin:6px 0 0;padding-top:6px;border-top:1px solid var(--border);font-weight:600;">
+        <span>Total (rounded)</span><span style="font-family:'JetBrains Mono',monospace;">${computeActivityScore(a)}</span>
+      </div>`;
+  el.style.display = 'block';
 }
 
 function computeScore() {
@@ -1189,6 +1232,7 @@ function renderViewModal(index) {
   }
 
   document.getElementById('viewScore').textContent = computeActivityScore(a);
+  document.getElementById('viewScoreBreakdown').style.display = 'none';
 
   document.getElementById('viewPrevBtn').disabled = viewPos <= 0;
   document.getElementById('viewNextBtn').disabled = viewPos < 0 || viewPos >= viewContext.length - 1;
