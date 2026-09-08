@@ -290,6 +290,9 @@
       <div class="card">
         <p class="label" id="chartTitle" style="margin-bottom:4px;">Kilometers per Day</p>
         <div class="chart-row" id="chartRow" style="overflow-x:auto;"></div>
+        <p class="hint" id="statsMonthNote" style="display:none;text-align:left;margin-top:10px;">
+          Weeks run Monday–Sunday. The monthly total above only counts days from the 1st to the last day of the calendar month, so the first/last week shown here may extend slightly beyond it.
+        </p>
       </div>
     </section>
 
@@ -1206,7 +1209,7 @@ function buildChartBuckets(type, offset, list) {
       const lastDay = new Date(e.getFullYear(), e.getMonth(), e.getDate() - 1);
       const label = (s.getDate() === lastDay.getDate() && s.getMonth() === lastDay.getMonth())
         ? `${MONTH_ABBR[s.getMonth()]} ${s.getDate()}`
-        : `${MONTH_ABBR[s.getMonth()]} ${s.getDate()}<br>${MONTH_ABBR[lastDay.getMonth()]} ${lastDay.getDate()}`;
+        : `${MONTH_ABBR[s.getMonth()]} ${s.getDate()} -<br>${MONTH_ABBR[lastDay.getMonth()]} ${lastDay.getDate()}`;
       buckets.push({ label, start: s, end: e, km: 0 });
       cursor = e;
     }
@@ -1288,6 +1291,7 @@ function renderStats() {
     ? periodLabels[statsPeriodType]
     : 'Selected Period';
   document.getElementById('chartTitle').textContent = chartTitles[statsPeriodType];
+  document.getElementById('statsMonthNote').style.display = statsPeriodType === 'month' ? 'block' : 'none';
   document.getElementById('statsPeriodLabel').textContent = formatPeriodLabel(statsPeriodType, statsPeriodOffset);
   document.getElementById('statsPeriodNextBtn').disabled = statsPeriodOffset >= 0;
 
