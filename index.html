@@ -1560,6 +1560,9 @@ function setupDrawerSwipeNav() {
     // Während ein Aktivitäts-Dialog offen ist, soll dessen eigene Wisch-Navigation (vor/zurück)
     // nicht mit dem Menü-Öffnen kollidieren
     if (e.target.closest && e.target.closest('.overlay.open')) { tracking = false; return; }
+    // Der Statistik-Reiter hat seine eigene Wisch-Navigation (Zeitraum vor/zurück) - dort soll
+    // ein Wisch niemals zusätzlich das Menü öffnen
+    if (e.target.closest && e.target.closest('#screen-stats')) { tracking = false; return; }
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     tracking = true;
