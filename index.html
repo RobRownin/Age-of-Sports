@@ -276,6 +276,12 @@
         <h1 class="title">Active Athlete</h1>
       </div>
 
+      <div class="field" style="margin-bottom:2px;">
+        <label>Switch Athlete</label>
+        <select id="athleteSelect" onchange="switchActiveAthlete(this.value)"
+          style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;"></select>
+      </div>
+
       <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
@@ -366,17 +372,9 @@
         <h1 class="title">Gymnasium</h1>
       </div>
 
-      <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('athlete')">
-        <div id="gymnasiumAvatar"></div>
-        <div style="flex:1;min-width:0;">
-          <div id="gymnasiumAthleteName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
-          <div id="gymnasiumAthleteLevel" class="label" style="margin-top:2px;">Level 1</div>
-        </div>
-        <span class="chevron">›</span>
-      </button>
+      <div id="gymnasiumList" style="display:flex;flex-direction:column;gap:8px;"></div>
 
-      <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Create New Athlete</button>
-      <p class="hint">Multiple athletes per account are coming in a future version.</p>
+      <button class="btn-primary" onclick="createNewAthlete()">+ Create New Athlete</button>
     </section>
 
     <!-- STADIUM -->
@@ -631,6 +629,87 @@ let WEEK = EMPTY_WEEK();
 let athleteName = "Leonidas";
 let currentUid = null;
 
+// Multi-athlete state: `athletes` is the full roster, `activeAthleteId` marks which one is
+// currently loaded into athleteName/ACTIVITIES/WEEK above.
+let athletes = [];
+let activeAthleteId = null;
+
+function makeAthleteId() {
+  return 'athlete_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+// Writes the in-memory working state (athleteName/ACTIVITIES/WEEK) back into the matching
+// entry of the `athletes` roster, so it's included next time we persist to Firestore.
+function syncActiveAthleteIntoRoster() {
+  const entry = athletes.find((a) => a.id === activeAthleteId);
+  if (entry) {
+    entry.name = athleteName;
+    entry.activities = ACTIVITIES;
+    entry.week = WEEK;
+  }
+}
+
+function loadAthleteIntoWorkingState(entry) {
+  athleteName = entry.name || 'Leonidas';
+  ACTIVITIES = entry.activities || [];
+  WEEK = entry.week || EMPTY_WEEK();
+}
+
+function switchActiveAthlete(id) {
+  if (!id || id === activeAthleteId) return;
+  const entry = athletes.find((a) => a.id === id);
+  if (!entry) return;
+  syncActiveAthleteIntoRoster();
+  activeAthleteId = id;
+  loadAthleteIntoWorkingState(entry);
+  persist();
+  renderActivities();
+  renderStats();
+  renderAthleteAndHero();
+}
+
+function createNewAthlete() {
+  const name = prompt('Name for the new athlete:');
+  if (!name || !name.trim()) return;
+  syncActiveAthleteIntoRoster();
+  const entry = { id: makeAthleteId(), name: name.trim().slice(0, 20), activities: [], week: EMPTY_WEEK() };
+  athletes.push(entry);
+  activeAthleteId = entry.id;
+  loadAthleteIntoWorkingState(entry);
+  persist();
+  renderActivities();
+  renderStats();
+  renderAthleteAndHero();
+  showScreen('athlete');
+}
+
+function renderAthleteSelector() {
+  const sel = document.getElementById('athleteSelect');
+  if (!sel) return;
+  sel.innerHTML = athletes.map((a) =>
+    `<option value="${a.id}" ${a.id === activeAthleteId ? 'selected' : ''}>${a.name}</option>`
+  ).join('');
+}
+
+function renderGymnasiumList() {
+  const listEl = document.getElementById('gymnasiumList');
+  if (!listEl) return;
+  listEl.innerHTML = athletes.map((a) => {
+    const isActive = a.id === activeAthleteId;
+    const lvl = levelFromKm(totalKm(a.activities || [])).level;
+    return `
+    <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;"
+      onclick="switchActiveAthlete('${a.id}'); showScreen('athlete');">
+      <img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
+        <div class="label" style="margin-top:2px;">Level ${lvl}</div>
+      </div>
+      <span class="chevron">›</span>
+    </button>`;
+  }).join('');
+}
+
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
 function lifetimeKm() { return totalKm(ACTIVITIES); }
 
@@ -689,10 +768,10 @@ function computeScore() {
 
 function persist() {
   if (!currentUid || !window.fb) return;
+  syncActiveAthleteIntoRoster();
   window.fb.saveUserData(currentUid, {
-    athleteName: athleteName,
-    activities: ACTIVITIES,
-    week: WEEK,
+    athletes: athletes,
+    activeAthleteId: activeAthleteId,
   }).catch((e) => console.error('Save failed:', e));
   syncLeaderboard();
 }
@@ -1055,11 +1134,9 @@ function renderAthleteAndHero() {
   document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
-  document.getElementById('gymnasiumAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />`;
-  document.getElementById('gymnasiumAthleteName').textContent = athleteName;
-  document.getElementById('gymnasiumAthleteLevel').textContent = 'Level ' + level;
-
   renderAttrs(level);
+  renderAthleteSelector();
+  renderGymnasiumList();
 }
 
 function showScreen(name) {
@@ -1773,20 +1850,39 @@ window.handleAuthState = async function (user) {
   if (user) {
     currentUid = user.uid;
     let data = null;
+    let isNewDoc = false;
     try {
       data = await window.fb.loadUserData(user.uid);
     } catch (e) {
       console.error('Failed to load:', e);
     }
     if (!data) {
-      data = { athleteName: 'Leonidas', activities: [], week: EMPTY_WEEK() };
-      window.fb.saveUserData(user.uid, data).catch(() => {});
+      data = {};
+      isNewDoc = true;
     }
-    athleteName = data.athleteName || data.characterName || 'Leonidas';
-    ACTIVITIES = data.activities || [];
-    WEEK = data.week || EMPTY_WEEK();
+
+    // Load the multi-athlete roster, migrating legacy single-athlete accounts on the fly
+    if (Array.isArray(data.athletes) && data.athletes.length > 0) {
+      athletes = data.athletes;
+      activeAthleteId = (data.activeAthleteId && athletes.some((a) => a.id === data.activeAthleteId))
+        ? data.activeAthleteId
+        : athletes[0].id;
+    } else {
+      const legacyName = data.athleteName || data.characterName || 'Leonidas';
+      const legacyEntry = {
+        id: makeAthleteId(),
+        name: legacyName,
+        activities: data.activities || [],
+        week: data.week || EMPTY_WEEK(),
+      };
+      athletes = [legacyEntry];
+      activeAthleteId = legacyEntry.id;
+    }
+    loadAthleteIntoWorkingState(athletes.find((a) => a.id === activeAthleteId) || athletes[0]);
+
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
+    if (isNewDoc) persist();
 
     // If the email was actually changed in the meantime via a confirmation link
     // (verifyBeforeUpdateEmail), sync Firestore now
@@ -2174,15 +2270,20 @@ if ('serviceWorker' in navigator) {
         throw err;
       }
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const initialAthleteId = "athlete_" + Date.now();
       await setDoc(doc(db, "users", cred.user.uid), {
         username: username.trim(),
         email: email.trim(),
-        athleteName: "Leonidas",
-        activities: [],
-        week: [
-          { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
-          { day: "Fri", km: 0 }, { day: "Sat", km: 0 }, { day: "Sun", km: 0 },
-        ],
+        activeAthleteId: initialAthleteId,
+        athletes: [{
+          id: initialAthleteId,
+          name: "Leonidas",
+          activities: [],
+          week: [
+            { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
+            { day: "Fri", km: 0 }, { day: "Sat", km: 0 }, { day: "Sun", km: 0 },
+          ],
+        }],
       });
       await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: email.trim() });
       return cred.user;
