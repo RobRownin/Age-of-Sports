@@ -388,9 +388,13 @@
       </div>
 
       <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Benutzername</label>
-        <p id="accountUsername" style="margin:0 0 4px;font-family:'Cinzel','Times New Roman',serif;font-weight:600;">Leonidas</p>
-        <p class="hint" style="text-align:left;margin:0;">Der Benutzername kann aktuell nicht geändert werden.</p>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Benutzername</label>
+          <input id="accountUsername" />
+        </div>
+        <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
+        <p class="hint" id="accountUsernameSuccess" style="display:none;color:var(--gold);"></p>
+        <button class="btn-primary" onclick="saveAccountUsername()">Benutzername ändern</button>
       </div>
 
       <div class="card">
@@ -1325,15 +1329,44 @@ let currentUsername = null;
 let currentEmail = null;
 
 function loadAccountScreen() {
-  document.getElementById('accountUsername').textContent = currentUsername || '–';
+  document.getElementById('accountUsername').value = currentUsername || '';
   document.getElementById('accountEmail').value = currentEmail || '';
   document.getElementById('accountEmailPassword').value = '';
   document.getElementById('accountCurrentPassword').value = '';
   document.getElementById('accountNewPassword').value = '';
+  document.getElementById('accountUsernameError').style.display = 'none';
+  document.getElementById('accountUsernameSuccess').style.display = 'none';
   document.getElementById('accountEmailError').style.display = 'none';
   document.getElementById('accountEmailSuccess').style.display = 'none';
   document.getElementById('accountPasswordError').style.display = 'none';
   document.getElementById('accountPasswordSuccess').style.display = 'none';
+}
+
+async function saveAccountUsername() {
+  const newUsername = document.getElementById('accountUsername').value.trim();
+  const errEl = document.getElementById('accountUsernameError');
+  const okEl = document.getElementById('accountUsernameSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (newUsername.length < 3) {
+    errEl.textContent = 'Benutzername muss mind. 3 Zeichen haben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newUsername === currentUsername) return;
+
+  try {
+    const saved = await window.fb.updateUsername(currentUid, currentUsername, newUsername, currentEmail);
+    currentUsername = saved;
+    localStorage.setItem('aos_lastUsername', saved);
+    document.getElementById('accountUsername').value = saved;
+    okEl.textContent = 'Benutzername geändert.';
+    okEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = mapFirebaseError(e);
+    errEl.style.display = 'block';
+  }
 }
 
 async function saveAccountEmail() {
@@ -1655,7 +1688,7 @@ if ('serviceWorker' in navigator) {
     sendPasswordResetEmail, updatePassword, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit
+    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1783,6 +1816,24 @@ if ('serviceWorker' in navigator) {
     async syncEmailIfChanged(uid, username, authEmail) {
       await setDoc(doc(db, "users", uid), { email: authEmail }, { merge: true });
       await setDoc(doc(db, "usernames", normalizeUsername(username)), { email: authEmail }, { merge: true });
+    },
+    async updateUsername(uid, oldUsername, newUsername, email) {
+      const trimmed = newUsername.trim();
+      const newUname = normalizeUsername(trimmed);
+      const oldUname = normalizeUsername(oldUsername);
+
+      if (newUname !== oldUname) {
+        const existing = await getDoc(doc(db, "usernames", newUname));
+        if (existing.exists()) {
+          const err = new Error("username taken");
+          err.code = "auth/username-already-in-use";
+          throw err;
+        }
+        await setDoc(doc(db, "usernames", newUname), { uid, email });
+        await deleteDoc(doc(db, "usernames", oldUname)).catch(() => {});
+      }
+      await setDoc(doc(db, "users", uid), { username: trimmed }, { merge: true });
+      return trimmed;
     },
     async updateAccountPassword(currentPassword, newPassword) {
       await reauth(currentPassword);
