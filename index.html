@@ -1704,15 +1704,19 @@ if ('serviceWorker' in navigator) {
       await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: email.trim() });
       return cred.user;
     },
-    async login(username, password) {
-      const uname = normalizeUsername(username);
+    async login(usernameOrEmail, password) {
+      const trimmed = usernameOrEmail.trim();
+      const uname = normalizeUsername(trimmed);
       const legacyEmail = uname + "@ageofsports.app";
 
-      // Kandidaten sammeln: zuerst die in Firestore hinterlegte Adresse (falls vorhanden),
-      // danach immer auch die alte erfundene Adresse als Absicherung - z. B. falls ein
-      // E-Mail-Wechsel angestoßen, aber der Bestätigungslink noch nicht angeklickt wurde
-      // (Firebase nutzt bis dahin weiterhin die alte Adresse zum Einloggen).
+      // Kandidaten sammeln:
+      // 1) Falls direkt eine E-Mail-Adresse eingegeben wurde (enthält "@") - erlaubt Login per
+      //    echter E-Mail als Notlösung, z. B. wenn die Firestore-Zuordnung noch nicht mit einer
+      //    frisch bestätigten neuen Adresse synchron ist.
+      // 2) die in Firestore hinterlegte Adresse (falls vorhanden)
+      // 3) immer auch die alte erfundene Adresse als Absicherung für Alt-Accounts
       const candidates = [];
+      if (trimmed.includes('@')) candidates.push(trimmed);
       try {
         const mapSnap = await getDoc(doc(db, "usernames", uname));
         if (mapSnap.exists() && mapSnap.data().email) candidates.push(mapSnap.data().email);
@@ -1723,8 +1727,20 @@ if ('serviceWorker' in navigator) {
       for (const email of candidates) {
         try {
           const cred = await signInWithEmailAndPassword(auth, email, password);
-          // Zuordnung synchronisieren, damit künftige Logins direkt den richtigen Treffer nutzen
-          await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email }, { merge: true }).catch(() => {});
+          // Zuordnung synchronisieren - bei Login per E-Mail zuerst den echten Benutzernamen
+          // aus dem Nutzerprofil holen, damit kein falscher Zuordnungs-Schlüssel entsteht
+          let realUname = uname;
+          if (trimmed.includes('@')) {
+            try {
+              const userSnap = await getDoc(doc(db, "users", cred.user.uid));
+              if (userSnap.exists() && userSnap.data().username) {
+                realUname = normalizeUsername(userSnap.data().username);
+              }
+            } catch (e) { /* falls das fehlschlägt, keine Synchronisierung vornehmen */ realUname = null; }
+          }
+          if (realUname) {
+            await setDoc(doc(db, "usernames", realUname), { uid: cred.user.uid, email }, { merge: true }).catch(() => {});
+          }
           return cred.user;
         } catch (e) {
           lastErr = e;
