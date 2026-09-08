@@ -398,17 +398,25 @@
       </div>
 
       <div class="card">
-        <div class="field" style="margin-bottom:10px;">
-          <label>E-Mail-Adresse</label>
-          <input id="accountEmail" type="email" placeholder="deine@email.de" />
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">E-Mail-Adresse</label>
+        <div id="accountEmailDisplayRow" style="display:flex;align-items:center;gap:8px;">
+          <span id="accountEmailMasked" style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••</span>
+          <button onclick="startEditAccountEmail()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
         </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Aktuelles Passwort (zur Bestätigung)</label>
-          <input id="accountEmailPassword" type="password" autocomplete="current-password" />
+
+        <div id="accountEmailEditFields" style="display:none;">
+          <div class="field" style="margin-top:10px;margin-bottom:10px;">
+            <label>Neue E-Mail-Adresse</label>
+            <input id="accountEmail" type="email" placeholder="deine@email.de" />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Aktuelles Passwort (zur Bestätigung)</label>
+            <input id="accountEmailPassword" type="password" autocomplete="current-password" />
+          </div>
+          <p class="auth-error" id="accountEmailError" style="display:none;"></p>
+          <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
+          <button class="btn-primary" onclick="saveAccountEmail()">E-Mail ändern</button>
         </div>
-        <p class="auth-error" id="accountEmailError" style="display:none;"></p>
-        <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
-        <button class="btn-primary" onclick="saveAccountEmail()">E-Mail ändern</button>
       </div>
 
       <div class="card">
@@ -1331,9 +1339,30 @@ function logout() {
 let currentUsername = null;
 let currentEmail = null;
 
+function maskEmailPart(s) {
+  if (!s || s.length <= 4) return s || '';
+  return s.slice(0, 2) + '•'.repeat(s.length - 4) + s.slice(-2);
+}
+
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return email || '';
+  const [local, domain] = email.split('@');
+  return maskEmailPart(local) + '@' + maskEmailPart(domain);
+}
+
+function startEditAccountEmail() {
+  document.getElementById('accountEmailDisplayRow').style.display = 'none';
+  document.getElementById('accountEmailEditFields').style.display = 'block';
+  document.getElementById('accountEmail').value = '';
+  document.getElementById('accountEmail').focus();
+}
+
 function loadAccountScreen() {
   document.getElementById('accountUsername').value = currentUsername || '';
-  document.getElementById('accountEmail').value = currentEmail || '';
+  document.getElementById('accountEmailMasked').textContent = maskEmail(currentEmail);
+  document.getElementById('accountEmailDisplayRow').style.display = 'flex';
+  document.getElementById('accountEmailEditFields').style.display = 'none';
+  document.getElementById('accountEmail').value = '';
   document.getElementById('accountEmailPassword').value = '';
   document.getElementById('accountCurrentPassword').value = '';
   document.getElementById('accountNewPassword').value = '';
