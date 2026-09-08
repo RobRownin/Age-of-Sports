@@ -197,7 +197,6 @@
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawerMenu">
     <p class="drawer-title">Navigation</p>
-    <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
     <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Character</button>
     <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventory</button>
     <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Sport</button>
@@ -205,7 +204,8 @@
     <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Stats</button>
     <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Academy</button>
     <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Leaderboard</button>
-    <button class="drawer-item" style="margin-top:auto;border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Log Out</button>
+    <button class="drawer-item" data-tab="account" style="margin-top:auto;" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
+    <button class="drawer-item" style="border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Log Out</button>
   </nav>
 
   <div class="sticky-header">
