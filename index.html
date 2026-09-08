@@ -1231,15 +1231,16 @@ function editFromView() {
 
 // Swipe-Gesten für das Burger-Menü: von links reinwischen öffnet, nach links wischen schließt
 function setupDrawerSwipeNav() {
-  let startX = 0, startY = 0, tracking = false, startFromEdge = false;
+  let startX = 0, startY = 0, tracking = false;
 
   document.addEventListener('touchstart', (e) => {
     if (e.touches.length !== 1) return;
     if (document.getElementById('appRoot').style.display === 'none') return; // nicht auf dem Login-Screen
+    // Während ein Aktivitäts-Dialog offen ist, soll dessen eigene Wisch-Navigation (vor/zurück)
+    // nicht mit dem Menü-Öffnen kollidieren
+    if (e.target.closest && e.target.closest('.overlay.open')) { tracking = false; return; }
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    startFromEdge = startX < 60; // Wisch-Start im linken Bildschirmbereich (etwas breiter, damit die
-                                  // System-"Zurück"-Geste am äußersten Rand nicht dazwischenfunkt)
     tracking = true;
   }, { passive: true });
 
@@ -1252,7 +1253,7 @@ function setupDrawerSwipeNav() {
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // keine eindeutig horizontale Geste
 
     const drawerOpen = document.getElementById('drawerMenu').classList.contains('open');
-    if (!drawerOpen && startFromEdge && dx > 0) {
+    if (!drawerOpen && dx > 0) {
       openDrawer();
     } else if (drawerOpen && dx < 0) {
       closeDrawer();
