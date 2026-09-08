@@ -1859,6 +1859,7 @@ function parseGPX(text) {
   let km = 0;
   const elevations = [];
   const heartRates = [];
+  const pointTimes = []; // nur Zeiten der GPS-/Trackpunkte, NICHT z. B. das Metadaten-Zeitfeld
 
   pts.forEach((pt, i) => {
     if (i > 0) {
@@ -1880,19 +1881,38 @@ function parseGPX(text) {
       const v = parseFloat(hrEl.textContent);
       if (!isNaN(v)) heartRates.push(v);
     }
+    const timeEl = getByLocalName(pt, 'time')[0];
+    if (timeEl) {
+      const d = new Date(timeEl.textContent);
+      if (!isNaN(d.getTime())) pointTimes.push(d);
+    }
   });
 
-  const timeEls = xml.getElementsByTagName('time');
+  // Herzfrequenz-Fallback: falls keine Werte pro Punkt gefunden wurden (z. B. Indoor-Aktivität
+  // ohne echte Trackpoints), irgendwo im Dokument nach "hr"-Elementen suchen (z. B. Track-Extensions)
+  if (heartRates.length === 0) {
+    getByLocalName(xml, 'hr').forEach((el) => {
+      const v = parseFloat(el.textContent);
+      if (!isNaN(v)) heartRates.push(v);
+    });
+  }
+
   let mins = 0;
   let startDate = null;
-  if (timeEls.length >= 1) {
-    startDate = new Date(timeEls[0].textContent);
-    if (isNaN(startDate.getTime())) startDate = null;
+  if (pointTimes.length >= 1) {
+    startDate = pointTimes[0];
+  } else {
+    // Kein einziger Trackpoint mit Zeit vorhanden - als letzten Ausweg das Metadaten-Zeitfeld nehmen
+    const metaTimeEl = xml.getElementsByTagName('time')[0];
+    if (metaTimeEl) {
+      const d = new Date(metaTimeEl.textContent);
+      if (!isNaN(d.getTime())) startDate = d;
+    }
   }
-  if (timeEls.length >= 2) {
-    const t0 = new Date(timeEls[0].textContent).getTime();
-    const t1 = new Date(timeEls[timeEls.length - 1].textContent).getTime();
-    if (!isNaN(t0) && !isNaN(t1) && t1 > t0) mins = Math.round((t1 - t0) / 60000);
+  if (pointTimes.length >= 2) {
+    const t0 = pointTimes[0].getTime();
+    const t1 = pointTimes[pointTimes.length - 1].getTime();
+    if (t1 > t0) mins = Math.round((t1 - t0) / 60000);
   }
 
   const nameEl = xml.getElementsByTagName('name')[0];
