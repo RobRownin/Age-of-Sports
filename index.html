@@ -1230,6 +1230,12 @@ function buildChartBuckets(type, offset, list) {
     }
   }
 
+  // Den Balken markieren, der "heute" enthält - unabhängig vom gewählten Zeitraum/Offset
+  const now = Date.now();
+  buckets.forEach((b) => {
+    b.isCurrent = now >= b.start.getTime() && now < b.end.getTime();
+  });
+
   list.forEach((a) => {
     if (!a.km) return;
     const t = activitySortTime(a);
@@ -1292,8 +1298,8 @@ function renderStats() {
   const max = Math.max(...buckets.map((d) => d.km), 1);
   document.getElementById('chartRow').innerHTML = buckets.map(d => `
     <div class="chart-col">
-      <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%"></div>
-      <div class="chart-day">${d.label}</div>
+      <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%;${d.isCurrent ? 'background:var(--red);' : ''}"></div>
+      <div class="chart-day" style="${d.isCurrent ? 'color:var(--red);font-weight:600;' : ''}">${d.label}</div>
     </div>`).join('') || '<p class="hint">No data for this period.</p>';
 }
 
