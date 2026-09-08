@@ -575,6 +575,7 @@ function syncLeaderboard() {
   const { level } = levelFromKm(lifetimeKm());
   window.fb.saveLeaderboardEntry(currentUid, {
     characterName: characterName,
+    username: currentUsername,
     level: level,
     score: computeScore(),
   }).catch((e) => console.error('Rangliste-Update fehlgeschlagen:', e));
@@ -595,11 +596,12 @@ async function loadLeaderboard() {
     }
     listEl.innerHTML = entries.map((e, i) => {
       const isMe = e.uid === currentUid;
+      const suffix = isMe ? ' (Du)' : (e.username ? ` (${e.username})` : '');
       return `
       <div class="card" style="display:flex;align-items:center;gap:12px;${isMe ? 'border-color:var(--gold);' : ''}">
         <div style="width:26px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#${i + 1}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.characterName || '???'}${isMe ? ' (Du)' : ''}</div>
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.characterName || '???'}${suffix}</div>
           <div class="label" style="margin-top:1px;">Level ${e.level || 1}</div>
         </div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600;">${e.score || 0}</div>
@@ -1362,6 +1364,7 @@ async function saveAccountUsername() {
     currentUsername = saved;
     localStorage.setItem('aos_lastUsername', saved);
     document.getElementById('accountUsername').value = saved;
+    syncLeaderboard();
     okEl.textContent = 'Benutzername geändert.';
     okEl.style.display = 'block';
   } catch (e) {
