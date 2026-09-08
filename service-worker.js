@@ -16,8 +16,8 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Network-first für Navigation/HTML: Du siehst immer die neueste Version, wenn online.
-// Fällt nur auf den Cache zurück, wenn offline (z. B. Icons/Manifest).
+// Network-first for navigation/HTML: you always see the latest version when online.
+// Only falls back to the cache when offline (e.g. icons/manifest).
 self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate" || event.request.destination === "document") {
     event.respondWith(

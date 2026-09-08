@@ -558,7 +558,7 @@
 </div>
 
 <script>
-// ---------- App-Datenmodell (pro Account in Firestore gespeichert) ----------
+// ---------- App data model (stored per account in Firestore) ----------
 const TYPE_LABEL = { run: "Run", ride: "Ride", walk: "Walk", strength: "Strength", sleep: "Sleep" };
 const EMPTY_WEEK = () => [
   { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
@@ -573,15 +573,15 @@ let currentUid = null;
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
 function lifetimeKm() { return totalKm(ACTIVITIES); }
 
-// Erste Version der Punkteformel für die Rangliste - Faktoren: Distanz, Dauer,
-// Wiederholungen, Herzfrequenz (Intensitäts-Bonus), Höhenmeter und Schlaf.
-// Gewichtungen sind ein erster Entwurf und lassen sich jederzeit anpassen.
+// First version of the leaderboard scoring formula - factors: distance, duration,
+// reps, heart rate (intensity bonus), elevation gain, and sleep.
+// Weights are an initial draft and can be adjusted anytime.
 function computeScore() {
   let score = 0;
   ACTIVITIES.forEach((a) => {
     if (a.type === 'sleep') {
       const hours = (a.mins || 0) / 60;
-      score += Math.min(hours, 9) * 5; // gedeckelt bei 9h, damit Über-Schlafen nicht überproportional zählt
+      score += Math.min(hours, 9) * 5; // capped at 9h so oversleeping doesn't count disproportionately
     } else {
       score += (a.km || 0) * 10;
       score += (a.mins || 0) * 1;
@@ -599,7 +599,7 @@ function persist() {
     characterName: characterName,
     activities: ACTIVITIES,
     week: WEEK,
-  }).catch((e) => console.error('Speichern fehlgeschlagen:', e));
+  }).catch((e) => console.error('Save failed:', e));
   syncLeaderboard();
 }
 
@@ -611,7 +611,7 @@ function syncLeaderboard() {
     username: currentUsername,
     level: level,
     score: computeScore(),
-  }).catch((e) => console.error('Rangliste-Update fehlgeschlagen:', e));
+  }).catch((e) => console.error('Leaderboard update failed:', e));
 }
 
 async function loadLeaderboard() {
@@ -695,25 +695,25 @@ function avatarSVG(size) {
     <ellipse cx="100" cy="140" rx="95" ry="130" fill="url(#glowGrad)"/>
     <ellipse cx="100" cy="270" rx="42" ry="7" fill="#000" opacity="0.3"/>
 
-    <!-- Cape mit Faltenlinien -->
+    <!-- Cape with fold lines -->
     <path d="M 128,68 C 148,82 158,116 152,158 C 148,188 138,214 132,238 C 142,214 156,190 158,160 C 162,120 152,84 128,68 Z" fill="url(#capeGrad)"/>
     <path d="M 134,90 C 140,112 142,138 138,166" stroke="#4A0E0E" stroke-width="2" opacity="0.4" fill="none"/>
     <path d="M 142,100 C 148,124 148,148 142,174" stroke="#4A0E0E" stroke-width="1.5" opacity="0.3" fill="none"/>
     <path d="M 130,110 C 134,132 134,152 130,172" stroke="#E05050" stroke-width="1" opacity="0.25" fill="none"/>
 
-    <!-- Beine -->
+    <!-- Legs -->
     <path d="M 82,152 C 78,182 76,206 80,232 C 81,242 83,252 86,262 L 100,262 C 99,236 98,206 96,178 C 95,168 94,158 92,150 Z" fill="url(#skinGrad)"/>
     <path d="M 118,152 C 122,182 124,206 120,232 C 119,242 117,252 114,262 L 100,262 C 101,236 102,206 104,178 C 105,168 106,158 108,150 Z" fill="url(#skinGrad)"/>
-    <!-- Quadrizeps-Trennung -->
+    <!-- Quadriceps separation -->
     <path d="M 88,156 C 87,172 87,188 88,200" stroke="#000" stroke-opacity="0.1" stroke-width="1.5" fill="none"/>
     <path d="M 112,156 C 113,172 113,188 112,200" stroke="#000" stroke-opacity="0.1" stroke-width="1.5" fill="none"/>
-    <!-- Waden -->
+    <!-- Calves -->
     <path d="M 90,200 C 92,212 92,224 90,236 L 96,236 C 97,224 97,212 96,200 Z" fill="#000" opacity="0.14"/>
     <path d="M 110,200 C 108,212 108,224 110,236 L 104,236 C 103,224 103,212 104,200 Z" fill="#000" opacity="0.14"/>
     <path d="M 84,206 C 82,214 82,222 84,230" stroke="#fff" stroke-opacity="0.08" stroke-width="1.5" fill="none"/>
     <path d="M 116,206 C 118,214 118,222 116,230" stroke="#fff" stroke-opacity="0.08" stroke-width="1.5" fill="none"/>
 
-    <!-- Sandalen: gekreuzte Riemen am Schienbein -->
+    <!-- Sandals: crossed straps on the shin -->
     <path d="M 78,196 L 98,206" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
     <path d="M 78,206 L 98,196" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
     <path d="M 78,218 L 98,228" stroke="#3C2E1E" stroke-width="3" opacity="0.85"/>
@@ -727,7 +727,7 @@ function avatarSVG(size) {
     <path d="M 78,266 L 100,266 L 100,270 L 78,270 Z" fill="#5C4426" opacity="0.6"/>
     <path d="M 122,266 L 100,266 L 100,270 L 122,270 Z" fill="#5C4426" opacity="0.6"/>
 
-    <!-- Pteryges (Lederschurz) mit Licht/Schatten je Streifen -->
+    <!-- Pteryges (leather skirt) with light/shadow per strip -->
     <path d="M 95,146 L 105,146 L 104,172 L 96,172 Z" fill="#4A2E1A"/>
     <path d="M 95,146 L 97,146 L 96,172 L 96,172 Z" fill="#6B4426" opacity="0.5"/>
     <path d="M 103,146 L 105,146 L 104,172 L 103,172 Z" fill="#2A1B10" opacity="0.5"/>
@@ -743,20 +743,20 @@ function avatarSVG(size) {
 
     <!-- Torso -->
     <path d="M 70,72 C 78,64 90,60 100,60 C 110,60 122,64 130,72 L 127,102 C 128,118 127,132 122,142 C 114,148 108,150 100,150 C 92,150 86,148 78,142 C 73,132 72,118 73,102 Z" fill="url(#skinGrad)"/>
-    <!-- Schlüsselbein -->
+    <!-- Collarbone -->
     <path d="M 84,74 C 90,72 96,72 100,73" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
     <path d="M 116,74 C 110,72 104,72 100,73" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
-    <!-- Bauchmuskeln -->
+    <!-- Abs -->
     <path d="M 100,78 L 100,140" stroke="#000" stroke-opacity="0.18" stroke-width="2"/>
     <path d="M 82,86 C 88,90 94,92 100,92 C 106,92 112,90 118,86" stroke="#000" stroke-opacity="0.15" stroke-width="2" fill="none"/>
     <path d="M 86,104 L 114,104 M 87,116 L 113,116 M 88,128 L 112,128" stroke="#000" stroke-opacity="0.12" stroke-width="1.5"/>
-    <!-- Seitliche Rippen/Schräge Bauchmuskeln -->
+    <!-- Side ribs / oblique abs -->
     <path d="M 80,96 C 82,104 83,112 82,120" stroke="#000" stroke-opacity="0.1" stroke-width="1.2" fill="none"/>
     <path d="M 120,96 C 118,104 117,112 118,120" stroke="#000" stroke-opacity="0.1" stroke-width="1.2" fill="none"/>
     <path d="M 130,72 L 127,102 C 128,118 127,132 122,142 C 126,138 129,128 129,110 C 129,96 130,82 130,72 Z" fill="#000" opacity="0.18"/>
     <path d="M 72,74 C 76,70 82,66 88,63 L 86,100 C 84,110 82,120 80,128 L 74,124 C 73,110 72,92 72,74 Z" fill="#fff" opacity="0.08"/>
 
-    <!-- Arme -->
+    <!-- Arms -->
     <path d="M 72,74 C 62,80 55,90 52,102 C 50,110 51,118 55,124 C 58,120 61,114 65,108 C 68,116 70,124 70,132 C 74,130 78,126 79,120 C 77,108 75,96 74,86 C 74,82 73,78 72,74 Z" fill="url(#skinGrad)"/>
     <path d="M 68,78 C 72,80 75,83 77,87" stroke="#000" stroke-opacity="0.12" stroke-width="1.5" fill="none"/>
     <path d="M 55,96 C 58,98 62,99 66,98" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
@@ -764,38 +764,38 @@ function avatarSVG(size) {
     <path d="M 132,78 C 128,80 125,83 123,87" stroke="#000" stroke-opacity="0.12" stroke-width="1.5" fill="none"/>
     <path d="M 145,96 C 142,98 138,99 134,98" stroke="#000" stroke-opacity="0.15" stroke-width="1.5" fill="none"/>
 
-    <!-- Hals -->
+    <!-- Neck -->
     <path d="M 90,58 L 110,58 L 108,68 L 92,68 Z" fill="url(#skinGrad)"/>
 
-    <!-- Kopf -->
+    <!-- Head -->
     <ellipse cx="100" cy="38" rx="17" ry="19" fill="url(#skinGrad)"/>
-    <!-- Ohr -->
+    <!-- Ear -->
     <ellipse cx="83" cy="40" rx="2.6" ry="5" fill="url(#skinGrad)"/>
     <path d="M 82,37 C 84,38 84,42 82,43" stroke="#000" stroke-opacity="0.15" stroke-width="1" fill="none"/>
-    <!-- Augenbrauen -->
+    <!-- Eyebrows -->
     <path d="M 88,34.5 C 91,33 94,33 97,34" stroke="#2A2018" stroke-width="1.3" fill="none"/>
     <path d="M 103,34 C 106,33 109,33 112,34.5" stroke="#2A2018" stroke-width="1.3" fill="none"/>
-    <!-- Nase -->
+    <!-- Nose -->
     <path d="M 99,35 C 98,38 97,41 98.5,43 C 99.3,43.6 100.7,43.6 101.5,43" stroke="#000" stroke-opacity="0.2" stroke-width="1" fill="none"/>
-    <!-- Kinn/Wange -->
+    <!-- Chin/cheek -->
     <path d="M 88,44 C 91,50 96,54 100,55 C 96,52 92,48 90,42 Z" fill="#000" opacity="0.12"/>
-    <!-- Lippen -->
+    <!-- Lips -->
     <path d="M 95,48 C 97,49 103,49 105,48" stroke="#000" stroke-opacity="0.18" stroke-width="1" fill="none"/>
-    <!-- Haar mit Textur -->
+    <!-- Hair with texture -->
     <path d="M 82,32 C 82,19 90,10 100,10 C 110,10 118,19 118,32 C 118,25 112,20 100,20 C 88,20 82,25 82,32 Z" fill="#2A2018"/>
     <path d="M 84,22 C 87,18 91,16 95,15" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
     <path d="M 96,14 C 100,13 104,13 108,14" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
     <path d="M 109,15 C 113,17 116,20 117,24" stroke="#100C08" stroke-width="1.2" opacity="0.6" fill="none"/>
     <path d="M 85,26 C 88,24 91,23 94,23" stroke="#3A2E20" stroke-width="1" opacity="0.5" fill="none"/>
     <path d="M 106,23 C 109,23 112,24 115,26" stroke="#3A2E20" stroke-width="1" opacity="0.5" fill="none"/>
-    <!-- Lorbeerkranz -->
+    <!-- Laurel wreath -->
     <path d="M 83,26 L 117,26 L 116,30 L 84,30 Z" fill="#C9A227"/>
     <path d="M 84,22 C 86,25 86,29 84,32 C 82,29 82,25 84,22 Z" fill="#8FA84A"/>
     <path d="M 92,22 C 94,25 94,29 92,32 C 90,29 90,25 92,22 Z" fill="#8FA84A"/>
     <path d="M 100,22 C 102,25 102,29 100,32 C 98,29 98,25 100,22 Z" fill="#8FA84A"/>
     <path d="M 108,22 C 110,25 110,29 108,32 C 106,29 106,25 108,22 Z" fill="#8FA84A"/>
     <path d="M 116,22 C 118,25 118,29 116,32 C 114,29 114,25 116,22 Z" fill="#8FA84A"/>
-    <!-- Augen -->
+    <!-- Eyes -->
     <circle cx="93" cy="38" r="1.7" fill="#2A2018"/>
     <circle cx="107" cy="38" r="1.7" fill="#2A2018"/>
     <circle cx="93.5" cy="37.4" r="0.5" fill="#fff" opacity="0.5"/>
@@ -818,7 +818,7 @@ function laurelBarSVG(pct) {
   </div>`;
 }
 
-// ---------- UI-Zustand ----------
+// ---------- UI state ----------
 
 function primaryMetricDisplay(a) {
   if (a.type === 'sleep') return (a.mins / 60).toFixed(1) + ' h';
@@ -849,8 +849,8 @@ function renderActivityRow(a, realIndex) {
     </button>`;
 }
 
-// Fallback für ältere Einträge ohne gespeichertes dateISO: Datum/Uhrzeit aus dem
-// angezeigten Text ("Do, 3. Sep" bzw. "Do, 3. Sep, 18:00") heraus schätzen.
+// Fallback for older entries without a stored dateISO: estimate the date/time from
+// the displayed text ("Thu, 3 Sep" or "Thu, 3 Sep, 18:00").
 function parseGermanDateFallback(dateStr) {
   if (!dateStr) return null;
   const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
@@ -864,7 +864,7 @@ function parseGermanDateFallback(dateStr) {
 
   const now = new Date();
   const candidate = new Date(now.getFullYear(), month, day, hour, minute);
-  // Läge das Datum mehr als einen Tag in der Zukunft, war es vermutlich letztes Jahr
+  // If the date would be more than a day in the future, it was probably last year
   if (candidate.getTime() - now.getTime() > 24 * 60 * 60 * 1000) {
     candidate.setFullYear(candidate.getFullYear() - 1);
   }
@@ -950,7 +950,7 @@ function renderAttrs(level) {
     </div>`).join('<div style="height:10px"></div>');
 }
 
-const AVATAR_VERSION = 10; // bei jeder Änderung der avatar-pixel.png hochzählen, erzwingt frisches Laden
+const AVATAR_VERSION = 10; // increment whenever avatar-pixel.png changes, forces a fresh load
 
 function renderCharacterAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
@@ -1011,7 +1011,7 @@ function saveName() {
 // ---------- Add/Edit-activity sheet ----------
 let selectedType = "run";
 let selectedMetric = "distance";
-let editingIndex = null; // null = neue Aktivität, sonst Index in ACTIVITIES
+let editingIndex = null; // null = new activity, otherwise index into ACTIVITIES
 
 function dayAbbrFromDate(dateStr) { return dateStr.split(',')[0]; }
 function adjustWeekKm(dayAbbr, delta) {
@@ -1019,7 +1019,7 @@ function adjustWeekKm(dayAbbr, delta) {
   if (entry) entry.km = Math.max(0, entry.km + delta);
 }
 
-// Berechnet die Schlafdauer in Minuten aus "HH:MM"-Zeiten, inkl. Übergang über Mitternacht
+// Computes sleep duration in minutes from "HH:MM" times, including crossing midnight
 function computeSleepMinutes(bedStr, wakeStr) {
   if (!bedStr || !wakeStr) return null;
   const [bh, bm] = bedStr.split(':').map(Number);
@@ -1027,7 +1027,7 @@ function computeSleepMinutes(bedStr, wakeStr) {
   const bedMin = bh * 60 + bm;
   const wakeMin = wh * 60 + wm;
   let diff = wakeMin - bedMin;
-  if (diff <= 0) diff += 24 * 60; // über Mitternacht hinweg
+  if (diff <= 0) diff += 24 * 60; // crossed midnight
   return diff;
 }
 
@@ -1141,7 +1141,7 @@ function selectType(btn) {
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedType = btn.dataset.type;
-  // sinnvolle Standard-Erfassungsart je Aktivitätstyp vorschlagen, bleibt aber änderbar
+  // suggest a sensible default tracking method per activity type, but keep it changeable
   const suggestedMetric = btn.dataset.metric;
   const isSleep = selectedType === 'sleep';
 
@@ -1153,7 +1153,7 @@ function selectType(btn) {
   if (isSleep) updateSleepDurationHint();
 
   if (suggestedMetric === 'none') {
-    // Schlaf: weder Distanz noch Wiederholungen sinnvoll -> Erfassungsart komplett ausblenden
+    // Sleep: neither distance nor reps make sense -> hide the tracking-method field entirely
     selectedMetric = 'none';
     document.getElementById('metricField').style.display = 'none';
     document.getElementById('distanceField').style.display = 'none';
@@ -1212,7 +1212,7 @@ function submitActivity() {
   const elevation = parseInt(document.getElementById('inputElevation').value, 10) || null;
 
   if (editingIndex === null) {
-    // Neue Aktivität
+    // New activity
     const activity = {
       type: selectedType,
       icon: iconMap[selectedType] || "🏅",
@@ -1230,7 +1230,7 @@ function submitActivity() {
     ACTIVITIES.push(activity);
     if (km > 0) adjustWeekKm(dayAbbrFromDate(activity.date), km);
   } else {
-    // Bestehende Aktivität bearbeiten
+    // Edit existing activity
     const a = ACTIVITIES[editingIndex];
     const oldKm = a.km || 0;
     const oldDayAbbr = dayAbbrFromDate(a.date);
@@ -1248,7 +1248,7 @@ function submitActivity() {
     }
     a.avgHeartRate = isSleep ? (a.avgHeartRate || null) : hr;
     a.elevationGain = isSleep ? (a.elevationGain || null) : elevation;
-    // Wochenstatistik: alte km vom alten Tag abziehen, neue km dem (ggf. neuen) Tag zuschlagen
+    // Weekly stats: subtract old km from the old day, add new km to the (possibly new) day
     const newDayAbbr = dayAbbrFromDate(a.date);
     adjustWeekKm(oldDayAbbr, -oldKm);
     adjustWeekKm(newDayAbbr, km);
@@ -1277,7 +1277,7 @@ function deleteActivity() {
   closeActivityModal();
 }
 
-// ---------- Authentifizierung ----------
+// ---------- Authentication ----------
 let authMode = 'login';
 
 function setAuthMode(mode) {
@@ -1334,7 +1334,7 @@ async function submitAuth() {
     }
     localStorage.setItem('aos_lastUsername', username);
     // Passwortfeld sofort leeren, sonst fragt der Browser bei jedem weiteren
-    // Speichern-Klick in der App erneut, ob er das (noch befüllte) Feld sichern soll
+    // every subsequent save click in the app whether to store the (still filled) field
     document.getElementById('authPassword').value = '';
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   } catch (e) {
@@ -1528,7 +1528,7 @@ async function saveAccountPassword() {
   }
 }
 
-// Wird vom Firebase-Modul bei jeder Änderung des Login-Status aufgerufen
+// Called by the Firebase module whenever the login state changes
 window.handleAuthState = async function (user) {
   document.getElementById('loadingScreen').style.display = 'none';
   if (user) {
@@ -1537,7 +1537,7 @@ window.handleAuthState = async function (user) {
     try {
       data = await window.fb.loadUserData(user.uid);
     } catch (e) {
-      console.error('Laden fehlgeschlagen:', e);
+      console.error('Failed to load:', e);
     }
     if (!data) {
       data = { characterName: 'Leonidas', activities: [], week: EMPTY_WEEK() };
@@ -1549,11 +1549,11 @@ window.handleAuthState = async function (user) {
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
 
-    // Falls die E-Mail über einen Bestätigungslink (verifyBeforeUpdateEmail) inzwischen
-    // wirklich gewechselt wurde, Firestore jetzt nachziehen
+    // If the email was actually changed in the meantime via a confirmation link
+    // (verifyBeforeUpdateEmail), sync Firestore now
     if (user.email && user.email !== currentEmail && window.fb.syncEmailIfChanged) {
       currentEmail = user.email;
-      window.fb.syncEmailIfChanged(user.uid, currentUsername, user.email).catch((e) => console.error('E-Mail-Abgleich fehlgeschlagen:', e));
+      window.fb.syncEmailIfChanged(user.uid, currentUsername, user.email).catch((e) => console.error('Email sync failed:', e));
     }
 
     document.getElementById('authScreen').style.display = 'none';
@@ -1576,7 +1576,7 @@ window.handleAuthState = async function (user) {
   }
 };
 
-// ---------- Garmin-Datei-Import (GPX/TCX) ----------
+// ---------- Garmin file import (GPX/TCX) ----------
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -1587,7 +1587,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Findet Elemente unabhängig vom XML-Namespace-Präfix (z. B. "gpxtpx:hr" oder "ns3:hr")
+// Finds elements regardless of XML namespace prefix (e.g. "gpxtpx:hr" or "ns3:hr")
 function getByLocalName(root, localName) {
   const all = root.getElementsByTagName('*');
   const result = [];
@@ -1697,7 +1697,7 @@ function parseTCX(text) {
     }
   });
 
-  // Höhenmeter & Herzfrequenz-Fallback aus den einzelnen Trackpoints (falls Lap-Werte fehlen)
+  // Elevation & heart-rate fallback from individual trackpoints (if lap-level values are missing)
   const trackpoints = xml.getElementsByTagName('Trackpoint');
   const elevations = [];
   const pointHeartRates = [];
@@ -1746,7 +1746,7 @@ function parseTCX(text) {
 
 function handleGarminFile(event) {
   const file = event.target.files[0];
-  event.target.value = ''; // damit dieselbe Datei erneut wählbar ist
+  event.target.value = ''; // so the same file can be selected again
   if (!file) return;
 
   const name = file.name.toLowerCase();
@@ -1850,25 +1850,25 @@ if ('serviceWorker' in navigator) {
       const legacyEmail = uname + "@ageofsports.app";
 
       // Kandidaten sammeln:
-      // 1) Falls direkt eine E-Mail-Adresse eingegeben wurde (enthält "@") - erlaubt Login per
-      //    echter E-Mail als Notlösung, z. B. wenn die Firestore-Zuordnung noch nicht mit einer
-      //    frisch bestätigten neuen Adresse synchron ist.
-      // 2) die in Firestore hinterlegte Adresse (falls vorhanden)
-      // 3) immer auch die alte erfundene Adresse als Absicherung für Alt-Accounts
+      // 1) If a real email address was entered directly (contains "@") - allows logging in
+      //    with the real email as a fallback, e.g. if the Firestore mapping isn't yet in
+      //    sync with a freshly confirmed new address.
+      // 2) the address stored in Firestore (if present)
+      // 3) always also the old made-up address as a safety net for legacy accounts
       const candidates = [];
       if (trimmed.includes('@')) candidates.push(trimmed);
       try {
         const mapSnap = await getDoc(doc(db, "usernames", uname));
         if (mapSnap.exists() && mapSnap.data().email) candidates.push(mapSnap.data().email);
-      } catch (e) { /* ignorieren, Fallback greift unten */ }
+      } catch (e) { /* ignore, fallback below applies */ }
       if (!candidates.includes(legacyEmail)) candidates.push(legacyEmail);
 
       let lastErr = null;
       for (const email of candidates) {
         try {
           const cred = await signInWithEmailAndPassword(auth, email, password);
-          // Zuordnung synchronisieren - bei Login per E-Mail zuerst den echten Benutzernamen
-          // aus dem Nutzerprofil holen, damit kein falscher Zuordnungs-Schlüssel entsteht
+          // Sync the mapping - when logging in via email, first look up the real username
+          // from the user profile so no incorrect mapping key is created
           let realUname = uname;
           if (trimmed.includes('@')) {
             try {
@@ -1876,7 +1876,7 @@ if ('serviceWorker' in navigator) {
               if (userSnap.exists() && userSnap.data().username) {
                 realUname = normalizeUsername(userSnap.data().username);
               }
-            } catch (e) { /* falls das fehlschlägt, keine Synchronisierung vornehmen */ realUname = null; }
+            } catch (e) { /* if this fails, skip syncing */ realUname = null; }
           }
           if (realUname) {
             await setDoc(doc(db, "usernames", realUname), { uid: cred.user.uid, email }, { merge: true }).catch(() => {});
@@ -1909,15 +1909,15 @@ if ('serviceWorker' in navigator) {
     async sendPasswordReset(username) {
       const uname = normalizeUsername(username);
       const mapSnap = await getDoc(doc(db, "usernames", uname));
-      if (!mapSnap.exists()) return; // absichtlich kein Fehler, um Existenz nicht zu verraten
+      if (!mapSnap.exists()) return; // deliberately no error, to avoid revealing whether the account exists
       const { email } = mapSnap.data();
       await sendPasswordResetEmail(auth, email);
     },
     async updateAccountEmail(newEmail, currentPassword) {
       await reauth(currentPassword);
-      // verifyBeforeUpdateEmail statt updateEmail: Firebase verlangt inzwischen eine Bestätigung
-      // über einen Link an die NEUE Adresse, bevor die E-Mail wirklich gewechselt wird (Schutz vor
-      // Account-Übernahme). Firestore wird erst synchronisiert, sobald der Link bestätigt wurde.
+      // verifyBeforeUpdateEmail instead of updateEmail: Firebase now requires confirmation
+      // via a link sent to the NEW address before the email is actually changed (protects
+      // against account takeover). Firestore is only synced once the link has been confirmed.
       await verifyBeforeUpdateEmail(auth.currentUser, newEmail.trim());
     },
     async syncEmailIfChanged(uid, username, authEmail) {
