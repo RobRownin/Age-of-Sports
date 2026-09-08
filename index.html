@@ -253,6 +253,16 @@
         <h1 class="title">Stats</h1>
       </div>
 
+      <div class="type-row" id="statsFilterRow" style="flex-wrap:wrap;">
+        <button class="type-btn active" data-filter="all" onclick="setStatsFilter('all', this)"><span class="ic">⭐</span>All</button>
+        <button class="type-btn" data-filter="run" onclick="setStatsFilter('run', this)"><span class="ic">🏃</span>Run</button>
+        <button class="type-btn" data-filter="ride" onclick="setStatsFilter('ride', this)"><span class="ic">🚴</span>Ride</button>
+        <button class="type-btn" data-filter="walk" onclick="setStatsFilter('walk', this)"><span class="ic">🚶</span>Walk</button>
+        <button class="type-btn" data-filter="row" onclick="setStatsFilter('row', this)"><span class="ic">🚣</span>Rowing</button>
+        <button class="type-btn" data-filter="strength" onclick="setStatsFilter('strength', this)"><span class="ic">🏋️</span>Strength</button>
+        <button class="type-btn" data-filter="sleep" onclick="setStatsFilter('sleep', this)"><span class="ic">😴</span>Sleep</button>
+      </div>
+
       <div class="stat-grid">
         <div class="card">
           <p class="label">This Week</p>
@@ -1107,12 +1117,37 @@ function renderActivities() {
     || '<p class="hint">No sleep activity logged yet.</p>';
 }
 
+let statsFilter = 'all';
+
+// Baut die Wochentag-Kilometer-Übersicht frisch aus einer (ggf. nach Typ gefilterten)
+// Aktivitätenliste, statt aus dem global mitgeführten WEEK-Aggregat - so lässt sich nach
+// Typ filtern, ohne ein eigenes WEEK je Typ vorhalten zu müssen.
+function computeWeekFromActivities(list) {
+  const week = EMPTY_WEEK();
+  list.forEach((a) => {
+    if (!a.km) return;
+    const day = dayAbbrFromDate(a.date);
+    const entry = week.find((w) => w.day === day);
+    if (entry) entry.km += a.km;
+  });
+  return week;
+}
+
+function setStatsFilter(type, btn) {
+  statsFilter = type;
+  document.querySelectorAll('#statsFilterRow .type-btn').forEach((b) => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStats();
+}
+
 function renderStats() {
-  const weekKm = totalKm(WEEK);
+  const filtered = statsFilter === 'all' ? ACTIVITIES : ACTIVITIES.filter((a) => a.type === statsFilter);
+  const weekComputed = computeWeekFromActivities(filtered);
+  const weekKm = totalKm(weekComputed);
   document.getElementById('statWeekKm').innerHTML = weekKm.toFixed(1) + ' <span>km</span>';
-  document.getElementById('statCount').textContent = ACTIVITIES.length;
-  const max = Math.max(...WEEK.map(d => d.km), 1);
-  document.getElementById('chartRow').innerHTML = WEEK.map(d => `
+  document.getElementById('statCount').textContent = filtered.length;
+  const max = Math.max(...weekComputed.map(d => d.km), 1);
+  document.getElementById('chartRow').innerHTML = weekComputed.map(d => `
     <div class="chart-col">
       <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%"></div>
       <div class="chart-day">${d.day}</div>
