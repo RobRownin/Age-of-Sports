@@ -204,7 +204,8 @@
     <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Activities</button>
     <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Sleep</button>
     <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Stats</button>
-    <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Academy</button>
+    <button class="drawer-item" data-tab="gymnasium" onclick="showScreen('gymnasium')"><span class="ic">🏛️</span>Gymnasium</button>
+    <button class="drawer-item" data-tab="stadium" onclick="showScreen('stadium')"><span class="ic">🏟️</span>Stadium</button>
     <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Leaderboard</button>
     <button class="drawer-item" data-tab="account" style="margin-top:auto;" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
     <button class="drawer-item" style="border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Log Out</button>
@@ -361,24 +362,38 @@
       </div>
     </section>
 
-    <!-- ACADEMY -->
-    <section class="screen" id="screen-academy">
+    <!-- GYMNASIUM -->
+    <section class="screen" id="screen-gymnasium">
       <div>
         <p class="label">Your Athletes</p>
-        <h1 class="title">Academy</h1>
+        <h1 class="title">Gymnasium</h1>
       </div>
 
       <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('athlete')">
-        <div id="academyAvatar"></div>
+        <div id="gymnasiumAvatar"></div>
         <div style="flex:1;min-width:0;">
-          <div id="academyAthleteName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
-          <div id="academyAthleteLevel" class="label" style="margin-top:2px;">Level 1</div>
+          <div id="gymnasiumAthleteName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
+          <div id="gymnasiumAthleteLevel" class="label" style="margin-top:2px;">Level 1</div>
         </div>
         <span class="chevron">›</span>
       </button>
 
       <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Create New Athlete</button>
       <p class="hint">Multiple athletes per account are coming in a future version.</p>
+    </section>
+
+    <!-- STADIUM -->
+    <section class="screen" id="screen-stadium">
+      <div>
+        <p class="label">Enter the arena</p>
+        <h1 class="title">Stadium</h1>
+      </div>
+
+      <div class="card" style="text-align:center;padding:32px 16px;">
+        <div style="font-size:40px;margin-bottom:8px;">🏟️</div>
+        <p class="hint" style="margin:0;">Athlete duels are coming in a future version.</p>
+        <p class="hint" style="margin-top:4px;">Soon you'll be able to challenge other athletes here, with outcomes based on your athlete's stats.</p>
+      </div>
     </section>
 
     <!-- LEADERBOARD -->
@@ -1043,9 +1058,9 @@ function renderAthleteAndHero() {
   document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
-  document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />`;
-  document.getElementById('academyAthleteName').textContent = athleteName;
-  document.getElementById('academyAthleteLevel').textContent = 'Level ' + level;
+  document.getElementById('gymnasiumAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />`;
+  document.getElementById('gymnasiumAthleteName').textContent = athleteName;
+  document.getElementById('gymnasiumAthleteLevel').textContent = 'Level ' + level;
 
   renderAttrs(level);
 }
