@@ -183,7 +183,10 @@
     </div>
     <div class="field">
       <label>Password</label>
-      <input id="authPassword" type="password" autocomplete="current-password" />
+      <div style="position:relative;">
+        <input id="authPassword" type="password" autocomplete="current-password" style="padding-right:42px;" />
+        <button type="button" onclick="toggleAuthPasswordVisibility()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px;">👁️</button>
+      </div>
     </div>
 
     <p class="auth-error" id="authError" style="display:none;"></p>
@@ -1510,6 +1513,11 @@ function deleteActivity() {
 
 // ---------- Authentication ----------
 let authMode = 'login';
+
+function toggleAuthPasswordVisibility() {
+  const input = document.getElementById('authPassword');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
 
 function setAuthMode(mode) {
   authMode = mode;
