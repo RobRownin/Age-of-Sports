@@ -1415,8 +1415,8 @@ function submitActivity() {
     }
   }
 
-  if (selectedMetric === 'distance' && distance <= 0) {
-    alert('Please enter a distance greater than 0.');
+  if (selectedMetric === 'distance' && distance < 0) {
+    alert('Distance cannot be negative.');
     return;
   }
   if (selectedMetric === 'reps' && reps <= 0) {
@@ -1984,13 +1984,13 @@ function handleGarminFile(event) {
     } catch (err) {
       console.error(err);
     }
-    if (!result || !(result.km > 0)) {
-      alert('No distance/time data could be read from the file. Is this a valid GPX/TCX activity file?');
+    if (!result) {
+      alert('No usable data could be read from the file. Is this a valid GPX/TCX activity file?');
       return;
     }
     openActivityModal(result.type);
     document.getElementById('inputDescription').value = result.label;
-    document.getElementById('inputDistance').value = result.km.toFixed(2);
+    if (result.km > 0) document.getElementById('inputDistance').value = result.km.toFixed(2);
     document.getElementById('inputDuration').value = result.mins;
     document.getElementById('inputDateTime').value = toDateTimeLocalValue(result.startDate || new Date());
     if (result.avgHeartRate) document.getElementById('inputHeartRate').value = result.avgHeartRate;
