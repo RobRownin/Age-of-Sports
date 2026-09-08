@@ -263,9 +263,22 @@
         <button class="type-btn" data-filter="sleep" onclick="setStatsFilter('sleep', this)"><span class="ic">😴</span>Sleep</button>
       </div>
 
+      <div class="metric-row" id="statsPeriodRow">
+        <button class="metric-btn active" data-period="week" onclick="setStatsPeriod('week')">Week</button>
+        <button class="metric-btn" data-period="month" onclick="setStatsPeriod('month')">Month</button>
+        <button class="metric-btn" data-period="year" onclick="setStatsPeriod('year')">Year</button>
+        <button class="metric-btn" data-period="alltime" onclick="setStatsPeriod('alltime')">All-time</button>
+      </div>
+
+      <div id="statsPeriodNav" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+        <button class="sheet-nav-btn" onclick="statsPeriodPrev()">‹</button>
+        <span id="statsPeriodLabel" class="hint" style="margin:0;min-width:150px;text-align:center;"></span>
+        <button class="sheet-nav-btn" id="statsPeriodNextBtn" onclick="statsPeriodNext()">›</button>
+      </div>
+
       <div class="stat-grid">
         <div class="card">
-          <p class="label">This Week</p>
+          <p class="label" id="statPeriodLabel">This Week</p>
           <p class="stat-value" id="statWeekKm">0 <span>km</span></p>
         </div>
         <div class="card">
@@ -275,8 +288,8 @@
       </div>
 
       <div class="card">
-        <p class="label" style="margin-bottom:4px;">Kilometers per Day</p>
-        <div class="chart-row" id="chartRow"></div>
+        <p class="label" id="chartTitle" style="margin-bottom:4px;">Kilometers per Day</p>
+        <div class="chart-row" id="chartRow" style="overflow-x:auto;"></div>
       </div>
     </section>
 
@@ -1118,19 +1131,97 @@ function renderActivities() {
 }
 
 let statsFilter = 'all';
+let statsPeriodType = 'week'; // 'week' | 'month' | 'year' | 'alltime'
+let statsPeriodOffset = 0;    // 0 = current period, -1 = previous, etc. (never > 0, can't view the future)
 
-// Baut die Wochentag-Kilometer-Übersicht frisch aus einer (ggf. nach Typ gefilterten)
-// Aktivitätenliste, statt aus dem global mitgeführten WEEK-Aggregat - so lässt sich nach
-// Typ filtern, ohne ein eigenes WEEK je Typ vorhalten zu müssen.
-function computeWeekFromActivities(list) {
-  const week = EMPTY_WEEK();
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Berechnet Start (inklusiv) und Ende (exklusiv) des gewählten Zeitraums für einen gegebenen Offset
+function getPeriodRange(type, offset) {
+  const now = new Date();
+  if (type === 'week') {
+    const dow = now.getDay(); // 0=So..6=Sa
+    const diffToMonday = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+    const start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + offset * 7);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+    return { start, end };
+  }
+  if (type === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1);
+    return { start, end };
+  }
+  if (type === 'year') {
+    const start = new Date(now.getFullYear() + offset, 0, 1);
+    const end = new Date(now.getFullYear() + offset + 1, 0, 1);
+    return { start, end };
+  }
+  return null; // alltime
+}
+
+function formatPeriodLabel(type, offset) {
+  if (type === 'alltime') return 'All-time';
+  const { start, end } = getPeriodRange(type, offset);
+  if (type === 'week') {
+    const last = new Date(end.getTime() - 86400000);
+    const fmt = (d) => `${MONTH_ABBR[d.getMonth()]} ${d.getDate()}`;
+    return `${fmt(start)} – ${fmt(last)}, ${last.getFullYear()}`;
+  }
+  if (type === 'month') return `${MONTH_NAMES[start.getMonth()]} ${start.getFullYear()}`;
+  return String(start.getFullYear()); // year
+}
+
+// Baut die Balken für das Diagramm - Granularität passt sich an den Zeitraum an:
+// Woche -> Wochentage, Monat -> Wochen im Monat, Jahr -> Monate, Alltime -> Jahre.
+function buildChartBuckets(type, offset, list) {
+  let buckets = [];
+  if (type === 'week') {
+    const { start } = getPeriodRange('week', offset);
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    buckets = days.map((label, i) => {
+      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1);
+      return { label, start: s, end: e, km: 0 };
+    });
+  } else if (type === 'month') {
+    const { start, end } = getPeriodRange('month', offset);
+    const daysInMonth = Math.round((end - start) / 86400000);
+    const weekCount = Math.ceil(daysInMonth / 7);
+    for (let i = 0; i < weekCount; i++) {
+      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i * 7);
+      const dayEnd = Math.min((i + 1) * 7, daysInMonth);
+      const e = new Date(start.getFullYear(), start.getMonth(), start.getDate() + dayEnd);
+      buckets.push({ label: `W${i + 1}`, start: s, end: e, km: 0 });
+    }
+  } else if (type === 'year') {
+    const { start } = getPeriodRange('year', offset);
+    buckets = MONTH_ABBR.map((label, i) => ({
+      label,
+      start: new Date(start.getFullYear(), i, 1),
+      end: new Date(start.getFullYear(), i + 1, 1),
+      km: 0,
+    }));
+  } else {
+    // alltime: ein Balken je Jahr, von der ältesten Aktivität bis heute
+    if (list.length > 0) {
+      const years = list.map((a) => new Date(activitySortTime(a)).getFullYear());
+      const minY = Math.min(...years);
+      const maxY = Math.max(...years, new Date().getFullYear());
+      for (let y = minY; y <= maxY; y++) {
+        buckets.push({ label: String(y), start: new Date(y, 0, 1), end: new Date(y + 1, 0, 1), km: 0 });
+      }
+    }
+  }
+
   list.forEach((a) => {
     if (!a.km) return;
-    const day = dayAbbrFromDate(a.date);
-    const entry = week.find((w) => w.day === day);
-    if (entry) entry.km += a.km;
+    const t = activitySortTime(a);
+    const bucket = buckets.find((b) => t >= b.start.getTime() && t < b.end.getTime());
+    if (bucket) bucket.km += a.km;
   });
-  return week;
+  return buckets;
 }
 
 function setStatsFilter(type, btn) {
@@ -1140,18 +1231,78 @@ function setStatsFilter(type, btn) {
   renderStats();
 }
 
+function setStatsPeriod(type) {
+  statsPeriodType = type;
+  statsPeriodOffset = 0;
+  document.querySelectorAll('#statsPeriodRow .metric-btn').forEach((b) => b.classList.toggle('active', b.dataset.period === type));
+  document.getElementById('statsPeriodNav').style.display = type === 'alltime' ? 'none' : 'flex';
+  renderStats();
+}
+
+function statsPeriodPrev() {
+  if (statsPeriodType === 'alltime') return;
+  statsPeriodOffset -= 1;
+  renderStats();
+}
+
+function statsPeriodNext() {
+  if (statsPeriodType === 'alltime' || statsPeriodOffset >= 0) return;
+  statsPeriodOffset += 1;
+  renderStats();
+}
+
 function renderStats() {
-  const filtered = statsFilter === 'all' ? ACTIVITIES : ACTIVITIES.filter((a) => a.type === statsFilter);
-  const weekComputed = computeWeekFromActivities(filtered);
-  const weekKm = totalKm(weekComputed);
-  document.getElementById('statWeekKm').innerHTML = weekKm.toFixed(1) + ' <span>km</span>';
-  document.getElementById('statCount').textContent = filtered.length;
-  const max = Math.max(...weekComputed.map(d => d.km), 1);
-  document.getElementById('chartRow').innerHTML = weekComputed.map(d => `
+  const typeFiltered = statsFilter === 'all' ? ACTIVITIES : ACTIVITIES.filter((a) => a.type === statsFilter);
+  const periodFiltered = statsPeriodType === 'alltime'
+    ? typeFiltered
+    : typeFiltered.filter((a) => {
+        const { start, end } = getPeriodRange(statsPeriodType, statsPeriodOffset);
+        const t = activitySortTime(a);
+        return t >= start.getTime() && t < end.getTime();
+      });
+
+  const periodLabels = { week: 'This Week', month: 'This Month', year: 'This Year', alltime: 'All-time' };
+  const chartTitles = { week: 'Kilometers per Day', month: 'Kilometers per Week', year: 'Kilometers per Month', alltime: 'Kilometers per Year' };
+  document.getElementById('statPeriodLabel').textContent = statsPeriodOffset === 0 || statsPeriodType === 'alltime'
+    ? periodLabels[statsPeriodType]
+    : 'Selected Period';
+  document.getElementById('chartTitle').textContent = chartTitles[statsPeriodType];
+  document.getElementById('statsPeriodLabel').textContent = formatPeriodLabel(statsPeriodType, statsPeriodOffset);
+  document.getElementById('statsPeriodNextBtn').disabled = statsPeriodOffset >= 0;
+
+  document.getElementById('statWeekKm').innerHTML = totalKm(periodFiltered).toFixed(1) + ' <span>km</span>';
+  document.getElementById('statCount').textContent = periodFiltered.length;
+
+  const buckets = buildChartBuckets(statsPeriodType, statsPeriodOffset, typeFiltered);
+  const max = Math.max(...buckets.map((d) => d.km), 1);
+  document.getElementById('chartRow').innerHTML = buckets.map(d => `
     <div class="chart-col">
       <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%"></div>
-      <div class="chart-day">${d.day}</div>
-    </div>`).join('');
+      <div class="chart-day">${d.label}</div>
+    </div>`).join('') || '<p class="hint">No data for this period.</p>';
+}
+
+// Swipe-Navigation auf dem Statistik-Reiter: links = nächster Zeitraum, rechts = vorheriger
+function setupStatsSwipeNav() {
+  const el = document.getElementById('screen-stats');
+  let startX = 0, startY = 0, tracking = false;
+
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  el.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) statsPeriodNext(); else statsPeriodPrev();
+  }, { passive: true });
 }
 
 function renderAttrs(level) {
@@ -2266,6 +2417,7 @@ setBedTime('23:00');
 setWakeTime('07:00');
 setupViewSwipeNav();
 setupDrawerSwipeNav();
+setupStatsSwipeNav();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
