@@ -62,7 +62,7 @@
   .chart-bar{ width:100%; max-width:26px; background:var(--gold); border-radius:6px 6px 0 0; min-height:2px; }
   .chart-day{ font-size:11px; color:var(--muted); }
 
-  .char-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
+  .athlete-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
   .equip-group{ display:flex; flex-direction:column; gap:10px; }
   .equip-slot{ width:60px; height:60px; border:1px solid var(--border); border-radius:10px; background:var(--surface); display:flex; flex-direction:column;
@@ -199,7 +199,7 @@
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawerMenu">
     <p class="drawer-title">Navigation</p>
-    <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Athlete</button>
+    <button class="drawer-item" data-tab="athlete" onclick="showScreen('athlete')"><span class="ic">⚔️</span>Athlete</button>
     <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventory</button>
     <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Sport</button>
     <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Sleep</button>
@@ -267,19 +267,19 @@
     </section>
 
     <!-- CHARACTER -->
-    <section class="screen active" id="screen-character">
+    <section class="screen active" id="screen-athlete">
       <div>
         <p class="label">Athlete</p>
         <h1 class="title">Your Olympian</h1>
       </div>
 
-      <div class="card char-card">
+      <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
             <div class="equip-slot"><span class="ic">👕</span>Clothing</div>
             <div class="equip-slot"><span class="ic">🛡️</span>Equipment</div>
           </div>
-          <div id="charAvatar"></div>
+          <div id="athleteAvatar"></div>
           <div class="equip-group">
             <div class="equip-slot"><span class="ic">🍖</span>Supplies</div>
             <div class="equip-slot"><span class="ic">❓</span>Slot 4</div>
@@ -287,7 +287,7 @@
         </div>
 
         <button class="name-row" id="nameDisplayRow" onclick="startEditName()">
-          <span class="name" id="charName">Leonidas</span>
+          <span class="name" id="athleteNameDisplay">Leonidas</span>
           <span style="color:var(--muted);font-size:13px;">✎</span>
         </button>
         <div class="name-edit" id="nameEditRow">
@@ -295,8 +295,8 @@
           <button onclick="saveName()">✓</button>
         </div>
 
-        <p class="label" style="margin-top:8px;" id="charLevel">Level 1</p>
-        <p class="hint" id="charRemain" style="margin-bottom:6px;"></p>
+        <p class="label" style="margin-top:8px;" id="athleteLevel">Level 1</p>
+        <p class="hint" id="athleteRemain" style="margin-bottom:6px;"></p>
         <div id="laurelBarWrap"></div>
       </div>
 
@@ -368,11 +368,11 @@
         <h1 class="title">Academy</h1>
       </div>
 
-      <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('character')">
+      <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('athlete')">
         <div id="academyAvatar"></div>
         <div style="flex:1;min-width:0;">
-          <div id="academyCharName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
-          <div id="academyCharLevel" class="label" style="margin-top:2px;">Level 1</div>
+          <div id="academyAthleteName" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</div>
+          <div id="academyAthleteLevel" class="label" style="margin-top:2px;">Level 1</div>
         </div>
         <span class="chevron">›</span>
       </button>
@@ -614,7 +614,7 @@ const EMPTY_WEEK = () => [
 
 let ACTIVITIES = [];
 let WEEK = EMPTY_WEEK();
-let characterName = "Leonidas";
+let athleteName = "Leonidas";
 let currentUid = null;
 
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
@@ -643,7 +643,7 @@ function computeScore() {
 function persist() {
   if (!currentUid || !window.fb) return;
   window.fb.saveUserData(currentUid, {
-    characterName: characterName,
+    athleteName: athleteName,
     activities: ACTIVITIES,
     week: WEEK,
   }).catch((e) => console.error('Save failed:', e));
@@ -654,7 +654,7 @@ function syncLeaderboard() {
   if (!currentUid || !window.fb || !window.fb.saveLeaderboardEntry) return;
   const { level } = levelFromKm(lifetimeKm());
   window.fb.saveLeaderboardEntry(currentUid, {
-    characterName: characterName,
+    athleteName: athleteName,
     username: currentUsername,
     level: level,
     score: computeScore(),
@@ -681,7 +681,7 @@ async function loadLeaderboard() {
       <div class="card" style="display:flex;align-items:center;gap:12px;${isMe ? 'border-color:var(--gold);' : ''}">
         <div style="width:26px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#${i + 1}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.characterName || '???'}${suffix}</div>
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.athleteName || e.characterName || '???'}${suffix}</div>
           <div class="label" style="margin-top:1px;">Level ${e.level || 1}</div>
         </div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600;">${e.score || 0}</div>
@@ -999,18 +999,18 @@ function renderAttrs(level) {
 
 const AVATAR_VERSION = 10; // increment whenever avatar-pixel.png changes, forces a fresh load
 
-function renderCharacterAndHero() {
+function renderAthleteAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
-  document.getElementById('charAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="108" height="162" alt="Charakter" />`;
-  document.getElementById('charName').textContent = characterName;
-  document.getElementById('charLevel').textContent = 'Level ' + level;
-  document.getElementById('charRemain').textContent = `${remaining} km until Level ${level + 1}`;
+  document.getElementById('athleteAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="108" height="162" alt="Athlete" />`;
+  document.getElementById('athleteNameDisplay').textContent = athleteName;
+  document.getElementById('athleteLevel').textContent = 'Level ' + level;
+  document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
-  document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
-  document.getElementById('academyCharName').textContent = characterName;
-  document.getElementById('academyCharLevel').textContent = 'Level ' + level;
+  document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />`;
+  document.getElementById('academyAthleteName').textContent = athleteName;
+  document.getElementById('academyAthleteLevel').textContent = 'Level ' + level;
 
   renderAttrs(level);
 }
@@ -1041,18 +1041,18 @@ function startEditName() {
   document.getElementById('nameDisplayRow').style.display = 'none';
   document.getElementById('nameEditRow').style.display = 'flex';
   const input = document.getElementById('nameInput');
-  input.value = characterName;
+  input.value = athleteName;
   input.focus();
   input.onkeydown = (e) => { if (e.key === 'Enter') saveName(); };
 }
 
 function saveName() {
   const val = document.getElementById('nameInput').value.trim();
-  characterName = val.length > 0 ? val.slice(0, 20) : characterName;
+  athleteName = val.length > 0 ? val.slice(0, 20) : athleteName;
   persist();
   document.getElementById('nameDisplayRow').style.display = 'flex';
   document.getElementById('nameEditRow').style.display = 'none';
-  renderCharacterAndHero();
+  renderAthleteAndHero();
 }
 
 // ---------- Add/Edit-activity sheet ----------
@@ -1411,7 +1411,7 @@ function submitActivity() {
   persist();
   renderActivities();
   renderStats();
-  renderCharacterAndHero();
+  renderAthleteAndHero();
   closeActivityModal();
 }
 
@@ -1427,7 +1427,7 @@ function deleteActivity() {
   persist();
   renderActivities();
   renderStats();
-  renderCharacterAndHero();
+  renderAthleteAndHero();
   closeActivityModal();
 }
 
@@ -1694,10 +1694,10 @@ window.handleAuthState = async function (user) {
       console.error('Failed to load:', e);
     }
     if (!data) {
-      data = { characterName: 'Leonidas', activities: [], week: EMPTY_WEEK() };
+      data = { athleteName: 'Leonidas', activities: [], week: EMPTY_WEEK() };
       window.fb.saveUserData(user.uid, data).catch(() => {});
     }
-    characterName = data.characterName || 'Leonidas';
+    athleteName = data.athleteName || data.characterName || 'Leonidas';
     ACTIVITIES = data.activities || [];
     WEEK = data.week || EMPTY_WEEK();
     currentUsername = data.username || user.email;
@@ -1716,11 +1716,11 @@ window.handleAuthState = async function (user) {
 
     renderActivities();
     renderStats();
-    renderCharacterAndHero();
+    renderAthleteAndHero();
     syncLeaderboard();
     const lastScreen = localStorage.getItem('aos_lastScreen');
     const validScreen = lastScreen && document.getElementById('screen-' + lastScreen);
-    showScreen(validScreen ? lastScreen : 'character');
+    showScreen(validScreen ? lastScreen : 'athlete');
   } else {
     currentUid = null;
     document.getElementById('authScreen').style.display = 'flex';
@@ -1989,7 +1989,7 @@ if ('serviceWorker' in navigator) {
       await setDoc(doc(db, "users", cred.user.uid), {
         username: username.trim(),
         email: email.trim(),
-        characterName: "Leonidas",
+        athleteName: "Leonidas",
         activities: [],
         week: [
           { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
