@@ -1302,8 +1302,8 @@ function renderStats() {
   const max = Math.max(...buckets.map((d) => d.km), 1);
   document.getElementById('chartRow').innerHTML = buckets.map(d => `
     <div class="chart-col">
-      <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%;${d.isCurrent ? 'background:var(--red);' : ''}"></div>
-      <div class="chart-day" style="${d.isCurrent ? 'color:var(--red);font-weight:600;' : ''}">${d.label}</div>
+      <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%;${d.isCurrent ? 'background:var(--gold-light);box-shadow:0 0 0 2px var(--text);' : ''}"></div>
+      <div class="chart-day" style="${d.isCurrent ? 'color:var(--gold-light);font-weight:600;' : ''}">${d.label}</div>
     </div>`).join('') || '<p class="hint">No data for this period.</p>';
 }
 
