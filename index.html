@@ -1229,6 +1229,36 @@ function editFromView() {
   openEditModal(idx);
 }
 
+// Swipe-Gesten für das Burger-Menü: von links reinwischen öffnet, nach links wischen schließt
+function setupDrawerSwipeNav() {
+  let startX = 0, startY = 0, tracking = false, startFromEdge = false;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    if (document.getElementById('appRoot').style.display === 'none') return; // nicht auf dem Login-Screen
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startFromEdge = startX < 24; // Wisch-Start nahe am linken Bildschirmrand
+    tracking = true;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // keine eindeutig horizontale Geste
+
+    const drawerOpen = document.getElementById('drawerMenu').classList.contains('open');
+    if (!drawerOpen && startFromEdge && dx > 0) {
+      openDrawer();
+    } else if (drawerOpen && dx < 0) {
+      closeDrawer();
+    }
+  }, { passive: true });
+}
+
 // Swipe-Navigation im Ansichts-Dialog: links = weiter zur nächsten, rechts = zurück zur vorherigen
 function setupViewSwipeNav() {
   const sheet = document.querySelector('#activityViewOverlay .sheet');
@@ -1937,6 +1967,7 @@ populateTimeSelects();
 setBedTime('23:00');
 setWakeTime('07:00');
 setupViewSwipeNav();
+setupDrawerSwipeNav();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
