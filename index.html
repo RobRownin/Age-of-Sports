@@ -388,13 +388,24 @@
       </div>
 
       <div class="card">
-        <div class="field" style="margin-bottom:10px;">
-          <label>Benutzername</label>
-          <input id="accountUsername" />
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Benutzername</label>
+        <div id="accountUsernameDisplayRow" style="display:flex;align-items:center;gap:8px;">
+          <span id="accountUsernameDisplay" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</span>
+          <button onclick="startEditAccountUsername()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
         </div>
-        <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
-        <p class="hint" id="accountUsernameSuccess" style="display:none;color:var(--gold);"></p>
-        <button class="btn-primary" onclick="saveAccountUsername()">Benutzername ändern</button>
+
+        <div id="accountUsernameEditFields" style="display:none;">
+          <div class="field" style="margin-top:10px;margin-bottom:10px;">
+            <label>Neuer Benutzername</label>
+            <input id="accountUsername" />
+          </div>
+          <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
+          <p class="hint" id="accountUsernameSuccess" style="display:none;color:var(--gold);"></p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-primary" style="flex:1;" onclick="saveAccountUsername()">Benutzername ändern</button>
+            <button onclick="cancelEditAccountUsername()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Abbrechen</button>
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -423,17 +434,28 @@
       </div>
 
       <div class="card">
-        <div class="field" style="margin-bottom:10px;">
-          <label>Aktuelles Passwort</label>
-          <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Passwort</label>
+        <div id="accountPasswordDisplayRow" style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••••</span>
+          <button onclick="startEditAccountPassword()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
         </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Neues Passwort</label>
-          <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="mind. 6 Zeichen" />
+
+        <div id="accountPasswordEditFields" style="display:none;">
+          <div class="field" style="margin-top:10px;margin-bottom:10px;">
+            <label>Aktuelles Passwort</label>
+            <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Neues Passwort</label>
+            <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="mind. 6 Zeichen" />
+          </div>
+          <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
+          <p class="hint" id="accountPasswordSuccess" style="display:none;color:var(--gold);"></p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-primary" style="flex:1;" onclick="saveAccountPassword()">Passwort ändern</button>
+            <button onclick="cancelEditAccountPassword()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Abbrechen</button>
+          </div>
         </div>
-        <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
-        <p class="hint" id="accountPasswordSuccess" style="display:none;color:var(--gold);"></p>
-        <button class="btn-primary" onclick="saveAccountPassword()">Passwort ändern</button>
       </div>
     </section>
 
@@ -1353,6 +1375,21 @@ function maskEmail(email) {
   return maskEmailPart(local) + '@' + maskEmailPart(domain);
 }
 
+function startEditAccountUsername() {
+  document.getElementById('accountUsernameDisplayRow').style.display = 'none';
+  document.getElementById('accountUsernameEditFields').style.display = 'block';
+  document.getElementById('accountUsername').value = currentUsername || '';
+  document.getElementById('accountUsername').focus();
+}
+
+function cancelEditAccountUsername() {
+  document.getElementById('accountUsernameDisplayRow').style.display = 'flex';
+  document.getElementById('accountUsernameEditFields').style.display = 'none';
+  document.getElementById('accountUsername').value = '';
+  document.getElementById('accountUsernameError').style.display = 'none';
+  document.getElementById('accountUsernameSuccess').style.display = 'none';
+}
+
 function startEditAccountEmail() {
   document.getElementById('accountEmailDisplayRow').style.display = 'none';
   document.getElementById('accountEmailEditFields').style.display = 'block';
@@ -1369,15 +1406,38 @@ function cancelEditAccountEmail() {
   document.getElementById('accountEmailSuccess').style.display = 'none';
 }
 
+function startEditAccountPassword() {
+  document.getElementById('accountPasswordDisplayRow').style.display = 'none';
+  document.getElementById('accountPasswordEditFields').style.display = 'block';
+  document.getElementById('accountCurrentPassword').focus();
+}
+
+function cancelEditAccountPassword() {
+  document.getElementById('accountPasswordDisplayRow').style.display = 'flex';
+  document.getElementById('accountPasswordEditFields').style.display = 'none';
+  document.getElementById('accountCurrentPassword').value = '';
+  document.getElementById('accountNewPassword').value = '';
+  document.getElementById('accountPasswordError').style.display = 'none';
+  document.getElementById('accountPasswordSuccess').style.display = 'none';
+}
+
 function loadAccountScreen() {
-  document.getElementById('accountUsername').value = currentUsername || '';
+  document.getElementById('accountUsernameDisplay').textContent = currentUsername || '–';
+  document.getElementById('accountUsernameDisplayRow').style.display = 'flex';
+  document.getElementById('accountUsernameEditFields').style.display = 'none';
+  document.getElementById('accountUsername').value = '';
+
   document.getElementById('accountEmailMasked').textContent = maskEmail(currentEmail);
   document.getElementById('accountEmailDisplayRow').style.display = 'flex';
   document.getElementById('accountEmailEditFields').style.display = 'none';
   document.getElementById('accountEmail').value = '';
   document.getElementById('accountEmailPassword').value = '';
+
+  document.getElementById('accountPasswordDisplayRow').style.display = 'flex';
+  document.getElementById('accountPasswordEditFields').style.display = 'none';
   document.getElementById('accountCurrentPassword').value = '';
   document.getElementById('accountNewPassword').value = '';
+
   document.getElementById('accountUsernameError').style.display = 'none';
   document.getElementById('accountUsernameSuccess').style.display = 'none';
   document.getElementById('accountEmailError').style.display = 'none';
@@ -1398,16 +1458,16 @@ async function saveAccountUsername() {
     errEl.style.display = 'block';
     return;
   }
-  if (newUsername === currentUsername) return;
+  if (newUsername === currentUsername) { cancelEditAccountUsername(); return; }
 
   try {
     const saved = await window.fb.updateUsername(currentUid, currentUsername, newUsername, currentEmail);
     currentUsername = saved;
     localStorage.setItem('aos_lastUsername', saved);
-    document.getElementById('accountUsername').value = saved;
     syncLeaderboard();
-    okEl.textContent = 'Benutzername geändert.';
-    okEl.style.display = 'block';
+    document.getElementById('accountUsernameDisplay').textContent = saved;
+    document.getElementById('accountUsernameDisplayRow').style.display = 'flex';
+    document.getElementById('accountUsernameEditFields').style.display = 'none';
   } catch (e) {
     errEl.textContent = mapFirebaseError(e);
     errEl.style.display = 'block';
@@ -1460,8 +1520,8 @@ async function saveAccountPassword() {
     await window.fb.updateAccountPassword(currentPassword, newPassword);
     document.getElementById('accountCurrentPassword').value = '';
     document.getElementById('accountNewPassword').value = '';
-    okEl.textContent = 'Passwort geändert.';
-    okEl.style.display = 'block';
+    document.getElementById('accountPasswordDisplayRow').style.display = 'flex';
+    document.getElementById('accountPasswordEditFields').style.display = 'none';
   } catch (e) {
     errEl.textContent = mapFirebaseError(e);
     errEl.style.display = 'block';
