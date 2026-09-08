@@ -505,11 +505,11 @@
         <div id="viewExtraRows"></div>
       </div>
 
-      <button class="card" style="text-align:center;width:100%;border:1px solid var(--border);cursor:pointer;" onclick="toggleScoreBreakdown()">
-        <p class="label">Leaderboard Points <span style="opacity:.6;">(tap for breakdown)</span></p>
+      <div class="card" style="text-align:center;">
+        <p class="label">Leaderboard Points</p>
         <p class="stat-value" id="viewScore" style="color:var(--gold);font-size:28px;">0</p>
-        <div id="viewScoreBreakdown" style="display:none;text-align:left;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
-      </button>
+        <div id="viewScoreBreakdown" style="text-align:left;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
+      </div>
 
       <div style="display:flex;gap:8px;">
         <button class="btn-primary" style="flex:1;" onclick="editFromView()">Edit</button>
@@ -656,16 +656,8 @@ function computeActivityScoreBreakdown(a) {
   return rows;
 }
 
-function toggleScoreBreakdown() {
+function renderScoreBreakdown(a) {
   const el = document.getElementById('viewScoreBreakdown');
-  const a = ACTIVITIES[viewingIndex];
-  if (!a) return;
-
-  if (el.style.display === 'block') {
-    el.style.display = 'none';
-    return;
-  }
-
   const rows = computeActivityScoreBreakdown(a);
   el.innerHTML = rows.map(r => `
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:3px 0;">
@@ -675,7 +667,6 @@ function toggleScoreBreakdown() {
     + `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold);margin:6px 0 0;padding-top:6px;border-top:1px solid var(--border);font-weight:600;">
         <span>Total (rounded)</span><span style="font-family:'JetBrains Mono',monospace;">${computeActivityScore(a)}</span>
       </div>`;
-  el.style.display = 'block';
 }
 
 function computeScore() {
@@ -1232,7 +1223,7 @@ function renderViewModal(index) {
   }
 
   document.getElementById('viewScore').textContent = computeActivityScore(a);
-  document.getElementById('viewScoreBreakdown').style.display = 'none';
+  renderScoreBreakdown(a);
 
   document.getElementById('viewPrevBtn').disabled = viewPos <= 0;
   document.getElementById('viewNextBtn').disabled = viewPos < 0 || viewPos >= viewContext.length - 1;
