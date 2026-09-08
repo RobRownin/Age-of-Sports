@@ -307,7 +307,8 @@
         <span class="left">⛰️ Import Garmin File (.gpx/.tcx)</span>
         <span class="chevron">›</span>
       </button>
-      <input type="file" id="garminFileInput" accept=".gpx,.tcx,.xml" style="display:none;" onchange="handleGarminFile(event)" />
+      <p class="hint">Tip: select both the .gpx and .tcx of the same activity together for the most complete data</p>
+      <input type="file" id="garminFileInput" accept=".gpx,.tcx,.xml" multiple style="display:none;" onchange="handleGarminFile(event)" />
 
       <button class="duel-btn">
         <span class="left">⚔️ Enter Duel</span>
@@ -1926,6 +1927,7 @@ function parseGPX(text) {
 
   return {
     type: inferredType || 'run',
+    typeConfident: !!inferredType,
     km,
     mins: Math.max(1, mins),
     label,
@@ -2006,6 +2008,7 @@ function parseTCX(text) {
 
   return {
     type,
+    typeConfident: !!(typeMap[sport] || inferredType),
     km: meters / 1000,
     mins: Math.max(1, Math.round(seconds / 60)),
     label,
@@ -2015,38 +2018,88 @@ function parseTCX(text) {
   };
 }
 
-function handleGarminFile(event) {
-  const file = event.target.files[0];
-  event.target.value = ''; // so the same file can be selected again
-  if (!file) return;
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
 
-  const name = file.name.toLowerCase();
-  if (!name.endsWith('.gpx') && !name.endsWith('.tcx') && !name.endsWith('.xml')) {
-    alert('Please choose a .gpx or .tcx file. In Garmin Connect: open the activity → gear icon → "Export" → GPX or TCX (not FIT).');
+// Führt die Ergebnisse von GPX- und TCX-Parsern zusammen: nimmt von jedem Feld den
+// "besseren" Wert (z. B. Typ von der Datei, die sich beim Typ sicher war; Distanz/Dauer/
+// Herzfrequenz/Höhenmeter von der Datei, die tatsächlich Werte > 0 geliefert hat).
+function mergeGarminResults(results) {
+  const valid = results.filter(Boolean);
+  if (valid.length === 0) return null;
+  if (valid.length === 1) return valid[0];
+
+  const pick = (key, isBetter) => {
+    let best = null;
+    for (const r of valid) {
+      if (r[key] != null && (best === null || isBetter(r[key], best))) best = r[key];
+    }
+    return best;
+  };
+
+  const typeSource = valid.find((r) => r.typeConfident) || valid[0];
+  const kmBest = pick('km', (a, b) => a > b) || 0;
+  const minsBest = pick('mins', (a, b) => a > b) || 1;
+  const hrBest = pick('avgHeartRate', (a, b) => a > b);
+  const elevBest = pick('elevationGain', (a, b) => a > b);
+  const startDateBest = valid.find((r) => r.startDate)?.startDate || null;
+  const labelBest = valid.map((r) => r.label).find((l) => l && !l.endsWith(': Other')) || valid[0].label;
+
+  return {
+    type: typeSource.type,
+    typeConfident: typeSource.typeConfident,
+    km: kmBest,
+    mins: minsBest,
+    label: labelBest,
+    startDate: startDateBest,
+    avgHeartRate: hrBest,
+    elevationGain: elevBest,
+  };
+}
+
+async function handleGarminFile(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = ''; // so the same files can be selected again
+
+  const validFiles = files.filter((f) => {
+    const n = f.name.toLowerCase();
+    return n.endsWith('.gpx') || n.endsWith('.tcx') || n.endsWith('.xml');
+  });
+  if (validFiles.length === 0) {
+    alert('Please choose a .gpx and/or .tcx file. In Garmin Connect: open the activity → gear icon → "Export" → GPX or TCX (not FIT). Tip: select both files together for the most complete data.');
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    let result = null;
+  const results = [];
+  for (const file of validFiles) {
     try {
-      result = name.endsWith('.tcx') ? parseTCX(e.target.result) : parseGPX(e.target.result);
+      const text = await readFileAsText(file);
+      const n = file.name.toLowerCase();
+      results.push(n.endsWith('.tcx') ? parseTCX(text) : parseGPX(text));
     } catch (err) {
       console.error(err);
     }
-    if (!result) {
-      alert('No usable data could be read from the file. Is this a valid GPX/TCX activity file?');
-      return;
-    }
-    openActivityModal(result.type);
-    document.getElementById('inputDescription').value = result.label;
-    if (result.km > 0) document.getElementById('inputDistance').value = result.km.toFixed(2);
-    document.getElementById('inputDuration').value = result.mins;
-    document.getElementById('inputDateTime').value = toDateTimeLocalValue(result.startDate || new Date());
-    if (result.avgHeartRate) document.getElementById('inputHeartRate').value = result.avgHeartRate;
-    if (result.elevationGain) document.getElementById('inputElevation').value = result.elevationGain;
-  };
-  reader.readAsText(file);
+  }
+
+  const result = mergeGarminResults(results);
+  if (!result) {
+    alert('No usable data could be read from the file(s). Are these valid GPX/TCX activity files?');
+    return;
+  }
+
+  openActivityModal(result.type);
+  document.getElementById('inputDescription').value = result.label;
+  if (result.km > 0) document.getElementById('inputDistance').value = result.km.toFixed(2);
+  document.getElementById('inputDuration').value = result.mins;
+  document.getElementById('inputDateTime').value = toDateTimeLocalValue(result.startDate || new Date());
+  if (result.avgHeartRate) document.getElementById('inputHeartRate').value = result.avgHeartRate;
+  if (result.elevationGain) document.getElementById('inputElevation').value = result.elevationGain;
 }
 
 // ---------- Init ----------
