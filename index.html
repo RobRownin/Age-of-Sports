@@ -416,6 +416,7 @@
           <p class="auth-error" id="accountEmailError" style="display:none;"></p>
           <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
           <button class="btn-primary" onclick="saveAccountEmail()">E-Mail ändern</button>
+          <button onclick="cancelEditAccountEmail()" style="width:100%;margin-top:8px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:6px;">Abbrechen</button>
         </div>
       </div>
 
@@ -1355,6 +1356,15 @@ function startEditAccountEmail() {
   document.getElementById('accountEmailEditFields').style.display = 'block';
   document.getElementById('accountEmail').value = '';
   document.getElementById('accountEmail').focus();
+}
+
+function cancelEditAccountEmail() {
+  document.getElementById('accountEmailDisplayRow').style.display = 'flex';
+  document.getElementById('accountEmailEditFields').style.display = 'none';
+  document.getElementById('accountEmail').value = '';
+  document.getElementById('accountEmailPassword').value = '';
+  document.getElementById('accountEmailError').style.display = 'none';
+  document.getElementById('accountEmailSuccess').style.display = 'none';
 }
 
 function loadAccountScreen() {
