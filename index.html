@@ -532,6 +532,7 @@
           <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Run</button>
           <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Ride</button>
           <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Walk</button>
+          <button class="type-btn" data-type="row" data-icon="🚣" data-metric="distance" onclick="selectType(this)"><span class="ic">🚣</span>Rowing</button>
           <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
           <button class="type-btn" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Sleep</button>
         </div>
@@ -606,7 +607,7 @@
 
 <script>
 // ---------- App data model (stored per account in Firestore) ----------
-const TYPE_LABEL = { run: "Run", ride: "Ride", walk: "Walk", strength: "Strength", sleep: "Sleep" };
+const TYPE_LABEL = { run: "Run", ride: "Ride", walk: "Walk", row: "Rowing", strength: "Strength", sleep: "Sleep" };
 const EMPTY_WEEK = () => [
   { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
   { day: "Fri", km: 0 }, { day: "Sat", km: 0 }, { day: "Sun", km: 0 },
@@ -1423,7 +1424,7 @@ function submitActivity() {
     return;
   }
 
-  const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", strength: "🏋️", sleep: "😴" };
+  const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", row: "🚣", strength: "🏋️", sleep: "😴" };
   const km = selectedMetric === 'distance' ? distance : 0;
 
   const dateTimeVal = document.getElementById('inputDateTime').value;
@@ -1939,7 +1940,7 @@ function parseTCX(text) {
 
   const activityEl = xml.getElementsByTagName('Activity')[0];
   const sport = activityEl ? activityEl.getAttribute('Sport') : '';
-  const typeMap = { Running: 'run', Biking: 'ride', Cycling: 'ride', Walking: 'walk' };
+  const typeMap = { Running: 'run', Biking: 'ride', Cycling: 'ride', Walking: 'walk', Rowing: 'row' };
   const type = typeMap[sport] || 'run';
   const label = 'Garmin-Import' + (sport ? ': ' + sport : '');
 
