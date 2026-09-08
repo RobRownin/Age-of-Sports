@@ -1187,16 +1187,26 @@ function buildChartBuckets(type, offset, list) {
     });
   } else if (type === 'month') {
     const { start, end } = getPeriodRange('month', offset);
-    const daysInMonth = Math.round((end - start) / 86400000);
-    const weekCount = Math.ceil(daysInMonth / 7);
-    for (let i = 0; i < weekCount; i++) {
-      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i * 7);
-      const dayEnd = Math.min((i + 1) * 7, daysInMonth);
-      const e = new Date(start.getFullYear(), start.getMonth(), start.getDate() + dayEnd);
+    // An echten Kalenderwochen (Montag-Sonntag) ausrichten statt starrer 7-Tage-Blöcke ab dem 1. -
+    // dadurch kann die erste/letzte Woche ein paar Tage aus dem Nachbarmonat enthalten, was bei
+    // echten Wochen normal ist (z. B. Aug 31 gehört zur Woche, die auch den 1. Sep enthält).
+    const firstDow = start.getDay(); // 0=So..6=Sa
+    const diffToMonday = firstDow === 0 ? -6 : 1 - firstDow;
+    const gridStart = new Date(start.getFullYear(), start.getMonth(), start.getDate() + diffToMonday);
+
+    const lastDayOfMonth = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+    const lastDow = lastDayOfMonth.getDay();
+    const diffToSunday = lastDow === 0 ? 0 : 7 - lastDow;
+    const gridEnd = new Date(lastDayOfMonth.getFullYear(), lastDayOfMonth.getMonth(), lastDayOfMonth.getDate() + diffToSunday + 1);
+
+    let cursor = new Date(gridStart);
+    while (cursor < gridEnd) {
+      const s = new Date(cursor);
+      const e = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
       const lastDay = new Date(e.getFullYear(), e.getMonth(), e.getDate() - 1);
-      // Zeigt den Tagesbereich der Woche (z. B. "1–7") statt eines nichtssagenden "W1"
       const label = s.getDate() === lastDay.getDate() ? `${s.getDate()}` : `${s.getDate()}–${lastDay.getDate()}`;
       buckets.push({ label, start: s, end: e, km: 0 });
+      cursor = e;
     }
   } else if (type === 'year') {
     const { start } = getPeriodRange('year', offset);
