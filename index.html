@@ -112,6 +112,8 @@
   .sheet-header{ display:flex; align-items:center; justify-content:space-between; }
   .sheet-header h2{ font-family:'Cinzel','Times New Roman',serif; font-size:17px; margin:0; }
   .sheet-close{ background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; }
+  .sheet-nav-btn{ background:none; border:none; color:var(--text); font-size:22px; cursor:pointer; line-height:1; padding:2px 6px; }
+  .sheet-nav-btn:disabled{ opacity:.25; cursor:not-allowed; }
 
   .type-row{ display:flex; gap:8px; }
   .type-btn{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 4px;
@@ -475,7 +477,9 @@
   <div class="overlay" id="activityViewOverlay" onclick="if(event.target===this) closeViewModal()">
     <div class="sheet">
       <div class="sheet-header">
-        <h2 id="viewTitle">Activity</h2>
+        <button id="viewPrevBtn" class="sheet-nav-btn" onclick="viewPrev()">‹</button>
+        <h2 id="viewTitle" style="flex:1;text-align:center;">Activity</h2>
+        <button id="viewNextBtn" class="sheet-nav-btn" onclick="viewNext()">›</button>
         <button class="sheet-close" onclick="closeViewModal()">✕</button>
       </div>
 
@@ -1145,8 +1149,16 @@ function openActivityModal(defaultType) {
 }
 
 let viewingIndex = null;
+let viewContext = []; // realIndexes in the same sorted order the list shows, for the current type group (sport or sleep)
+let viewPos = -1;
 
-function openViewModal(index) {
+function buildViewContext(forSleep) {
+  const withIndex = ACTIVITIES.map((a, realIndex) => ({ a, realIndex }));
+  const sorted = withIndex.slice().sort((x, y) => activitySortTime(y.a) - activitySortTime(x.a));
+  return sorted.filter(({ a }) => (a.type === 'sleep') === forSleep).map(({ realIndex }) => realIndex);
+}
+
+function renderViewModal(index) {
   const a = ACTIVITIES[index];
   if (!a) return;
   viewingIndex = index;
@@ -1179,7 +1191,31 @@ function openViewModal(index) {
 
   document.getElementById('viewScore').textContent = computeActivityScore(a);
 
+  document.getElementById('viewPrevBtn').disabled = viewPos <= 0;
+  document.getElementById('viewNextBtn').disabled = viewPos < 0 || viewPos >= viewContext.length - 1;
+}
+
+function openViewModal(index) {
+  const a = ACTIVITIES[index];
+  if (!a) return;
+  viewContext = buildViewContext(a.type === 'sleep');
+  viewPos = viewContext.indexOf(index);
+  renderViewModal(index);
   document.getElementById('activityViewOverlay').classList.add('open');
+}
+
+function viewPrev() {
+  if (viewPos > 0) {
+    viewPos--;
+    renderViewModal(viewContext[viewPos]);
+  }
+}
+
+function viewNext() {
+  if (viewPos >= 0 && viewPos < viewContext.length - 1) {
+    viewPos++;
+    renderViewModal(viewContext[viewPos]);
+  }
 }
 
 function closeViewModal() {
