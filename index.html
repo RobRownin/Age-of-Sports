@@ -1238,7 +1238,8 @@ function setupDrawerSwipeNav() {
     if (document.getElementById('appRoot').style.display === 'none') return; // nicht auf dem Login-Screen
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    startFromEdge = startX < 24; // Wisch-Start nahe am linken Bildschirmrand
+    startFromEdge = startX < 60; // Wisch-Start im linken Bildschirmbereich (etwas breiter, damit die
+                                  // System-"Zurück"-Geste am äußersten Rand nicht dazwischenfunkt)
     tracking = true;
   }, { passive: true });
 
