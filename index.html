@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -167,27 +167,27 @@
     </div>
 
     <div class="auth-tabs">
-      <button class="auth-tab active" data-mode="login" onclick="setAuthMode('login')">Anmelden</button>
-      <button class="auth-tab" data-mode="register" onclick="setAuthMode('register')">Registrieren</button>
+      <button class="auth-tab active" data-mode="login" onclick="setAuthMode('login')">Log In</button>
+      <button class="auth-tab" data-mode="register" onclick="setAuthMode('register')">Register</button>
     </div>
 
     <div class="field">
-      <label>Benutzername</label>
+      <label>Username</label>
       <input id="authUsername" autocomplete="username" />
     </div>
     <div class="field" id="authEmailField" style="display:none;">
-      <label>E-Mail-Adresse</label>
-      <input id="authEmail" type="email" autocomplete="email" placeholder="deine@email.de" />
+      <label>Email Address</label>
+      <input id="authEmail" type="email" autocomplete="email" placeholder="you@email.com" />
     </div>
     <div class="field">
-      <label>Passwort</label>
+      <label>Password</label>
       <input id="authPassword" type="password" autocomplete="current-password" />
     </div>
 
     <p class="auth-error" id="authError" style="display:none;"></p>
-    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Anmelden</button>
-    <button class="drawer-item" id="forgotPasswordBtn" style="justify-content:center;" onclick="forgotPassword()">Passwort vergessen?</button>
-    <p class="hint" id="authHint">Noch kein Konto? Oben auf "Registrieren" tippen.</p>
+    <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Log In</button>
+    <button class="drawer-item" id="forgotPasswordBtn" style="justify-content:center;" onclick="forgotPassword()">Forgot password?</button>
+    <p class="hint" id="authHint">No account yet? Tap "Register" above.</p>
   </div>
 </div>
 
@@ -198,14 +198,14 @@
   <nav class="drawer" id="drawerMenu">
     <p class="drawer-title">Navigation</p>
     <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
-    <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Charakter</button>
-    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventar</button>
+    <button class="drawer-item" data-tab="character" onclick="showScreen('character')"><span class="ic">⚔️</span>Character</button>
+    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventory</button>
     <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Sport</button>
-    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Schlaf</button>
-    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Statistik</button>
-    <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Akademie</button>
-    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Rangliste</button>
-    <button class="drawer-item" style="margin-top:auto;border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Abmelden</button>
+    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Sleep</button>
+    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Stats</button>
+    <button class="drawer-item" data-tab="academy" onclick="showScreen('academy')"><span class="ic">🏛️</span>Academy</button>
+    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Leaderboard</button>
+    <button class="drawer-item" style="margin-top:auto;border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Log Out</button>
   </nav>
 
   <div class="sticky-header">
@@ -223,7 +223,7 @@
     <!-- ACTIVITIES -->
     <section class="screen" id="screen-activities">
       <div>
-        <p class="label">Diese Woche</p>
+        <p class="label">This Week</p>
         <h1 class="title">Sport</h1>
       </div>
 
@@ -233,8 +233,8 @@
     <!-- SLEEP -->
     <section class="screen" id="screen-sleep">
       <div>
-        <p class="label">Erholung</p>
-        <h1 class="title">Schlaf</h1>
+        <p class="label">Recovery</p>
+        <h1 class="title">Sleep</h1>
       </div>
 
       <div id="sleepList" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -243,23 +243,23 @@
     <!-- STATS -->
     <section class="screen" id="screen-stats">
       <div>
-        <p class="label">Übersicht</p>
-        <h1 class="title">Statistik</h1>
+        <p class="label">Overview</p>
+        <h1 class="title">Stats</h1>
       </div>
 
       <div class="stat-grid">
         <div class="card">
-          <p class="label">Diese Woche</p>
+          <p class="label">This Week</p>
           <p class="stat-value" id="statWeekKm">0 <span>km</span></p>
         </div>
         <div class="card">
-          <p class="label">Aktivitäten</p>
+          <p class="label">Activities</p>
           <p class="stat-value" id="statCount">0</p>
         </div>
       </div>
 
       <div class="card">
-        <p class="label" style="margin-bottom:4px;">Kilometer pro Tag</p>
+        <p class="label" style="margin-bottom:4px;">Kilometers per Day</p>
         <div class="chart-row" id="chartRow"></div>
       </div>
     </section>
@@ -267,19 +267,19 @@
     <!-- CHARACTER -->
     <section class="screen active" id="screen-character">
       <div>
-        <p class="label">Charakter</p>
-        <h1 class="title">Dein Olympionike</h1>
+        <p class="label">Character</p>
+        <h1 class="title">Your Olympian</h1>
       </div>
 
       <div class="card char-card">
         <div class="equip-row">
           <div class="equip-group">
-            <div class="equip-slot"><span class="ic">👕</span>Kleidung</div>
+            <div class="equip-slot"><span class="ic">👕</span>Clothing</div>
             <div class="equip-slot"><span class="ic">🛡️</span>Equipment</div>
           </div>
           <div id="charAvatar"></div>
           <div class="equip-group">
-            <div class="equip-slot"><span class="ic">🍖</span>Verpflegung</div>
+            <div class="equip-slot"><span class="ic">🍖</span>Supplies</div>
             <div class="equip-slot"><span class="ic">❓</span>Slot 4</div>
           </div>
         </div>
@@ -300,31 +300,31 @@
 
       <div class="card attr-card" id="attrCard"></div>
 
-      <button class="btn-primary" onclick="openActivityModal('run')">+ Aktivität erfassen</button>
+      <button class="btn-primary" onclick="openActivityModal('run')">+ Log Activity</button>
 
       <button class="duel-btn" onclick="document.getElementById('garminFileInput').click()">
-        <span class="left">⛰️ Garmin-Datei importieren (.gpx/.tcx)</span>
+        <span class="left">⛰️ Import Garmin File (.gpx/.tcx)</span>
         <span class="chevron">›</span>
       </button>
       <input type="file" id="garminFileInput" accept=".gpx,.tcx,.xml" style="display:none;" onchange="handleGarminFile(event)" />
 
       <button class="duel-btn">
-        <span class="left">⚔️ Wettkampf antreten</span>
+        <span class="left">⚔️ Enter Duel</span>
         <span class="chevron">›</span>
       </button>
-      <p class="hint">Wettkämpfe in der Arena folgen in einer späteren Version</p>
+      <p class="hint">Duels in the Arena are coming in a future version</p>
     </section>
 
     <!-- INVENTORY -->
     <section class="screen" id="screen-inventory">
       <div>
-        <p class="label">Deine Sammlung</p>
-        <h1 class="title">Inventar</h1>
+        <p class="label">Your Collection</p>
+        <h1 class="title">Inventory</h1>
       </div>
 
       <div class="inv-section">
-        <div class="inv-section-title">👕 Kleidung</div>
-        <p class="inv-empty-hint">Noch keine Kleidungsstücke gesammelt.</p>
+        <div class="inv-section-title">👕 Clothing</div>
+        <p class="inv-empty-hint">No clothing items collected yet.</p>
         <div class="inv-grid">
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
@@ -333,7 +333,7 @@
 
       <div class="inv-section">
         <div class="inv-section-title">🛡️ Equipment</div>
-        <p class="inv-empty-hint">Noch kein Equipment gesammelt.</p>
+        <p class="inv-empty-hint">No equipment collected yet.</p>
         <div class="inv-grid">
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
@@ -341,8 +341,8 @@
       </div>
 
       <div class="inv-section">
-        <div class="inv-section-title">🍖 Verpflegung</div>
-        <p class="inv-empty-hint">Noch keine Verpflegung gesammelt.</p>
+        <div class="inv-section-title">🍖 Supplies</div>
+        <p class="inv-empty-hint">No supplies collected yet.</p>
         <div class="inv-grid">
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
@@ -351,7 +351,7 @@
 
       <div class="inv-section">
         <div class="inv-section-title">❓ Slot 4</div>
-        <p class="inv-empty-hint">Noch nichts gesammelt.</p>
+        <p class="inv-empty-hint">Nothing collected yet.</p>
         <div class="inv-grid">
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
           <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
@@ -362,8 +362,8 @@
     <!-- ACADEMY -->
     <section class="screen" id="screen-academy">
       <div>
-        <p class="label">Deine Krieger</p>
-        <h1 class="title">Akademie</h1>
+        <p class="label">Your Warriors</p>
+        <h1 class="title">Academy</h1>
       </div>
 
       <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);cursor:pointer;" onclick="showScreen('character')">
@@ -375,85 +375,85 @@
         <span class="chevron">›</span>
       </button>
 
-      <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Neuen Charakter erstellen</button>
-      <p class="hint">Mehrere Charaktere pro Account folgen in einer späteren Version.</p>
+      <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">+ Create New Character</button>
+      <p class="hint">Multiple characters per account are coming in a future version.</p>
     </section>
 
     <!-- LEADERBOARD -->
     <!-- ACCOUNT -->
     <section class="screen" id="screen-account">
       <div>
-        <p class="label">Einstellungen</p>
+        <p class="label">Settings</p>
         <h1 class="title">Account</h1>
       </div>
 
       <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Benutzername</label>
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Username</label>
         <div id="accountUsernameDisplayRow" style="display:flex;align-items:center;gap:8px;">
           <span id="accountUsernameDisplay" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</span>
-          <button onclick="startEditAccountUsername()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
+          <button onclick="startEditAccountUsername()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
         </div>
 
         <div id="accountUsernameEditFields" style="display:none;">
           <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>Neuer Benutzername</label>
+            <label>New Username</label>
             <input id="accountUsername" />
           </div>
           <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
           <p class="hint" id="accountUsernameSuccess" style="display:none;color:var(--gold);"></p>
           <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountUsername()">Benutzername ändern</button>
-            <button onclick="cancelEditAccountUsername()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Abbrechen</button>
+            <button class="btn-primary" style="flex:1;" onclick="saveAccountUsername()">Change Username</button>
+            <button onclick="cancelEditAccountUsername()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">E-Mail-Adresse</label>
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Email Address</label>
         <div id="accountEmailDisplayRow" style="display:flex;align-items:center;gap:8px;">
           <span id="accountEmailMasked" style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••</span>
-          <button onclick="startEditAccountEmail()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
+          <button onclick="startEditAccountEmail()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
         </div>
 
         <div id="accountEmailEditFields" style="display:none;">
           <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>Neue E-Mail-Adresse</label>
-            <input id="accountEmail" type="email" placeholder="deine@email.de" />
+            <label>New Email Address</label>
+            <input id="accountEmail" type="email" placeholder="you@email.com" />
           </div>
           <div class="field" style="margin-bottom:10px;">
-            <label>Aktuelles Passwort (zur Bestätigung)</label>
+            <label>Current Password (to confirm)</label>
             <input id="accountEmailPassword" type="password" autocomplete="current-password" />
           </div>
           <p class="auth-error" id="accountEmailError" style="display:none;"></p>
           <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
           <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountEmail()">E-Mail ändern</button>
-            <button onclick="cancelEditAccountEmail()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Abbrechen</button>
+            <button class="btn-primary" style="flex:1;" onclick="saveAccountEmail()">Change Email</button>
+            <button onclick="cancelEditAccountEmail()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Passwort</label>
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Password</label>
         <div id="accountPasswordDisplayRow" style="display:flex;align-items:center;gap:8px;">
           <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••••</span>
-          <button onclick="startEditAccountPassword()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Ändern</button>
+          <button onclick="startEditAccountPassword()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
         </div>
 
         <div id="accountPasswordEditFields" style="display:none;">
           <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>Aktuelles Passwort</label>
+            <label>Current Password</label>
             <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
           </div>
           <div class="field" style="margin-bottom:10px;">
-            <label>Neues Passwort</label>
-            <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="mind. 6 Zeichen" />
+            <label>New Password</label>
+            <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="min. 6 characters" />
           </div>
           <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
           <p class="hint" id="accountPasswordSuccess" style="display:none;color:var(--gold);"></p>
           <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountPassword()">Passwort ändern</button>
-            <button onclick="cancelEditAccountPassword()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Abbrechen</button>
+            <button class="btn-primary" style="flex:1;" onclick="saveAccountPassword()">Change Password</button>
+            <button onclick="cancelEditAccountPassword()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
           </div>
         </div>
       </div>
@@ -461,12 +461,12 @@
 
     <section class="screen" id="screen-leaderboard">
       <div>
-        <p class="label">Wer führt?</p>
-        <h1 class="title">Rangliste</h1>
+        <p class="label">Who's leading?</p>
+        <h1 class="title">Leaderboard</h1>
       </div>
 
       <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;">
-        <p class="hint">Lädt…</p>
+        <p class="hint">Loading…</p>
       </div>
     </section>
   </main>
@@ -475,69 +475,69 @@
   <div class="overlay" id="activityOverlay" onclick="if(event.target===this) closeActivityModal()">
     <div class="sheet">
       <div class="sheet-header">
-        <h2 id="sheetTitle">Aktivität erfassen</h2>
+        <h2 id="sheetTitle">Log Activity</h2>
         <button class="sheet-close" onclick="closeActivityModal()">✕</button>
       </div>
 
       <div class="field">
-        <label>Art der Aktivität</label>
+        <label>Activity Type</label>
         <div class="type-row" id="typeRow" style="flex-wrap:wrap;">
-          <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Lauf</button>
-          <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Rad</button>
-          <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Spaziergang</button>
-          <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Kraft</button>
-          <button class="type-btn" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Schlaf</button>
+          <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Run</button>
+          <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Ride</button>
+          <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Walk</button>
+          <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
+          <button class="type-btn" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Sleep</button>
         </div>
       </div>
 
       <div class="field" id="metricField">
-        <label>Erfassungsart</label>
+        <label>Tracking Method</label>
         <div class="metric-row" id="metricRow">
-          <button class="metric-btn active" data-metric="distance" onclick="selectMetric(this)">Distanz (km)</button>
-          <button class="metric-btn" data-metric="reps" onclick="selectMetric(this)">Wiederholungen</button>
+          <button class="metric-btn active" data-metric="distance" onclick="selectMetric(this)">Distance (km)</button>
+          <button class="metric-btn" data-metric="reps" onclick="selectMetric(this)">Reps</button>
         </div>
       </div>
 
       <div class="field" id="distanceField">
-        <label>Distanz (km)</label>
-        <input type="number" id="inputDistance" inputmode="decimal" step="0.1" min="0" placeholder="z. B. 5.0" />
+        <label>Distance (km)</label>
+        <input type="number" id="inputDistance" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 5.0" />
       </div>
       <div class="field" id="repsField" style="display:none;">
-        <label>Wiederholungen</label>
-        <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="z. B. 40" />
+        <label>Reps</label>
+        <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="e.g. 40" />
       </div>
 
       <div class="field" id="durationField">
-        <label>Dauer (Minuten)</label>
-        <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="z. B. 30" />
+        <label>Duration (minutes)</label>
+        <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="e.g. 30" />
       </div>
 
       <div class="field" id="dateTimeField">
-        <label>Datum &amp; Uhrzeit</label>
+        <label>Date &amp; Time</label>
         <input type="datetime-local" id="inputDateTime" />
       </div>
 
       <div id="extraStatsField" style="display:flex; gap:8px; margin-bottom:0;">
         <div class="field" style="flex:1;">
-          <label>Herzfrequenz (bpm)</label>
+          <label>Heart Rate (bpm)</label>
           <input type="number" id="inputHeartRate" inputmode="numeric" step="1" min="0" placeholder="optional" />
         </div>
         <div class="field" style="flex:1;">
-          <label>Höhenmeter</label>
+          <label>Elevation Gain</label>
           <input type="number" id="inputElevation" inputmode="numeric" step="1" min="0" placeholder="optional" />
         </div>
       </div>
 
       <div id="sleepTimeField" style="display:none; gap:8px; margin-bottom:0;">
         <div class="field" style="flex:1;">
-          <label>Schlafenszeit</label>
+          <label>Bedtime</label>
           <div style="display:flex; gap:4px;">
             <select class="time-select" id="inputBedHour" onchange="updateSleepDurationHint()"></select>
             <select class="time-select" id="inputBedMinute" onchange="updateSleepDurationHint()"></select>
           </div>
         </div>
         <div class="field" style="flex:1;">
-          <label>Aufstehzeit</label>
+          <label>Wake Time</label>
           <div style="display:flex; gap:4px;">
             <select class="time-select" id="inputWakeHour" onchange="updateSleepDurationHint()"></select>
             <select class="time-select" id="inputWakeMinute" onchange="updateSleepDurationHint()"></select>
@@ -547,22 +547,22 @@
       <p class="hint" id="sleepDurationHint" style="display:none; margin-top:-6px;"></p>
 
       <div class="field">
-        <label>Beschreibung</label>
-        <input type="text" id="inputDescription" maxlength="60" placeholder="z. B. Abendlauf am Fluss" />
+        <label>Description</label>
+        <input type="text" id="inputDescription" maxlength="60" placeholder="e.g. Evening run by the river" />
       </div>
 
-      <button class="btn-primary" id="sheetSubmitBtn" onclick="submitActivity()">Speichern</button>
-      <button class="btn-primary" id="sheetDeleteBtn" style="display:none;background:var(--red);color:var(--text);" onclick="deleteActivity()">Aktivität löschen</button>
+      <button class="btn-primary" id="sheetSubmitBtn" onclick="submitActivity()">Save</button>
+      <button class="btn-primary" id="sheetDeleteBtn" style="display:none;background:var(--red);color:var(--text);" onclick="deleteActivity()">Delete Activity</button>
     </div>
   </div>
 </div>
 
 <script>
 // ---------- App-Datenmodell (pro Account in Firestore gespeichert) ----------
-const TYPE_LABEL = { run: "Lauf", ride: "Radtour", walk: "Spaziergang", strength: "Kraft", sleep: "Schlaf" };
+const TYPE_LABEL = { run: "Run", ride: "Ride", walk: "Walk", strength: "Strength", sleep: "Sleep" };
 const EMPTY_WEEK = () => [
-  { day: "Mo", km: 0 }, { day: "Di", km: 0 }, { day: "Mi", km: 0 }, { day: "Do", km: 0 },
-  { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
+  { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
+  { day: "Fri", km: 0 }, { day: "Sat", km: 0 }, { day: "Sun", km: 0 },
 ];
 
 let ACTIVITIES = [];
@@ -616,20 +616,20 @@ function syncLeaderboard() {
 
 async function loadLeaderboard() {
   const listEl = document.getElementById('leaderboardList');
-  listEl.innerHTML = '<p class="hint">Lädt…</p>';
+  listEl.innerHTML = '<p class="hint">Loading…</p>';
   if (!window.fb || !window.fb.fetchLeaderboard) {
-    listEl.innerHTML = '<p class="hint">Rangliste aktuell nicht verfügbar.</p>';
+    listEl.innerHTML = '<p class="hint">Leaderboard currently unavailable.</p>';
     return;
   }
   try {
     const entries = await window.fb.fetchLeaderboard();
     if (!entries || entries.length === 0) {
-      listEl.innerHTML = '<p class="hint">Noch keine Einträge.</p>';
+      listEl.innerHTML = '<p class="hint">No entries yet.</p>';
       return;
     }
     listEl.innerHTML = entries.map((e, i) => {
       const isMe = e.uid === currentUid;
-      const suffix = isMe ? ' (Du)' : (e.username ? ` (${e.username})` : '');
+      const suffix = isMe ? ' (You)' : (e.username ? ` (${e.username})` : '');
       return `
       <div class="card" style="display:flex;align-items:center;gap:12px;${isMe ? 'border-color:var(--gold);' : ''}">
         <div style="width:26px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#${i + 1}</div>
@@ -642,7 +642,7 @@ async function loadLeaderboard() {
     }).join('');
   } catch (err) {
     console.error(err);
-    listEl.innerHTML = '<p class="hint">Rangliste konnte nicht geladen werden.</p>';
+    listEl.innerHTML = '<p class="hint">Leaderboard could not be loaded.</p>';
   }
 }
 
@@ -655,15 +655,15 @@ function levelFromKm(totalKm) {
 }
 
 function todayLabel() {
-  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const d = new Date();
   return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}`;
 }
 
 function formatDateTimeLabel(d) {
-  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
   return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}, ${hh}:${mm}`;
@@ -823,7 +823,7 @@ function laurelBarSVG(pct) {
 function primaryMetricDisplay(a) {
   if (a.type === 'sleep') return (a.mins / 60).toFixed(1) + ' h';
   if (a.km) return a.km.toFixed(1) + ' km';
-  return (a.reps || 0) + ' Wdh.';
+  return (a.reps || 0) + ' reps';
 }
 
 function renderActivityRow(a, realIndex) {
@@ -853,7 +853,7 @@ function renderActivityRow(a, realIndex) {
 // angezeigten Text ("Do, 3. Sep" bzw. "Do, 3. Sep, 18:00") heraus schätzen.
 function parseGermanDateFallback(dateStr) {
   if (!dateStr) return null;
-  const months = { Jan: 0, Feb: 1, 'Mär': 2, Apr: 3, Mai: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Okt: 9, Nov: 10, Dez: 11 };
+  const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
   const m = dateStr.match(/(\d{1,2})\.\s*([A-Za-zÄÖÜäöü]{3})(?:,\s*(\d{1,2}):(\d{2}))?/);
   if (!m) return null;
   const day = parseInt(m[1], 10);
@@ -886,14 +886,14 @@ function dayKey(t) {
 }
 
 function formatDayHeader(t) {
-  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const d = new Date(t);
   const now = new Date();
   const isSameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-  if (isSameDay(d, now)) return 'Heute';
-  if (isSameDay(d, yesterday)) return 'Gestern';
+  if (isSameDay(d, now)) return 'Today';
+  if (isSameDay(d, yesterday)) return 'Yesterday';
   return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}`;
 }
 
@@ -921,7 +921,7 @@ function renderActivities() {
 
   const sleepListEl = document.getElementById('sleepList');
   sleepListEl.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type === 'sleep'))
-    || '<p class="hint">Noch keine Schlaf-Aktivität erfasst.</p>';
+    || '<p class="hint">No sleep activity logged yet.</p>';
 }
 
 function renderStats() {
@@ -958,7 +958,7 @@ function renderCharacterAndHero() {
   document.getElementById('charAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="108" height="162" alt="Charakter" />`;
   document.getElementById('charName').textContent = characterName;
   document.getElementById('charLevel').textContent = 'Level ' + level;
-  document.getElementById('charRemain').textContent = `noch ${remaining} km bis Level ${level + 1}`;
+  document.getElementById('charRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
   document.getElementById('academyAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Charakter" />`;
@@ -1067,7 +1067,7 @@ function updateSleepDurationHint() {
   const mins = computeSleepMinutes(bed, wake);
   if (mins != null) {
     hint.style.display = 'block';
-    hint.textContent = `= ${(mins / 60).toFixed(1)} Stunden Schlaf`;
+    hint.textContent = `= ${(mins / 60).toFixed(1)} hours of sleep`;
   } else {
     hint.style.display = 'none';
   }
@@ -1094,8 +1094,8 @@ function resetForm(defaultType) {
 
 function openActivityModal(defaultType) {
   editingIndex = null;
-  document.getElementById('sheetTitle').textContent = defaultType === 'sleep' ? 'Schlaf erfassen' : 'Aktivität erfassen';
-  document.getElementById('sheetSubmitBtn').textContent = 'Speichern';
+  document.getElementById('sheetTitle').textContent = defaultType === 'sleep' ? 'Log Sleep' : 'Log Activity';
+  document.getElementById('sheetSubmitBtn').textContent = 'Save';
   document.getElementById('sheetDeleteBtn').style.display = 'none';
   resetForm(defaultType);
   document.getElementById('activityOverlay').classList.add('open');
@@ -1106,8 +1106,8 @@ function openEditModal(index) {
   if (!a) return;
   editingIndex = index;
 
-  document.getElementById('sheetTitle').textContent = 'Aktivität bearbeiten';
-  document.getElementById('sheetSubmitBtn').textContent = 'Änderungen speichern';
+  document.getElementById('sheetTitle').textContent = 'Edit Activity';
+  document.getElementById('sheetSubmitBtn').textContent = 'Save Changes';
   document.getElementById('sheetDeleteBtn').style.display = 'block';
 
   const typeBtn = document.querySelector(`.type-btn[data-type="${a.type}"]`) || document.querySelector('.type-btn[data-type="run"]');
@@ -1189,17 +1189,17 @@ function submitActivity() {
   } else {
     duration = parseInt(document.getElementById('inputDuration').value, 10) || 0;
     if (duration <= 0) {
-      alert('Bitte eine Dauer in Minuten angeben.');
+      alert('Please enter a duration in minutes.');
       return;
     }
   }
 
   if (selectedMetric === 'distance' && distance <= 0) {
-    alert('Bitte eine Distanz größer 0 angeben.');
+    alert('Please enter a distance greater than 0.');
     return;
   }
   if (selectedMetric === 'reps' && reps <= 0) {
-    alert('Bitte eine Anzahl an Wiederholungen größer 0 angeben.');
+    alert('Please enter a number of reps greater than 0.');
     return;
   }
 
@@ -1263,7 +1263,7 @@ function submitActivity() {
 
 function deleteActivity() {
   if (editingIndex === null) return;
-  if (!confirm('Diese Aktivität wirklich löschen?')) return;
+  if (!confirm('Really delete this activity?')) return;
 
   const a = ACTIVITIES[editingIndex];
   if (a.km) adjustWeekKm(dayAbbrFromDate(a.date), -a.km);
@@ -1283,12 +1283,12 @@ let authMode = 'login';
 function setAuthMode(mode) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
+  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log In' : 'Register';
   document.getElementById('authEmailField').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('forgotPasswordBtn').style.display = mode === 'login' ? 'flex' : 'none';
   document.getElementById('authHint').textContent = mode === 'login'
-    ? 'Noch kein Konto? Oben auf "Registrieren" tippen.'
-    : 'Schon registriert? Oben auf "Anmelden" tippen.';
+    ? 'No account yet? Tap "Register" above.'
+    : 'Already registered? Tap "Log In" above.';
   document.getElementById('authError').style.display = 'none';
 }
 
@@ -1300,14 +1300,14 @@ function showAuthError(msg) {
 
 function mapFirebaseError(e) {
   const code = e && e.code ? e.code : '';
-  if (code.includes('username-already-in-use')) return 'Dieser Benutzername ist schon vergeben.';
-  if (code.includes('email-already-in-use')) return 'Diese E-Mail-Adresse wird bereits verwendet.';
-  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Benutzername oder Passwort falsch.';
-  if (code.includes('weak-password')) return 'Passwort ist zu schwach (mind. 6 Zeichen).';
-  if (code.includes('invalid-email')) return 'Bitte eine gültige E-Mail-Adresse angeben.';
-  if (code.includes('requires-recent-login')) return 'Bitte aktuelles Passwort zur Bestätigung eingeben.';
-  if (code.includes('network-request-failed')) return 'Keine Verbindung – bitte Internet prüfen.';
-  return 'Es ist ein Fehler aufgetreten (' + (code || (e && e.message) || 'unbekannt') + ').';
+  if (code.includes('username-already-in-use')) return 'This username is already taken.';
+  if (code.includes('email-already-in-use')) return 'This email address is already in use.';
+  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Incorrect username or password.';
+  if (code.includes('weak-password')) return 'Password is too weak (min. 6 characters).';
+  if (code.includes('invalid-email')) return 'Please enter a valid email address.';
+  if (code.includes('requires-recent-login')) return 'Please enter your current password to confirm.';
+  if (code.includes('network-request-failed')) return 'No connection – please check your internet.';
+  return 'An error occurred (' + (code || (e && e.message) || 'unknown') + ').';
 }
 
 async function submitAuth() {
@@ -1316,13 +1316,13 @@ async function submitAuth() {
   const password = document.getElementById('authPassword').value;
   document.getElementById('authError').style.display = 'none';
 
-  if (username.length < 3) { showAuthError('Benutzername muss mind. 3 Zeichen haben.'); return; }
+  if (username.length < 3) { showAuthError('Username must be at least 3 characters.'); return; }
   if (authMode === 'register' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showAuthError('Bitte eine gültige E-Mail-Adresse angeben (für Passwort-Zurücksetzen).');
+    showAuthError('Please enter a valid email address (for password reset).');
     return;
   }
-  if (password.length < 6) { showAuthError('Passwort muss mind. 6 Zeichen haben.'); return; }
-  if (!window.fb) { showAuthError('Verbindung zu Firebase noch nicht bereit, bitte kurz warten und erneut versuchen.'); return; }
+  if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  if (!window.fb) { showAuthError('Connection to Firebase not ready yet, please wait a moment and try again.'); return; }
 
   const btn = document.getElementById('authSubmitBtn');
   btn.disabled = true;
@@ -1347,14 +1347,14 @@ async function submitAuth() {
 async function forgotPassword() {
   const username = document.getElementById('authUsername').value.trim();
   document.getElementById('authError').style.display = 'none';
-  if (username.length < 3) { showAuthError('Bitte oben zuerst deinen Benutzernamen eingeben.'); return; }
-  if (!window.fb) { showAuthError('Verbindung zu Firebase noch nicht bereit, bitte kurz warten.'); return; }
+  if (username.length < 3) { showAuthError('Please enter your username above first.'); return; }
+  if (!window.fb) { showAuthError('Connection to Firebase not ready yet, please wait a moment.'); return; }
   try {
     await window.fb.sendPasswordReset(username);
   } catch (e) {
     console.error(e);
   }
-  showAuthError('Falls dieser Benutzername existiert, wurde eine E-Mail mit einem Link zum Zurücksetzen verschickt.');
+  showAuthError('If this username exists, an email with a reset link has been sent.');
 }
 
 function logout() {
@@ -1454,7 +1454,7 @@ async function saveAccountUsername() {
   okEl.style.display = 'none';
 
   if (newUsername.length < 3) {
-    errEl.textContent = 'Benutzername muss mind. 3 Zeichen haben.';
+    errEl.textContent = 'Username must be at least 3 characters.';
     errEl.style.display = 'block';
     return;
   }
@@ -1483,13 +1483,13 @@ async function saveAccountEmail() {
   okEl.style.display = 'none';
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-    errEl.textContent = 'Bitte eine gültige E-Mail-Adresse angeben.';
+    errEl.textContent = 'Please enter a valid email address.';
     errEl.style.display = 'block';
     return;
   }
   if (newEmail === currentEmail) return;
   if (!currentPassword) {
-    errEl.textContent = 'Bitte aktuelles Passwort zur Bestätigung eingeben.';
+    errEl.textContent = 'Please enter your current password to confirm.';
     errEl.style.display = 'block';
     return;
   }
@@ -1497,7 +1497,7 @@ async function saveAccountEmail() {
   try {
     await window.fb.updateAccountEmail(newEmail, currentPassword);
     document.getElementById('accountEmailPassword').value = '';
-    okEl.textContent = 'Bestätigungslink an die neue Adresse verschickt. Erst nach Klick auf den Link in der E-Mail wird der Wechsel wirksam.';
+    okEl.textContent = 'Confirmation link sent to the new address. The change only takes effect once you click the link in the email.';
     okEl.style.display = 'block';
   } catch (e) {
     errEl.textContent = mapFirebaseError(e);
@@ -1513,8 +1513,8 @@ async function saveAccountPassword() {
   errEl.style.display = 'none';
   okEl.style.display = 'none';
 
-  if (!currentPassword) { errEl.textContent = 'Bitte aktuelles Passwort eingeben.'; errEl.style.display = 'block'; return; }
-  if (newPassword.length < 6) { errEl.textContent = 'Neues Passwort muss mind. 6 Zeichen haben.'; errEl.style.display = 'block'; return; }
+  if (!currentPassword) { errEl.textContent = 'Please enter your current password.'; errEl.style.display = 'block'; return; }
+  if (newPassword.length < 6) { errEl.textContent = 'New password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
 
   try {
     await window.fb.updateAccountPassword(currentPassword, newPassword);
@@ -1751,7 +1751,7 @@ function handleGarminFile(event) {
 
   const name = file.name.toLowerCase();
   if (!name.endsWith('.gpx') && !name.endsWith('.tcx') && !name.endsWith('.xml')) {
-    alert('Bitte eine .gpx- oder .tcx-Datei wählen. Export in Garmin Connect: Aktivität öffnen → Zahnrad → "Exportieren" → GPX oder TCX (nicht FIT).');
+    alert('Please choose a .gpx or .tcx file. In Garmin Connect: open the activity → gear icon → "Export" → GPX or TCX (not FIT).');
     return;
   }
 
@@ -1764,7 +1764,7 @@ function handleGarminFile(event) {
       console.error(err);
     }
     if (!result || !(result.km > 0)) {
-      alert('Aus der Datei konnten keine Distanz-/Zeitdaten gelesen werden. Ist es eine gültige GPX/TCX-Aktivitätsdatei?');
+      alert('No distance/time data could be read from the file. Is this a valid GPX/TCX activity file?');
       return;
     }
     openActivityModal(result.type);
@@ -1837,8 +1837,8 @@ if ('serviceWorker' in navigator) {
         characterName: "Leonidas",
         activities: [],
         week: [
-          { day: "Mo", km: 0 }, { day: "Di", km: 0 }, { day: "Mi", km: 0 }, { day: "Do", km: 0 },
-          { day: "Fr", km: 0 }, { day: "Sa", km: 0 }, { day: "So", km: 0 },
+          { day: "Mon", km: 0 }, { day: "Tue", km: 0 }, { day: "Wed", km: 0 }, { day: "Thu", km: 0 },
+          { day: "Fri", km: 0 }, { day: "Sat", km: 0 }, { day: "Sun", km: 0 },
         ],
       });
       await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: email.trim() });

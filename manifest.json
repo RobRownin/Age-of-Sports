@@ -1,7 +1,7 @@
 {
   "name": "Age of Sports",
   "short_name": "Age of Sports",
-  "description": "Sportliche Aktivitäten erfassen und deinen Olympioniken aufleveln.",
+  "description": "Log sporting activities and level up your Olympian.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
