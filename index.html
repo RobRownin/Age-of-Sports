@@ -1835,6 +1835,20 @@ function avg(list) {
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
 }
 
+// Errät den Aktivitätstyp aus freiem Text (Name/Notizen), als Rückfalloption für Formate wie TCX,
+// deren "Sport"-Attribut offiziell nur Running/Biking/Other kennt und alles andere (z. B. Rudern)
+// als "Other" exportiert.
+function inferTypeFromText(text) {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  if (t.includes('row')) return 'row';
+  if (t.includes('cycl') || t.includes('bik')) return 'ride';
+  if (t.includes('walk') || t.includes('hik')) return 'walk';
+  if (t.includes('strength') || t.includes('weight') || t.includes('gym')) return 'strength';
+  if (t.includes('run')) return 'run';
+  return null;
+}
+
 function parseGPX(text) {
   const xml = new DOMParser().parseFromString(text, 'application/xml');
   if (xml.getElementsByTagName('parsererror').length > 0) return null;
@@ -1882,8 +1896,15 @@ function parseGPX(text) {
 
   const nameEl = xml.getElementsByTagName('name')[0];
   const label = 'Garmin-Import' + (nameEl && nameEl.textContent ? ': ' + nameEl.textContent : '');
+
+  // GPX kennt (anders als TCX) ein freies <type>-Feld, das Garmin meist korrekt befüllt
+  // (z. B. "Rowing", "running", "cycling") - deutlich zuverlässiger als der TCX-Sport-Wert.
+  const typeEl = xml.getElementsByTagName('type')[0];
+  const inferredType = inferTypeFromText(typeEl ? typeEl.textContent : null)
+    || inferTypeFromText(nameEl ? nameEl.textContent : null);
+
   return {
-    type: 'run',
+    type: inferredType || 'run',
     km,
     mins: Math.max(1, mins),
     label,
@@ -1941,7 +1962,15 @@ function parseTCX(text) {
   const activityEl = xml.getElementsByTagName('Activity')[0];
   const sport = activityEl ? activityEl.getAttribute('Sport') : '';
   const typeMap = { Running: 'run', Biking: 'ride', Cycling: 'ride', Walking: 'walk', Rowing: 'row' };
-  const type = typeMap[sport] || 'run';
+
+  // TCX kennt bei "Sport" offiziell nur Running/Biking/Other - alles andere (z. B. Rudern)
+  // landet als "Other". Versuche in dem Fall, den Typ aus Name/Notizen-Text zu erraten.
+  const notesEl = activityEl ? getByLocalName(activityEl, 'Notes')[0] : null;
+  const nameEl = xml.getElementsByTagName('Name')[0];
+  const inferredType = inferTypeFromText(notesEl ? notesEl.textContent : null)
+    || inferTypeFromText(nameEl ? nameEl.textContent : null);
+  const type = typeMap[sport] || inferredType || 'run';
+
   const label = 'Garmin-Import' + (sport ? ': ' + sport : '');
 
   let startDate = null;
