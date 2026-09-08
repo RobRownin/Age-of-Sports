@@ -1706,19 +1706,31 @@ if ('serviceWorker' in navigator) {
     },
     async login(username, password) {
       const uname = normalizeUsername(username);
-      const mapSnap = await getDoc(doc(db, "usernames", uname));
-      if (mapSnap.exists()) {
-        const { email } = mapSnap.data();
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        return cred.user;
-      }
-      // Rückwärtskompatibilität: Accounts von vor der Umstellung auf echte E-Mails
-      // wurden mit einer erfundenen Adresse angelegt und haben noch keine usernames-Zuordnung.
       const legacyEmail = uname + "@ageofsports.app";
-      const cred = await signInWithEmailAndPassword(auth, legacyEmail, password);
-      // Zuordnung nachträglich anlegen, damit künftige Logins den regulären Weg nehmen
-      await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email: legacyEmail });
-      return cred.user;
+
+      // Kandidaten sammeln: zuerst die in Firestore hinterlegte Adresse (falls vorhanden),
+      // danach immer auch die alte erfundene Adresse als Absicherung - z. B. falls ein
+      // E-Mail-Wechsel angestoßen, aber der Bestätigungslink noch nicht angeklickt wurde
+      // (Firebase nutzt bis dahin weiterhin die alte Adresse zum Einloggen).
+      const candidates = [];
+      try {
+        const mapSnap = await getDoc(doc(db, "usernames", uname));
+        if (mapSnap.exists() && mapSnap.data().email) candidates.push(mapSnap.data().email);
+      } catch (e) { /* ignorieren, Fallback greift unten */ }
+      if (!candidates.includes(legacyEmail)) candidates.push(legacyEmail);
+
+      let lastErr = null;
+      for (const email of candidates) {
+        try {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          // Zuordnung synchronisieren, damit künftige Logins direkt den richtigen Treffer nutzen
+          await setDoc(doc(db, "usernames", uname), { uid: cred.user.uid, email }, { merge: true }).catch(() => {});
+          return cred.user;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      throw lastErr;
     },
     async logout() {
       await signOut(auth);
