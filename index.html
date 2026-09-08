@@ -57,10 +57,11 @@
   .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .stat-value{ font-family:'JetBrains Mono', monospace; font-size:24px; margin-top:2px; }
   .stat-value span{ font-size:13px; color:var(--muted); }
-  .chart-row{ display:flex; align-items:flex-end; gap:8px; height:130px; margin-top:8px; }
+  .chart-row{ display:flex; align-items:flex-end; gap:8px; height:150px; margin-top:8px; }
   .chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
   .chart-bar{ width:100%; max-width:26px; background:var(--gold); border-radius:6px 6px 0 0; min-height:2px; }
   .chart-day{ font-size:11px; color:var(--muted); white-space:nowrap; text-align:center; line-height:1.4; }
+  .chart-value{ font-size:9px; color:var(--muted); white-space:nowrap; text-align:center; }
 
   .athlete-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
@@ -1240,10 +1241,11 @@ function buildChartBuckets(type, offset, list) {
   });
 
   list.forEach((a) => {
-    if (!a.km) return;
     const t = activitySortTime(a);
     const bucket = buckets.find((b) => t >= b.start.getTime() && t < b.end.getTime());
-    if (bucket) bucket.km += a.km;
+    if (!bucket) return;
+    bucket.count = (bucket.count || 0) + 1;
+    if (a.km) bucket.km += a.km;
   });
   return buckets;
 }
@@ -1302,6 +1304,7 @@ function renderStats() {
   const max = Math.max(...buckets.map((d) => d.km), 1);
   document.getElementById('chartRow').innerHTML = buckets.map(d => `
     <div class="chart-col">
+      <div class="chart-value" style="${d.isCurrent ? 'color:var(--gold-light);font-weight:600;' : ''}">${d.count ? `${d.km.toFixed(1)} (${d.count})` : ''}</div>
       <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%;${d.isCurrent ? 'background:var(--gold-light);box-shadow:0 0 0 2px var(--text);' : ''}"></div>
       <div class="chart-day" style="${d.isCurrent ? 'color:var(--gold-light);font-weight:600;' : ''}">${d.label}</div>
     </div>`).join('') || '<p class="hint">No data for this period.</p>';
