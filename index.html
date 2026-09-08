@@ -778,13 +778,23 @@ function persist() {
 
 function syncLeaderboard() {
   if (!currentUid || !window.fb || !window.fb.saveLeaderboardEntry) return;
-  const { level } = levelFromKm(lifetimeKm());
-  window.fb.saveLeaderboardEntry(currentUid, {
-    athleteName: athleteName,
-    username: currentUsername,
-    level: level,
-    score: computeScore(),
-  }).catch((e) => console.error('Leaderboard update failed:', e));
+  syncActiveAthleteIntoRoster();
+  athletes.forEach((a) => {
+    const { level } = levelFromKm(totalKm(a.activities || []));
+    const score = a.activities.reduce((sum, act) => sum + computeActivityScore(act), 0);
+    window.fb.saveLeaderboardEntry(`${currentUid}_${a.id}`, {
+      uid: currentUid,
+      athleteId: a.id,
+      athleteName: a.name,
+      username: currentUsername,
+      level: level,
+      score: score,
+    }).catch((e) => console.error('Leaderboard update failed:', e));
+  });
+  // Altformat aus der Zeit vor Mehrfach-Athleten aufräumen (Dokument-ID war früher = uid)
+  if (window.fb.deleteLeaderboardEntry) {
+    window.fb.deleteLeaderboardEntry(currentUid).catch(() => {});
+  }
 }
 
 async function loadLeaderboard() {
@@ -2342,13 +2352,16 @@ if ('serviceWorker' in navigator) {
     async saveUserData(uid, data) {
       await setDoc(doc(db, "users", uid), data, { merge: true });
     },
-    async saveLeaderboardEntry(uid, data) {
-      await setDoc(doc(db, "leaderboard", uid), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    async saveLeaderboardEntry(docId, data) {
+      await setDoc(doc(db, "leaderboard", docId), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    async deleteLeaderboardEntry(docId) {
+      await deleteDoc(doc(db, "leaderboard", docId));
     },
     async fetchLeaderboard() {
       const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
       const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      return snap.docs.map((d) => ({ docId: d.id, ...d.data() }));
     },
     async sendPasswordReset(username) {
       const uname = normalizeUsername(username);
