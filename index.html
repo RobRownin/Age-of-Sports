@@ -60,7 +60,7 @@
   .chart-row{ display:flex; align-items:flex-end; gap:8px; height:130px; margin-top:8px; }
   .chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
   .chart-bar{ width:100%; max-width:26px; background:var(--gold); border-radius:6px 6px 0 0; min-height:2px; }
-  .chart-day{ font-size:11px; color:var(--muted); white-space:nowrap; }
+  .chart-day{ font-size:11px; color:var(--muted); white-space:nowrap; text-align:center; line-height:1.4; }
 
   .athlete-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
@@ -1204,7 +1204,9 @@ function buildChartBuckets(type, offset, list) {
       const s = new Date(cursor);
       const e = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
       const lastDay = new Date(e.getFullYear(), e.getMonth(), e.getDate() - 1);
-      const label = s.getDate() === lastDay.getDate() ? `${s.getDate()}` : `${s.getDate()}–${lastDay.getDate()}`;
+      const label = (s.getDate() === lastDay.getDate() && s.getMonth() === lastDay.getMonth())
+        ? `${MONTH_ABBR[s.getMonth()]} ${s.getDate()}`
+        : `${MONTH_ABBR[s.getMonth()]} ${s.getDate()}<br>${MONTH_ABBR[lastDay.getMonth()]} ${lastDay.getDate()}`;
       buckets.push({ label, start: s, end: e, km: 0 });
       cursor = e;
     }
