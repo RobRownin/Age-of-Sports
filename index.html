@@ -471,6 +471,49 @@
     </section>
   </main>
 
+  <!-- VIEW ACTIVITY SHEET (read-only) -->
+  <div class="overlay" id="activityViewOverlay" onclick="if(event.target===this) closeViewModal()">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2 id="viewTitle">Activity</h2>
+        <button class="sheet-close" onclick="closeViewModal()">✕</button>
+      </div>
+
+      <div class="card" style="display:flex;align-items:center;gap:12px;">
+        <div class="activity-icon" id="viewIcon" style="width:48px;height:48px;font-size:22px;"></div>
+        <div style="flex:1;min-width:0;">
+          <div class="activity-name" id="viewLabel" style="font-size:16px;"></div>
+          <div class="activity-sub" id="viewTypeDate"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card">
+          <p class="label" id="viewMetricLabel">Distance</p>
+          <p class="stat-value" id="viewMetricValue">0</p>
+        </div>
+        <div class="card">
+          <p class="label">Duration</p>
+          <p class="stat-value" id="viewDuration">0 <span>min</span></p>
+        </div>
+      </div>
+
+      <div class="card" id="viewExtraCard" style="display:none;">
+        <div id="viewExtraRows"></div>
+      </div>
+
+      <div class="card" style="text-align:center;">
+        <p class="label">Leaderboard Points</p>
+        <p class="stat-value" id="viewScore" style="color:var(--gold);font-size:28px;">0</p>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" style="flex:1;" onclick="editFromView()">Edit</button>
+        <button onclick="closeViewModal()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ADD/EDIT ACTIVITY SHEET -->
   <div class="overlay" id="activityOverlay" onclick="if(event.target===this) closeActivityModal()">
     <div class="sheet">
@@ -576,21 +619,21 @@ function lifetimeKm() { return totalKm(ACTIVITIES); }
 // First version of the leaderboard scoring formula - factors: distance, duration,
 // reps, heart rate (intensity bonus), elevation gain, and sleep.
 // Weights are an initial draft and can be adjusted anytime.
-function computeScore() {
-  let score = 0;
-  ACTIVITIES.forEach((a) => {
-    if (a.type === 'sleep') {
-      const hours = (a.mins || 0) / 60;
-      score += Math.min(hours, 9) * 5; // capped at 9h so oversleeping doesn't count disproportionately
-    } else {
-      score += (a.km || 0) * 10;
-      score += (a.mins || 0) * 1;
-      score += (a.reps || 0) * 0.5;
-      if (a.avgHeartRate) score += a.avgHeartRate * 0.3;
-      if (a.elevationGain) score += a.elevationGain * 0.2;
-    }
-  });
+function computeActivityScore(a) {
+  if (a.type === 'sleep') {
+    const hours = (a.mins || 0) / 60;
+    return Math.round(Math.min(hours, 9) * 5); // capped at 9h so oversleeping doesn't count disproportionately
+  }
+  let score = (a.km || 0) * 10;
+  score += (a.mins || 0) * 1;
+  score += (a.reps || 0) * 0.5;
+  if (a.avgHeartRate) score += a.avgHeartRate * 0.3;
+  if (a.elevationGain) score += a.elevationGain * 0.2;
   return Math.round(score);
+}
+
+function computeScore() {
+  return ACTIVITIES.reduce((sum, a) => sum + computeActivityScore(a), 0);
 }
 
 function persist() {
@@ -833,7 +876,7 @@ function renderActivityRow(a, realIndex) {
   const extraLine = extras.length > 0 ? `<div class="activity-sub" style="opacity:.75;">${extras.join(' · ')}</div>` : '';
 
   return `
-    <button class="activity-row-btn" onclick="openEditModal(${realIndex})">
+    <button class="activity-row-btn" onclick="openViewModal(${realIndex})">
       <div class="card activity-row">
         <div class="activity-icon">${a.icon}</div>
         <div style="flex:1;min-width:0;">
@@ -1099,6 +1142,55 @@ function openActivityModal(defaultType) {
   document.getElementById('sheetDeleteBtn').style.display = 'none';
   resetForm(defaultType);
   document.getElementById('activityOverlay').classList.add('open');
+}
+
+let viewingIndex = null;
+
+function openViewModal(index) {
+  const a = ACTIVITIES[index];
+  if (!a) return;
+  viewingIndex = index;
+
+  const isSleep = a.type === 'sleep';
+
+  document.getElementById('viewTitle').textContent = TYPE_LABEL[a.type] || 'Activity';
+  document.getElementById('viewIcon').textContent = a.icon;
+  document.getElementById('viewLabel').textContent = a.label;
+  document.getElementById('viewTypeDate').textContent = `${TYPE_LABEL[a.type] || a.type} · ${a.date}`;
+
+  document.getElementById('viewMetricLabel').textContent = isSleep ? 'Sleep' : (a.km ? 'Distance' : 'Reps');
+  document.getElementById('viewMetricValue').innerHTML = isSleep
+    ? (a.mins / 60).toFixed(1) + ' <span>h</span>'
+    : (a.km ? a.km.toFixed(1) + ' <span>km</span>' : String(a.reps || 0));
+  document.getElementById('viewDuration').innerHTML = a.mins + ' <span>min</span>';
+
+  const extras = [];
+  if (a.avgHeartRate) extras.push(`❤ Heart Rate: ${a.avgHeartRate} bpm`);
+  if (a.elevationGain) extras.push(`⛰ Elevation Gain: ${a.elevationGain} hm`);
+  if (isSleep && a.bedTime) extras.push(`🌙 Bedtime: ${a.bedTime}`);
+  if (isSleep && a.wakeTime) extras.push(`☀️ Wake Time: ${a.wakeTime}`);
+  const extraCard = document.getElementById('viewExtraCard');
+  if (extras.length > 0) {
+    extraCard.style.display = 'block';
+    document.getElementById('viewExtraRows').innerHTML = extras.map(t => `<p class="hint" style="text-align:left;margin:4px 0;">${t}</p>`).join('');
+  } else {
+    extraCard.style.display = 'none';
+  }
+
+  document.getElementById('viewScore').textContent = computeActivityScore(a);
+
+  document.getElementById('activityViewOverlay').classList.add('open');
+}
+
+function closeViewModal() {
+  document.getElementById('activityViewOverlay').classList.remove('open');
+  viewingIndex = null;
+}
+
+function editFromView() {
+  const idx = viewingIndex;
+  closeViewModal();
+  openEditModal(idx);
 }
 
 function openEditModal(index) {
