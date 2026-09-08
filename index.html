@@ -398,9 +398,13 @@
           <label>E-Mail-Adresse</label>
           <input id="accountEmail" type="email" placeholder="deine@email.de" />
         </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Aktuelles Passwort (zur Bestätigung)</label>
+          <input id="accountEmailPassword" type="password" autocomplete="current-password" />
+        </div>
         <p class="auth-error" id="accountEmailError" style="display:none;"></p>
         <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
-        <button class="btn-primary" onclick="saveAccountEmail()">E-Mail speichern</button>
+        <button class="btn-primary" onclick="saveAccountEmail()">E-Mail ändern</button>
       </div>
 
       <div class="card">
@@ -1323,6 +1327,7 @@ let currentEmail = null;
 function loadAccountScreen() {
   document.getElementById('accountUsername').textContent = currentUsername || '–';
   document.getElementById('accountEmail').value = currentEmail || '';
+  document.getElementById('accountEmailPassword').value = '';
   document.getElementById('accountCurrentPassword').value = '';
   document.getElementById('accountNewPassword').value = '';
   document.getElementById('accountEmailError').style.display = 'none';
@@ -1333,6 +1338,7 @@ function loadAccountScreen() {
 
 async function saveAccountEmail() {
   const newEmail = document.getElementById('accountEmail').value.trim();
+  const currentPassword = document.getElementById('accountEmailPassword').value;
   const errEl = document.getElementById('accountEmailError');
   const okEl = document.getElementById('accountEmailSuccess');
   errEl.style.display = 'none';
@@ -1344,14 +1350,16 @@ async function saveAccountEmail() {
     return;
   }
   if (newEmail === currentEmail) return;
-
-  const currentPassword = prompt('Bitte aktuelles Passwort zur Bestätigung eingeben:');
-  if (!currentPassword) return;
+  if (!currentPassword) {
+    errEl.textContent = 'Bitte aktuelles Passwort zur Bestätigung eingeben.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   try {
-    await window.fb.updateAccountEmail(currentUid, currentUsername, newEmail, currentPassword);
-    currentEmail = newEmail;
-    okEl.textContent = 'E-Mail-Adresse aktualisiert.';
+    await window.fb.updateAccountEmail(newEmail, currentPassword);
+    document.getElementById('accountEmailPassword').value = '';
+    okEl.textContent = 'Bestätigungslink an die neue Adresse verschickt. Erst nach Klick auf den Link in der E-Mail wird der Wechsel wirksam.';
     okEl.style.display = 'block';
   } catch (e) {
     errEl.textContent = mapFirebaseError(e);
@@ -1402,6 +1410,13 @@ window.handleAuthState = async function (user) {
     WEEK = data.week || EMPTY_WEEK();
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
+
+    // Falls die E-Mail über einen Bestätigungslink (verifyBeforeUpdateEmail) inzwischen
+    // wirklich gewechselt wurde, Firestore jetzt nachziehen
+    if (user.email && user.email !== currentEmail && window.fb.syncEmailIfChanged) {
+      currentEmail = user.email;
+      window.fb.syncEmailIfChanged(user.uid, currentUsername, user.email).catch((e) => console.error('E-Mail-Abgleich fehlgeschlagen:', e));
+    }
 
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('appRoot').style.display = 'flex';
@@ -1637,7 +1652,7 @@ if ('serviceWorker' in navigator) {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-    sendPasswordResetEmail, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
+    sendPasswordResetEmail, updatePassword, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit
@@ -1730,11 +1745,16 @@ if ('serviceWorker' in navigator) {
       const { email } = mapSnap.data();
       await sendPasswordResetEmail(auth, email);
     },
-    async updateAccountEmail(uid, username, newEmail, currentPassword) {
+    async updateAccountEmail(newEmail, currentPassword) {
       await reauth(currentPassword);
-      await updateEmail(auth.currentUser, newEmail.trim());
-      await setDoc(doc(db, "users", uid), { email: newEmail.trim() }, { merge: true });
-      await setDoc(doc(db, "usernames", normalizeUsername(username)), { email: newEmail.trim() }, { merge: true });
+      // verifyBeforeUpdateEmail statt updateEmail: Firebase verlangt inzwischen eine Bestätigung
+      // über einen Link an die NEUE Adresse, bevor die E-Mail wirklich gewechselt wird (Schutz vor
+      // Account-Übernahme). Firestore wird erst synchronisiert, sobald der Link bestätigt wurde.
+      await verifyBeforeUpdateEmail(auth.currentUser, newEmail.trim());
+    },
+    async syncEmailIfChanged(uid, username, authEmail) {
+      await setDoc(doc(db, "users", uid), { email: authEmail }, { merge: true });
+      await setDoc(doc(db, "usernames", normalizeUsername(username)), { email: authEmail }, { merge: true });
     },
     async updateAccountPassword(currentPassword, newPassword) {
       await reauth(currentPassword);
