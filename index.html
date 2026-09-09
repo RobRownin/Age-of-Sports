@@ -78,11 +78,7 @@
     display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:16px; opacity:.5; }
   .inv-empty-hint{ font-size:11px; color:var(--muted); margin:0 0 8px; }
   .pixel-avatar{ image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
-  .name-row{ display:flex; align-items:center; gap:6px; margin-top:6px; background:none; border:none; cursor:pointer; color:inherit; font:inherit; }
-  .name-row .name{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; }
-  .name-edit{ display:none; align-items:center; gap:8px; margin-top:6px; }
-  .name-edit input{ background:var(--bg); color:var(--text); border:1px solid var(--gold); border-radius:8px; padding:6px 10px; font-family:'Cinzel','Times New Roman',serif; font-size:14px; text-align:center; width:160px; outline:none; }
-  .name-edit button{ width:28px; height:28px; border-radius:8px; background:var(--gold); border:none; color:var(--bg); font-weight:700; cursor:pointer; }
+  .name-select{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; color:var(--text); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 14px; margin-top:6px; text-align:center; text-align-last:center; cursor:pointer; width:auto; max-width:220px; }
 
   .attr-card{ margin-top:2px; }
   .attr-row{ display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px; }
@@ -304,12 +300,6 @@
         <h1 class="title">Active Athlete</h1>
       </div>
 
-      <div class="field" style="margin-bottom:2px;">
-        <label>Switch Athlete</label>
-        <select id="athleteSelect" onchange="switchActiveAthlete(this.value)"
-          style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;"></select>
-      </div>
-
       <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
@@ -323,14 +313,7 @@
           </div>
         </div>
 
-        <button class="name-row" id="nameDisplayRow" onclick="startEditName()">
-          <span class="name" id="athleteNameDisplay">Leonidas</span>
-          <span style="color:var(--muted);font-size:13px;">✎</span>
-        </button>
-        <div class="name-edit" id="nameEditRow">
-          <input id="nameInput" maxlength="20" />
-          <button onclick="saveName()">✓</button>
-        </div>
+        <select id="athleteNameSelect" class="name-select" onchange="switchActiveAthlete(this.value)"></select>
 
         <p class="label" style="margin-top:8px;" id="athleteLevel">Level 1</p>
         <p class="hint" id="athleteRemain" style="margin-bottom:6px;"></p>
@@ -510,6 +493,32 @@
       </div>
     </section>
   </main>
+
+  <!-- ATHLETE DETAIL DIALOG (Gymnasium) -->
+  <div class="overlay" id="athleteDialogOverlay" onclick="if(event.target===this) closeAthleteDialog()">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Athlete</h2>
+        <button class="sheet-close" onclick="closeAthleteDialog()">✕</button>
+      </div>
+
+      <div class="card" style="display:flex;align-items:center;gap:12px;">
+        <div id="athleteDialogAvatar"></div>
+        <div style="flex:1;min-width:0;">
+          <p class="label" style="margin:0 0 4px;">Level <span id="athleteDialogLevel"></span></p>
+          <p class="hint" id="athleteDialogRemain" style="margin:0;"></p>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:10px;">
+        <label>Name</label>
+        <input id="athleteDialogNameInput" maxlength="20" />
+      </div>
+      <p class="auth-error" id="athleteDialogError" style="display:none;"></p>
+      <p class="hint" id="athleteDialogSuccess" style="display:none;color:var(--gold);"></p>
+      <button class="btn-primary" onclick="saveAthleteDialogName()">Save Name</button>
+    </div>
+  </div>
 
   <!-- VIEW ACTIVITY SHEET (read-only) -->
   <div class="overlay" id="activityViewOverlay" onclick="if(event.target===this) closeViewModal()">
@@ -712,7 +721,7 @@ function createNewAthlete() {
 }
 
 function renderAthleteSelector() {
-  const sel = document.getElementById('athleteSelect');
+  const sel = document.getElementById('athleteNameSelect');
   if (!sel) return;
   sel.innerHTML = athletes.map((a) =>
     `<option value="${a.id}" ${a.id === activeAthleteId ? 'selected' : ''}>${a.name}</option>`
@@ -727,7 +736,7 @@ function renderGymnasiumList() {
     const lvl = levelFromKm(totalKm(a.activities || [])).level;
     return `
     <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;"
-      onclick="switchActiveAthlete('${a.id}'); showScreen('athlete');">
+      onclick="openAthleteDialog('${a.id}')">
       <img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
@@ -736,6 +745,56 @@ function renderGymnasiumList() {
       <span class="chevron">›</span>
     </button>`;
   }).join('');
+}
+
+let dialogAthleteId = null;
+
+function openAthleteDialog(id) {
+  const entry = athletes.find((a) => a.id === id);
+  if (!entry) return;
+  dialogAthleteId = id;
+  const { level, remaining } = levelFromKm(totalKm(entry.activities || []));
+
+  document.getElementById('athleteDialogAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="60" height="90" alt="Athlete" />`;
+  document.getElementById('athleteDialogLevel').textContent = level;
+  document.getElementById('athleteDialogRemain').textContent = `${remaining} km until Level ${level + 1}`;
+  document.getElementById('athleteDialogNameInput').value = entry.name;
+  document.getElementById('athleteDialogError').style.display = 'none';
+  document.getElementById('athleteDialogSuccess').style.display = 'none';
+  document.getElementById('athleteDialogOverlay').classList.add('open');
+}
+
+function closeAthleteDialog() {
+  document.getElementById('athleteDialogOverlay').classList.remove('open');
+  dialogAthleteId = null;
+}
+
+function saveAthleteDialogName() {
+  const entry = athletes.find((a) => a.id === dialogAthleteId);
+  if (!entry) return;
+  const errEl = document.getElementById('athleteDialogError');
+  const okEl = document.getElementById('athleteDialogSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  const newName = document.getElementById('athleteDialogNameInput').value.trim();
+  if (newName.length < 1) {
+    errEl.textContent = 'Please enter a name.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  entry.name = newName.slice(0, 20);
+  if (entry.id === activeAthleteId) {
+    athleteName = entry.name; // aktiven Namen synchron halten, falls es der aktive Athlet ist
+    renderAthleteAndHero();
+  }
+  persist();
+  renderGymnasiumList();
+  renderAthleteSelector();
+
+  okEl.textContent = 'Name updated.';
+  okEl.style.display = 'block';
 }
 
 function totalKm(list) { return list.reduce((s, a) => s + (a.km || 0), 0); }
@@ -1356,7 +1415,6 @@ function renderAthleteAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
   document.getElementById('athleteAvatar').innerHTML = `<img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="108" height="162" alt="Athlete" />`;
-  document.getElementById('athleteNameDisplay').textContent = athleteName;
   document.getElementById('athleteLevel').textContent = 'Level ' + level;
   document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
@@ -1386,24 +1444,6 @@ function openDrawer() {
 function closeDrawer() {
   document.getElementById('drawerMenu').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
-}
-
-function startEditName() {
-  document.getElementById('nameDisplayRow').style.display = 'none';
-  document.getElementById('nameEditRow').style.display = 'flex';
-  const input = document.getElementById('nameInput');
-  input.value = athleteName;
-  input.focus();
-  input.onkeydown = (e) => { if (e.key === 'Enter') saveName(); };
-}
-
-function saveName() {
-  const val = document.getElementById('nameInput').value.trim();
-  athleteName = val.length > 0 ? val.slice(0, 20) : athleteName;
-  persist();
-  document.getElementById('nameDisplayRow').style.display = 'flex';
-  document.getElementById('nameEditRow').style.display = 'none';
-  renderAthleteAndHero();
 }
 
 // ---------- Add/Edit-activity sheet ----------
