@@ -85,6 +85,10 @@
   .attr-row span.val{ color:var(--gold); font-family:'JetBrains Mono', monospace; }
   .attr-track{ height:6px; border-radius:3px; background:var(--bg); overflow:hidden; }
   .attr-track > div{ height:100%; background:var(--red); }
+  .attr-row-mini{ display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; color:var(--muted); }
+  .attr-row-mini span.val{ color:var(--gold); font-family:'JetBrains Mono', monospace; }
+  .attr-track-mini{ height:4px; border-radius:2px; background:var(--bg); overflow:hidden; }
+  .attr-track-mini > div{ height:100%; background:var(--red); }
 
   .duel-btn{ display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; width:100%; cursor:pointer; color:var(--text); font:inherit; }
   .duel-btn .left{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
@@ -746,8 +750,12 @@ function renderGymnasiumList() {
         </div>
         <span class="chevron">›</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-left:52px;">
-        ${attrs.map(attr => `<span class="hint" style="margin:0;text-align:left;">${attr.name} <b style="color:var(--text);">${attr.value}</b></span>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:4px;padding-left:52px;">
+        ${attrs.map(attr => `
+          <div class="attr-row-mini">
+            <span>${attr.name}</span><span class="val">${attr.value}</span>
+          </div>
+          <div class="attr-track-mini"><div style="width:${attr.value}%"></div></div>`).join('')}
       </div>
     </button>`;
   }).join('');
