@@ -734,15 +734,21 @@ function renderGymnasiumList() {
   listEl.innerHTML = athletes.map((a) => {
     const isActive = a.id === activeAthleteId;
     const lvl = levelFromKm(totalKm(a.activities || [])).level;
+    const attrs = computeAttrs(lvl);
     return `
-    <button class="card" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;"
+    <button class="card" style="width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;display:flex;flex-direction:column;gap:8px;"
       onclick="openAthleteDialog('${a.id}')">
-      <img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />
-      <div style="flex:1;min-width:0;">
-        <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
-        <div class="label" style="margin-top:2px;">Level ${lvl}</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img class="pixel-avatar" src="avatar-pixel.png?v=${AVATAR_VERSION}" width="40" height="60" alt="Athlete" />
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
+          <div class="label" style="margin-top:2px;">Level ${lvl}</div>
+        </div>
+        <span class="chevron">›</span>
       </div>
-      <span class="chevron">›</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-left:52px;">
+        ${attrs.map(attr => `<span class="hint" style="margin:0;text-align:left;">${attr.name} <b style="color:var(--text);">${attr.value}</b></span>`).join('')}
+      </div>
     </button>`;
   }).join('');
 }
@@ -1395,14 +1401,17 @@ function setupStatsSwipeNav() {
   }, { passive: true });
 }
 
-function renderAttrs(level) {
-  const attrs = [
+function computeAttrs(level) {
+  return [
     { name: 'Endurance', value: Math.min(99, 20 + level * 6) },
     { name: 'Pace', value: Math.min(99, 15 + level * 5) },
     { name: 'Strength', value: Math.min(99, 10 + level * 4) },
     { name: 'Mental power', value: Math.min(99, 12 + level * 4) },
   ];
-  document.getElementById('attrCard').innerHTML = attrs.map(a => `
+}
+
+function renderAttrs(level) {
+  document.getElementById('attrCard').innerHTML = computeAttrs(level).map(a => `
     <div class="attr-row-wrap">
       <div class="attr-row"><span>${a.name}</span><span class="val">${a.value}</span></div>
       <div class="attr-track"><div style="width:${a.value}%"></div></div>
