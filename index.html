@@ -880,6 +880,7 @@ function persist() {
 function syncLeaderboard() {
   if (!currentUid || !window.fb || !window.fb.saveLeaderboardEntry) return;
   syncActiveAthleteIntoRoster();
+  const validIds = new Set(athletes.map((a) => a.id));
   athletes.forEach((a) => {
     const { level } = levelFromKm(totalKm(a.activities || []));
     const score = a.activities.reduce((sum, act) => sum + computeActivityScore(act), 0);
@@ -892,6 +893,18 @@ function syncLeaderboard() {
       score: score,
     }).catch((e) => console.error('Leaderboard update failed:', e));
   });
+
+  // Verwaiste Einträge dieses Accounts entfernen - z. B. von Athleten-IDs, die im aktuellen
+  // Roster nicht mehr existieren, aber irgendwann mal (Migration, Race Condition o. Ä.)
+  // als eigenes Rangliste-Dokument angelegt wurden und seither nie aufgeräumt wurden.
+  if (window.fb.fetchLeaderboard && window.fb.deleteLeaderboardEntry) {
+    window.fb.fetchLeaderboard().then((entries) => {
+      entries
+        .filter((e) => e.uid === currentUid && e.athleteId && !validIds.has(e.athleteId))
+        .forEach((e) => window.fb.deleteLeaderboardEntry(e.docId).catch(() => {}));
+    }).catch(() => {});
+  }
+
   // Altformat aus der Zeit vor Mehrfach-Athleten aufräumen (Dokument-ID war früher = uid)
   if (window.fb.deleteLeaderboardEntry) {
     window.fb.deleteLeaderboardEntry(currentUid).catch(() => {});
