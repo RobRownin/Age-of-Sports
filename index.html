@@ -81,6 +81,9 @@
   .inv-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
   .inv-item-slot{ aspect-ratio:1; border:1px dashed var(--border); border-radius:10px; background:var(--surface);
     display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:16px; opacity:.5; }
+  .inv-item-slot.filled{ border-style:solid; opacity:1; flex-direction:column; gap:2px; font-size:22px; cursor:default; }
+  .inv-item-slot.filled.equipped{ border-color:var(--gold); }
+  .inv-item-slot .item-name{ font-size:8px; color:var(--muted); text-align:center; line-height:1.1; padding:0 2px; }
   .inv-empty-hint{ font-size:11px; color:var(--muted); margin:0 0 8px; }
   .pixel-avatar{ image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
   .name-select{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; color:var(--text); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 14px; margin-top:6px; text-align:center; text-align-last:center; cursor:pointer; width:auto; max-width:220px; }
@@ -350,38 +353,26 @@
 
       <div class="inv-section">
         <div class="inv-section-title">👕 Clothing</div>
-        <p class="inv-empty-hint">No clothing items collected yet.</p>
-        <div class="inv-grid">
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-        </div>
+        <p class="inv-empty-hint" id="invHintClothing">No clothing items collected yet.</p>
+        <div class="inv-grid" id="invGridClothing"></div>
       </div>
 
       <div class="inv-section">
         <div class="inv-section-title">🛡️ Equipment</div>
-        <p class="inv-empty-hint">No equipment collected yet.</p>
-        <div class="inv-grid">
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-        </div>
+        <p class="inv-empty-hint" id="invHintEquipment">No equipment collected yet.</p>
+        <div class="inv-grid" id="invGridEquipment"></div>
       </div>
 
       <div class="inv-section">
         <div class="inv-section-title">🍖 Supplies</div>
-        <p class="inv-empty-hint">No supplies collected yet.</p>
-        <div class="inv-grid">
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-        </div>
+        <p class="inv-empty-hint" id="invHintSupplies">No supplies collected yet.</p>
+        <div class="inv-grid" id="invGridSupplies"></div>
       </div>
 
       <div class="inv-section">
         <div class="inv-section-title">❓ Slot 4</div>
-        <p class="inv-empty-hint">Nothing collected yet.</p>
-        <div class="inv-grid">
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-          <div class="inv-item-slot">?</div><div class="inv-item-slot">?</div>
-        </div>
+        <p class="inv-empty-hint" id="invHintSlot4">Nothing collected yet.</p>
+        <div class="inv-grid" id="invGridSlot4"></div>
       </div>
     </section>
 
@@ -734,6 +725,33 @@ function renderEquipSlots() {
   });
 }
 
+function renderInventory() {
+  const entry = activeAthleteEntry();
+  if (!entry) return;
+  ensureAthleteItems(entry);
+  const sections = {
+    clothing: ['invGridClothing', 'invHintClothing'],
+    equipment: ['invGridEquipment', 'invHintEquipment'],
+    supplies: ['invGridSupplies', 'invHintSupplies'],
+    slot4: ['invGridSlot4', 'invHintSlot4'],
+  };
+  Object.entries(sections).forEach(([slot, [gridId, hintId]]) => {
+    const gridEl = document.getElementById(gridId);
+    const hintEl = document.getElementById(hintId);
+    if (!gridEl || !hintEl) return;
+    const owned = entry.inventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
+    hintEl.style.display = owned.length === 0 ? 'block' : 'none';
+    const equippedId = entry.equipped[slot];
+    const tiles = owned.map((id) => {
+      const item = ITEM_CATALOG[id];
+      const isEquipped = id === equippedId;
+      return `<div class="inv-item-slot filled ${isEquipped ? 'equipped' : ''}">${item.icon}<span class="item-name">${item.name}</span></div>`;
+    });
+    while (tiles.length < 4) tiles.push('<div class="inv-item-slot">?</div>');
+    gridEl.innerHTML = tiles.join('');
+  });
+}
+
 let pickerSlot = null;
 
 function openItemPicker(slot) {
@@ -775,6 +793,7 @@ function equipItem(itemId) {
   entry.equipped[pickerSlot] = itemId;
   persist();
   renderEquipSlots();
+  renderInventory();
   closeItemPicker();
 }
 
@@ -1556,6 +1575,7 @@ function renderAthleteAndHero() {
   renderAthleteSelector();
   renderGymnasiumList();
   renderEquipSlots();
+  renderInventory();
 }
 
 function showScreen(name) {
@@ -1567,6 +1587,7 @@ function showScreen(name) {
   closeDrawer();
   localStorage.setItem('aos_lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'inventory') renderInventory();
   if (name === 'account') loadAccountScreen();
 }
 
