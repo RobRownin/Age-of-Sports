@@ -68,8 +68,13 @@
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
   .equip-group{ display:flex; flex-direction:column; gap:10px; }
   .equip-slot{ width:60px; height:60px; border:1px solid var(--border); border-radius:10px; background:var(--surface); display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; }
+    align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; cursor:pointer; padding:0; font-family:inherit; }
   .equip-slot .ic{ font-size:17px; opacity:.55; }
+  .equip-slot.filled{ border-color:var(--gold); }
+  .equip-slot.filled .ic{ opacity:1; }
+  .item-pick-btn{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1px solid var(--border); border-radius:14px; background:var(--surface); padding:12px 14px; cursor:pointer; color:var(--text); font:inherit; margin-bottom:8px; }
+  .item-pick-btn.equipped{ border-color:var(--gold); }
+  .item-pick-btn .ic{ font-size:22px; }
 
   .inv-section{ margin-bottom:4px; }
   .inv-section-title{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; }
@@ -307,13 +312,13 @@
       <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
-            <div class="equip-slot"><span class="ic">👕</span>Clothing</div>
-            <div class="equip-slot"><span class="ic">🛡️</span>Equipment</div>
+            <button class="equip-slot" id="slot-clothing" onclick="openItemPicker('clothing')"></button>
+            <button class="equip-slot" id="slot-equipment" onclick="openItemPicker('equipment')"></button>
           </div>
           <div id="athleteAvatar"></div>
           <div class="equip-group">
-            <div class="equip-slot"><span class="ic">🍖</span>Supplies</div>
-            <div class="equip-slot"><span class="ic">❓</span>Slot 4</div>
+            <button class="equip-slot" id="slot-supplies" onclick="openItemPicker('supplies')"></button>
+            <button class="equip-slot" id="slot-slot4" onclick="openItemPicker('slot4')"></button>
           </div>
         </div>
 
@@ -498,6 +503,17 @@
     </section>
   </main>
 
+  <!-- ITEM PICKER (equip slot) -->
+  <div class="overlay" id="itemPickerOverlay" onclick="if(event.target===this) closeItemPicker()">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2 id="itemPickerTitle">Clothing</h2>
+        <button class="sheet-close" onclick="closeItemPicker()">✕</button>
+      </div>
+      <div id="itemPickerList"></div>
+    </div>
+  </div>
+
   <!-- ATHLETE DETAIL DIALOG (Gymnasium) -->
   <div class="overlay" id="athleteDialogOverlay" onclick="if(event.target===this) closeAthleteDialog()">
     <div class="sheet">
@@ -674,6 +690,93 @@ let currentUid = null;
 // currently loaded into athleteName/ACTIVITIES/WEEK above.
 let athletes = [];
 let activeAthleteId = null;
+
+// ---------- Items & equipment ----------
+// Erster Item-Katalog zum Testen - jede/r Athlet/in bekommt beim ersten Laden automatisch ein
+// Starter-Set (siehe ensureAthleteItems), damit sich das Ausrüsten sofort ausprobieren lässt.
+// Später kann das durch ein echtes Sammel-/Freischalt-System ersetzt werden.
+const ITEM_CATALOG = {
+  tunic_white: { name: 'White Tunic', icon: '👕', slot: 'clothing' },
+  tunic_red: { name: 'Racing Singlet', icon: '🎽', slot: 'clothing' },
+  sandals: { name: 'Running Sandals', icon: '👟', slot: 'equipment' },
+  headband: { name: 'Victory Headband', icon: '🎗️', slot: 'equipment' },
+  water_flask: { name: 'Water Flask', icon: '🧴', slot: 'supplies' },
+  dried_figs: { name: 'Dried Figs', icon: '🍇', slot: 'supplies' },
+  laurel_charm: { name: 'Laurel Charm', icon: '🌿', slot: 'slot4' },
+  lucky_coin: { name: 'Lucky Coin', icon: '🪙', slot: 'slot4' },
+};
+const STARTER_ITEMS = Object.keys(ITEM_CATALOG);
+const SLOT_LABELS = { clothing: 'Clothing', equipment: 'Equipment', supplies: 'Supplies', slot4: 'Slot 4' };
+const SLOT_ICONS = { clothing: '👕', equipment: '🛡️', supplies: '🍖', slot4: '❓' };
+
+function ensureAthleteItems(entry) {
+  if (!entry.inventory) entry.inventory = STARTER_ITEMS.slice();
+  if (!entry.equipped) entry.equipped = { clothing: null, equipment: null, supplies: null, slot4: null };
+}
+
+function activeAthleteEntry() {
+  return athletes.find((a) => a.id === activeAthleteId);
+}
+
+function renderEquipSlots() {
+  const entry = activeAthleteEntry();
+  if (!entry) return;
+  ensureAthleteItems(entry);
+  ['clothing', 'equipment', 'supplies', 'slot4'].forEach((slot) => {
+    const el = document.getElementById('slot-' + slot);
+    if (!el) return;
+    const equippedId = entry.equipped[slot];
+    const item = equippedId ? ITEM_CATALOG[equippedId] : null;
+    el.classList.toggle('filled', !!item);
+    el.innerHTML = item
+      ? `<span class="ic">${item.icon}</span>${item.name}`
+      : `<span class="ic">${SLOT_ICONS[slot]}</span>${SLOT_LABELS[slot]}`;
+  });
+}
+
+let pickerSlot = null;
+
+function openItemPicker(slot) {
+  const entry = activeAthleteEntry();
+  if (!entry) return;
+  ensureAthleteItems(entry);
+  pickerSlot = slot;
+
+  document.getElementById('itemPickerTitle').textContent = SLOT_LABELS[slot];
+  const owned = entry.inventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
+  const listEl = document.getElementById('itemPickerList');
+
+  if (owned.length === 0) {
+    listEl.innerHTML = `<p class="hint">No ${SLOT_LABELS[slot].toLowerCase()} items collected yet.</p>`;
+  } else {
+    const equippedId = entry.equipped[slot];
+    listEl.innerHTML = owned.map((id) => {
+      const item = ITEM_CATALOG[id];
+      const isEquipped = id === equippedId;
+      return `
+      <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
+        <span class="ic">${item.icon}</span>
+        <span style="flex:1;">${item.name}${isEquipped ? ' <span style="color:var(--gold);font-size:12px;">(Equipped)</span>' : ''}</span>
+      </button>`;
+    }).join('')
+    + (equippedId ? `<button class="item-pick-btn" onclick="equipItem(null)"><span class="ic">✕</span><span style="flex:1;">Unequip</span></button>` : '');
+  }
+  document.getElementById('itemPickerOverlay').classList.add('open');
+}
+
+function closeItemPicker() {
+  document.getElementById('itemPickerOverlay').classList.remove('open');
+  pickerSlot = null;
+}
+
+function equipItem(itemId) {
+  const entry = activeAthleteEntry();
+  if (!entry || !pickerSlot) return;
+  entry.equipped[pickerSlot] = itemId;
+  persist();
+  renderEquipSlots();
+  closeItemPicker();
+}
 
 function makeAthleteId() {
   return 'athlete_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -1452,6 +1555,7 @@ function renderAthleteAndHero() {
   renderAttrs(level);
   renderAthleteSelector();
   renderGymnasiumList();
+  renderEquipSlots();
 }
 
 function showScreen(name) {
