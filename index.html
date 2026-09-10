@@ -683,9 +683,9 @@ let athletes = [];
 let activeAthleteId = null;
 
 // ---------- Items & equipment ----------
-// Erster Item-Katalog zum Testen - jede/r Athlet/in bekommt beim ersten Laden automatisch ein
-// Starter-Set (siehe ensureAthleteItems), damit sich das Ausrüsten sofort ausprobieren lässt.
-// Später kann das durch ein echtes Sammel-/Freischalt-System ersetzt werden.
+// Das Inventar gehört dem gesamten Account (nicht dem einzelnen Athleten) - ein Item kann
+// jeweils nur von einem Athleten gleichzeitig getragen werden. Erster Item-Katalog zum Testen:
+// jeder Account bekommt beim ersten Laden automatisch ein Starter-Set (siehe ensureAccountInventory).
 const ITEM_CATALOG = {
   tunic_white: { name: 'White Tunic', icon: '👕', slot: 'clothing' },
   tunic_red: { name: 'Racing Singlet', icon: '🎽', slot: 'clothing' },
@@ -700,8 +700,20 @@ const STARTER_ITEMS = Object.keys(ITEM_CATALOG);
 const SLOT_LABELS = { clothing: 'Clothing', equipment: 'Equipment', supplies: 'Supplies', slot4: 'Slot 4' };
 const SLOT_ICONS = { clothing: '👕', equipment: '🛡️', supplies: '🍖', slot4: '❓' };
 
-function ensureAthleteItems(entry) {
-  if (!entry.inventory) entry.inventory = STARTER_ITEMS.slice();
+let accountInventory = [];
+
+// Legt bei Bedarf ein Startinventar an - poolt dabei automatisch eventuell noch vorhandene
+// Alt-Inventare einzelner Athleten (aus der Zeit vor dieser Umstellung) zusammen.
+// Gibt true zurück, wenn dabei etwas Neues angelegt wurde (=> sollte gespeichert werden).
+function ensureAccountInventory() {
+  if (Array.isArray(accountInventory) && accountInventory.length > 0) return false;
+  const legacyPooled = new Set();
+  athletes.forEach((a) => { (a.inventory || []).forEach((id) => legacyPooled.add(id)); });
+  accountInventory = legacyPooled.size > 0 ? Array.from(legacyPooled) : STARTER_ITEMS.slice();
+  return true;
+}
+
+function ensureAthleteEquipped(entry) {
   if (!entry.equipped) entry.equipped = { clothing: null, equipment: null, supplies: null, slot4: null };
 }
 
@@ -709,10 +721,15 @@ function activeAthleteEntry() {
   return athletes.find((a) => a.id === activeAthleteId);
 }
 
+// Findet heraus, welcher Athlet (falls überhaupt einer) ein bestimmtes Item aktuell trägt
+function findEquippedByAthlete(itemId) {
+  return athletes.find((a) => a.equipped && Object.values(a.equipped).includes(itemId)) || null;
+}
+
 function renderEquipSlots() {
   const entry = activeAthleteEntry();
   if (!entry) return;
-  ensureAthleteItems(entry);
+  ensureAthleteEquipped(entry);
   ['clothing', 'equipment', 'supplies', 'slot4'].forEach((slot) => {
     const el = document.getElementById('slot-' + slot);
     if (!el) return;
@@ -726,9 +743,6 @@ function renderEquipSlots() {
 }
 
 function renderInventory() {
-  const entry = activeAthleteEntry();
-  if (!entry) return;
-  ensureAthleteItems(entry);
   const sections = {
     clothing: ['invGridClothing', 'invHintClothing'],
     equipment: ['invGridEquipment', 'invHintEquipment'],
@@ -739,13 +753,16 @@ function renderInventory() {
     const gridEl = document.getElementById(gridId);
     const hintEl = document.getElementById(hintId);
     if (!gridEl || !hintEl) return;
-    const owned = entry.inventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
+    const owned = accountInventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
     hintEl.style.display = owned.length === 0 ? 'block' : 'none';
-    const equippedId = entry.equipped[slot];
     const tiles = owned.map((id) => {
       const item = ITEM_CATALOG[id];
-      const isEquipped = id === equippedId;
-      return `<div class="inv-item-slot filled ${isEquipped ? 'equipped' : ''}">${item.icon}<span class="item-name">${item.name}</span></div>`;
+      const wornBy = findEquippedByAthlete(id);
+      return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''}">
+        ${item.icon}
+        <span class="item-name">${item.name}</span>
+        ${wornBy ? `<span class="item-name" style="color:var(--gold);">Worn by ${wornBy.name}</span>` : ''}
+      </div>`;
     });
     while (tiles.length < 4) tiles.push('<div class="inv-item-slot">?</div>');
     gridEl.innerHTML = tiles.join('');
@@ -757,11 +774,11 @@ let pickerSlot = null;
 function openItemPicker(slot) {
   const entry = activeAthleteEntry();
   if (!entry) return;
-  ensureAthleteItems(entry);
+  ensureAthleteEquipped(entry);
   pickerSlot = slot;
 
   document.getElementById('itemPickerTitle').textContent = SLOT_LABELS[slot];
-  const owned = entry.inventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
+  const owned = accountInventory.filter((id) => ITEM_CATALOG[id] && ITEM_CATALOG[id].slot === slot);
   const listEl = document.getElementById('itemPickerList');
 
   if (owned.length === 0) {
@@ -771,6 +788,14 @@ function openItemPicker(slot) {
     listEl.innerHTML = owned.map((id) => {
       const item = ITEM_CATALOG[id];
       const isEquipped = id === equippedId;
+      const wornByOther = !isEquipped && findEquippedByAthlete(id);
+      if (wornByOther) {
+        return `
+        <div class="item-pick-btn" style="opacity:.4;cursor:not-allowed;">
+          <span class="ic">${item.icon}</span>
+          <span style="flex:1;">${item.name} <span style="color:var(--muted);font-size:12px;">(worn by ${wornByOther.name})</span></span>
+        </div>`;
+      }
       return `
       <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
         <span class="ic">${item.icon}</span>
@@ -995,6 +1020,7 @@ function persist() {
   window.fb.saveUserData(currentUid, {
     athletes: athletes,
     activeAthleteId: activeAthleteId,
+    inventory: accountInventory,
   }).catch((e) => console.error('Save failed:', e));
   syncLeaderboard();
 }
@@ -2304,10 +2330,14 @@ window.handleAuthState = async function (user) {
       activeAthleteId = legacyEntry.id;
     }
     loadAthleteIntoWorkingState(athletes.find((a) => a.id === activeAthleteId) || athletes[0]);
+    athletes.forEach(ensureAthleteEquipped);
+
+    accountInventory = Array.isArray(data.inventory) ? data.inventory : [];
+    const inventoryMigrated = ensureAccountInventory();
 
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
-    if (isNewDoc) persist();
+    if (isNewDoc || inventoryMigrated) persist();
 
     // If the email was actually changed in the meantime via a confirmation link
     // (verifyBeforeUpdateEmail), sync Firestore now
