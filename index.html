@@ -521,6 +521,11 @@
         </div>
       </div>
 
+      <div class="card">
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.05em;text-transform:uppercase;">Portrait</label>
+        <div id="athleteDialogPortraitPicker" style="display:flex;gap:10px;justify-content:center;"></div>
+      </div>
+
       <div class="field" style="margin-bottom:10px;">
         <label>Name</label>
         <input id="athleteDialogNameInput" maxlength="20" />
@@ -890,7 +895,7 @@ function renderGymnasiumList() {
     <button class="card" style="width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;display:flex;flex-direction:column;gap:8px;"
       onclick="openAthleteDialog('${a.id}')">
       <div style="display:flex;align-items:center;gap:12px;">
-        <img class="portrait-avatar" src="athlete-portrait.png?v=${AVATAR_VERSION}" width="46" height="64" alt="Athlete" />
+        <img class="portrait-avatar" src="${portraitUrl(a)}" width="46" height="64" alt="Athlete" />
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
           <div class="label" style="margin-top:2px;">Level ${lvl}</div>
@@ -916,13 +921,39 @@ function openAthleteDialog(id) {
   dialogAthleteId = id;
   const { level, remaining } = levelFromKm(totalKm(entry.activities || []));
 
-  document.getElementById('athleteDialogAvatar').innerHTML = `<img class="portrait-avatar" src="athlete-portrait.png?v=${AVATAR_VERSION}" width="65" height="90" alt="Athlete" />`;
+  document.getElementById('athleteDialogAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(entry)}" width="65" height="90" alt="Athlete" />`;
   document.getElementById('athleteDialogLevel').textContent = level;
   document.getElementById('athleteDialogRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('athleteDialogNameInput').value = entry.name;
   document.getElementById('athleteDialogError').style.display = 'none';
   document.getElementById('athleteDialogSuccess').style.display = 'none';
+  renderPortraitPicker(entry);
   document.getElementById('athleteDialogOverlay').classList.add('open');
+}
+
+function renderPortraitPicker(entry) {
+  const el = document.getElementById('athleteDialogPortraitPicker');
+  if (!el) return;
+  const current = entry.portrait || 1;
+  el.innerHTML = PORTRAITS.map((file, i) => {
+    const num = i + 1;
+    const isSelected = num === current;
+    return `
+    <button onclick="selectAthleteDialogPortrait(${num})" style="padding:0;border:2px solid ${isSelected ? 'var(--gold)' : 'var(--border)'};border-radius:10px;overflow:hidden;background:var(--surface2);cursor:pointer;width:56px;height:78px;">
+      <img src="${file}?v=${AVATAR_VERSION}" style="width:100%;height:100%;object-fit:contain;" alt="Portrait ${num}" />
+    </button>`;
+  }).join('');
+}
+
+function selectAthleteDialogPortrait(num) {
+  const entry = athletes.find((a) => a.id === dialogAthleteId);
+  if (!entry) return;
+  entry.portrait = num;
+  document.getElementById('athleteDialogAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(entry)}" width="65" height="90" alt="Athlete" />`;
+  renderPortraitPicker(entry);
+  persist();
+  renderGymnasiumList();
+  if (entry.id === activeAthleteId) renderAthleteAndHero();
 }
 
 function closeAthleteDialog() {
@@ -1587,12 +1618,19 @@ function renderAttrs(level) {
     </div>`).join('<div style="height:10px"></div>');
 }
 
-const AVATAR_VERSION = 12; // increment whenever athlete-portrait.png changes, forces a fresh load
+const AVATAR_VERSION = 13; // increment whenever a portrait image changes, forces a fresh load
+const PORTRAITS = ['athlete-portrait.png', 'athlete-portrait-2.png'];
+
+function portraitUrl(entry) {
+  const idx = entry && entry.portrait ? entry.portrait - 1 : 0;
+  const file = PORTRAITS[idx] || PORTRAITS[0];
+  return `${file}?v=${AVATAR_VERSION}`;
+}
 
 function renderAthleteAndHero() {
   const { level, pct, remaining } = levelFromKm(lifetimeKm());
 
-  document.getElementById('athleteAvatar').innerHTML = `<img class="portrait-avatar" src="athlete-portrait.png?v=${AVATAR_VERSION}" width="130" height="181" alt="Athlete" />`;
+  document.getElementById('athleteAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(activeAthleteEntry())}" width="130" height="181" alt="Athlete" />`;
   document.getElementById('athleteLevel').textContent = 'Level ' + level;
   document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
