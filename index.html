@@ -535,18 +535,30 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="athleteDialogFixedNote" style="display:none;">
+        <p class="hint" style="margin:0 0 12px;text-align:left;">Athleticus is a fixed test athlete - name and portrait are locked. The portrait is tied to its level, which can be set manually here for testing.</p>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Level (manual, for testing)</label>
+          <input id="athleteDialogManualLevel" type="number" min="1" max="5" />
+        </div>
+        <p class="auth-error" id="athleteDialogLevelError" style="display:none;"></p>
+        <button class="btn-primary" onclick="saveAthleticusLevel()">Save Level</button>
+      </div>
+
+      <div class="card" id="athleteDialogPortraitSection">
         <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.05em;text-transform:uppercase;">Portrait</label>
         <div id="athleteDialogPortraitPicker" style="display:flex;gap:10px;justify-content:center;"></div>
       </div>
 
-      <div class="field" style="margin-bottom:10px;">
-        <label>Name</label>
-        <input id="athleteDialogNameInput" maxlength="20" />
+      <div id="athleteDialogNameSection">
+        <div class="field" style="margin-bottom:10px;">
+          <label>Name</label>
+          <input id="athleteDialogNameInput" maxlength="20" />
+        </div>
+        <p class="auth-error" id="athleteDialogError" style="display:none;"></p>
+        <p class="hint" id="athleteDialogSuccess" style="display:none;color:var(--gold);"></p>
+        <button class="btn-primary" onclick="saveAthleteDialogName()">Save Name</button>
       </div>
-      <p class="auth-error" id="athleteDialogError" style="display:none;"></p>
-      <p class="hint" id="athleteDialogSuccess" style="display:none;color:var(--gold);"></p>
-      <button class="btn-primary" onclick="saveAthleteDialogName()">Save Name</button>
     </div>
   </div>
 
@@ -925,7 +937,7 @@ function renderGymnasiumList() {
   if (!listEl) return;
   listEl.innerHTML = athletes.map((a) => {
     const isActive = a.id === activeAthleteId;
-    const lvl = levelFromKm(totalKm(a.activities || [])).level;
+    const lvl = athleteLevel(a);
     const attrs = computeAttrs(lvl);
     return `
     <button class="card" style="width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;display:flex;flex-direction:column;gap:8px;"
@@ -955,16 +967,50 @@ function openAthleteDialog(id) {
   const entry = athletes.find((a) => a.id === id);
   if (!entry) return;
   dialogAthleteId = id;
-  const { level, remaining } = levelFromKm(totalKm(entry.activities || []));
+  const isFixed = entry.isFixedType === 'athleticus';
+  const level = athleteLevel(entry);
 
   document.getElementById('athleteDialogAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(entry)}" width="65" height="90" alt="Athlete" />`;
   document.getElementById('athleteDialogLevel').textContent = level;
-  document.getElementById('athleteDialogRemain').textContent = `${remaining} km until Level ${level + 1}`;
-  document.getElementById('athleteDialogNameInput').value = entry.name;
-  document.getElementById('athleteDialogError').style.display = 'none';
-  document.getElementById('athleteDialogSuccess').style.display = 'none';
-  renderPortraitPicker(entry);
+
+  document.getElementById('athleteDialogFixedNote').style.display = isFixed ? 'block' : 'none';
+  document.getElementById('athleteDialogPortraitSection').style.display = isFixed ? 'none' : 'block';
+  document.getElementById('athleteDialogNameSection').style.display = isFixed ? 'none' : 'block';
+  document.getElementById('athleteDialogLevelError').style.display = 'none';
+
+  if (isFixed) {
+    document.getElementById('athleteDialogRemain').textContent = 'Level set manually (testing)';
+    document.getElementById('athleteDialogManualLevel').value = level;
+  } else {
+    const { remaining } = levelFromKm(totalKm(entry.activities || []));
+    document.getElementById('athleteDialogRemain').textContent = `${remaining} km until Level ${level + 1}`;
+    document.getElementById('athleteDialogNameInput').value = entry.name;
+    document.getElementById('athleteDialogError').style.display = 'none';
+    document.getElementById('athleteDialogSuccess').style.display = 'none';
+    renderPortraitPicker(entry);
+  }
   document.getElementById('athleteDialogOverlay').classList.add('open');
+}
+
+function saveAthleticusLevel() {
+  const entry = athletes.find((a) => a.id === dialogAthleteId);
+  if (!entry || entry.isFixedType !== 'athleticus') return;
+  const errEl = document.getElementById('athleteDialogLevelError');
+  errEl.style.display = 'none';
+
+  const val = parseInt(document.getElementById('athleteDialogManualLevel').value, 10);
+  if (isNaN(val) || val < 1 || val > 5) {
+    errEl.textContent = 'Please enter a level between 1 and 5.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  entry.manualLevel = val;
+  persist();
+  document.getElementById('athleteDialogLevel').textContent = val;
+  document.getElementById('athleteDialogAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(entry)}" width="65" height="90" alt="Athlete" />`;
+  renderGymnasiumList();
+  if (entry.id === activeAthleteId) renderAthleteAndHero();
 }
 
 function renderPortraitPicker(entry) {
@@ -999,7 +1045,7 @@ function closeAthleteDialog() {
 
 function saveAthleteDialogName() {
   const entry = athletes.find((a) => a.id === dialogAthleteId);
-  if (!entry) return;
+  if (!entry || entry.isFixedType === 'athleticus') return;
   const errEl = document.getElementById('athleteDialogError');
   const okEl = document.getElementById('athleteDialogSuccess');
   errEl.style.display = 'none';
@@ -1097,7 +1143,7 @@ function syncLeaderboard() {
   syncActiveAthleteIntoRoster();
   const validIds = new Set(athletes.map((a) => a.id));
   athletes.forEach((a) => {
-    const { level } = levelFromKm(totalKm(a.activities || []));
+    const level = athleteLevel(a);
     const score = a.activities.reduce((sum, act) => sum + computeActivityScore(act), 0);
     window.fb.saveLeaderboardEntry(`${currentUid}_${a.id}`, {
       uid: currentUid,
@@ -1654,21 +1700,61 @@ function renderAttrs(level) {
     </div>`).join('<div style="height:10px"></div>');
 }
 
-const AVATAR_VERSION = 18; // increment whenever a portrait/item image changes, forces a fresh load
+const AVATAR_VERSION = 19; // increment whenever a portrait/item image changes, forces a fresh load
 const PORTRAITS = ['athlete-portrait.png', 'athlete-portrait-2.png', 'athlete-portrait-3.png', 'athlete-portrait-4.png'];
+// Level-gebundene Portraits für den festen Testathleten "Athleticus" - sein Bild hängt
+// automatisch vom (aktuell noch manuell gesetzten) Level ab, statt frei wählbar zu sein.
+const LEVEL_PORTRAITS = ['athlete-level-1.png', 'athlete-level-2.png', 'athlete-level-3.png', 'athlete-level-4.png', 'athlete-level-5.png'];
+
+// Liefert das aktuelle Level eines Athleten - normalerweise aus den Kilometern berechnet,
+// außer es wurde ein manuelles Level gesetzt (aktuell nur für Athleticus zum Testen).
+function athleteLevel(entry) {
+  if (!entry) return 1;
+  if (entry.manualLevel != null) return entry.manualLevel;
+  return levelFromKm(totalKm(entry.activities || [])).level;
+}
 
 function portraitUrl(entry) {
+  if (entry && entry.isFixedType === 'athleticus') {
+    const lvl = Math.min(Math.max(athleteLevel(entry), 1), 5);
+    return `${LEVEL_PORTRAITS[lvl - 1]}?v=${AVATAR_VERSION}`;
+  }
   const idx = entry && entry.portrait ? entry.portrait - 1 : 0;
   const file = PORTRAITS[idx] || PORTRAITS[0];
   return `${file}?v=${AVATAR_VERSION}`;
 }
 
-function renderAthleteAndHero() {
-  const { level, pct, remaining } = levelFromKm(lifetimeKm());
+// Legt beim ersten Laden einmalig den festen Test-Athleten "Athleticus" an (Name/Portrait
+// gesperrt, Level manuell einstellbar) - falls er noch nicht im Roster existiert.
+function ensureAthleticus() {
+  if (athletes.some((a) => a.isFixedType === 'athleticus')) return false;
+  athletes.push({
+    id: makeAthleteId(),
+    name: 'Athleticus',
+    isFixedType: 'athleticus',
+    manualLevel: 1,
+    activities: [],
+    week: EMPTY_WEEK(),
+  });
+  return true;
+}
 
-  document.getElementById('athleteAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(activeAthleteEntry())}" width="130" height="181" alt="Athlete" />`;
+function renderAthleteAndHero() {
+  const active = activeAthleteEntry();
+  let level, pct, remaining;
+  if (active && active.manualLevel != null) {
+    level = active.manualLevel;
+    pct = 0;
+    remaining = 50;
+  } else {
+    ({ level, pct, remaining } = levelFromKm(lifetimeKm()));
+  }
+
+  document.getElementById('athleteAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(active)}" width="130" height="181" alt="Athlete" />`;
   document.getElementById('athleteLevel').textContent = 'Level ' + level;
-  document.getElementById('athleteRemain').textContent = `${remaining} km until Level ${level + 1}`;
+  document.getElementById('athleteRemain').textContent = active && active.isFixedType === 'athleticus'
+    ? 'Level set manually (testing)'
+    : `${remaining} km until Level ${level + 1}`;
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
   renderAttrs(level);
@@ -2411,10 +2497,11 @@ window.handleAuthState = async function (user) {
     // Falls das Inventar schon existierte (nicht frisch angelegt), trotzdem neu ergänzte
     // Katalog-Items (wie z. B. die Sandalen) automatisch nachtragen
     const backfilled = !inventoryMigrated && backfillNewCatalogItems();
+    const athleticusAdded = ensureAthleticus();
 
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
-    if (isNewDoc || inventoryMigrated || backfilled) persist();
+    if (isNewDoc || inventoryMigrated || backfilled || athleticusAdded) persist();
 
     // If the email was actually changed in the meantime via a confirmation link
     // (verifyBeforeUpdateEmail), sync Firestore now
