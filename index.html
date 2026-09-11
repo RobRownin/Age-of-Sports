@@ -66,7 +66,9 @@
 
   .athlete-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
   .equip-row{ display:flex; align-items:center; justify-content:center; gap:22px; }
-  .equip-group{ display:flex; flex-direction:column; gap:20px; }
+  .equip-group{ display:flex; flex-direction:column; gap:34px; }
+  .equip-item{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .equip-item-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
   .equip-slot{ width:60px; height:60px; border:1px solid var(--border); border-radius:10px; background:var(--surface); display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; cursor:pointer; padding:0; font-family:inherit; }
   .equip-slot .ic{ font-size:17px; opacity:.55; }
@@ -315,13 +317,25 @@
       <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
-            <button class="equip-slot" id="slot-clothing" onclick="openItemPicker('clothing')"></button>
-            <button class="equip-slot" id="slot-equipment" onclick="openItemPicker('equipment')"></button>
+            <div class="equip-item">
+              <div class="equip-item-label">Clothing</div>
+              <button class="equip-slot" id="slot-clothing" onclick="openItemPicker('clothing')"></button>
+            </div>
+            <div class="equip-item">
+              <div class="equip-item-label">Equipment</div>
+              <button class="equip-slot" id="slot-equipment" onclick="openItemPicker('equipment')"></button>
+            </div>
           </div>
           <div id="athleteAvatar"></div>
           <div class="equip-group">
-            <button class="equip-slot" id="slot-supplies" onclick="openItemPicker('supplies')"></button>
-            <button class="equip-slot" id="slot-slot4" onclick="openItemPicker('slot4')"></button>
+            <div class="equip-item">
+              <div class="equip-item-label">Supplies</div>
+              <button class="equip-slot" id="slot-supplies" onclick="openItemPicker('supplies')"></button>
+            </div>
+            <div class="equip-item">
+              <div class="equip-item-label">Slot 4</div>
+              <button class="equip-slot" id="slot-slot4" onclick="openItemPicker('slot4')"></button>
+            </div>
           </div>
         </div>
 
@@ -765,7 +779,7 @@ function renderEquipSlots() {
     el.classList.toggle('filled', !!item);
     el.innerHTML = item
       ? itemIconHtml(item, 42)
-      : `<span class="ic">${SLOT_ICONS[slot]}</span>${SLOT_LABELS[slot]}`;
+      : `<span class="ic">${SLOT_ICONS[slot]}</span>`;
   });
 }
 
