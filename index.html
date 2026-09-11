@@ -694,6 +694,7 @@ let activeAthleteId = null;
 const ITEM_CATALOG = {
   tunic_white: { name: 'White Tunic', icon: '👕', slot: 'clothing' },
   tunic_red: { name: 'Racing Singlet', icon: '🎽', slot: 'clothing' },
+  lion_sandals: { name: 'Lion Sandals', icon: '👟', image: 'item-lion-sandals.png', slot: 'clothing' },
   sandals: { name: 'Running Sandals', icon: '👟', slot: 'equipment' },
   headband: { name: 'Victory Headband', icon: '🎗️', slot: 'equipment' },
   water_flask: { name: 'Water Flask', icon: '🧴', slot: 'supplies' },
@@ -704,6 +705,27 @@ const ITEM_CATALOG = {
 const STARTER_ITEMS = Object.keys(ITEM_CATALOG);
 const SLOT_LABELS = { clothing: 'Clothing', equipment: 'Equipment', supplies: 'Supplies', slot4: 'Slot 4' };
 const SLOT_ICONS = { clothing: '👕', equipment: '🛡️', supplies: '🍖', slot4: '❓' };
+
+// Items können statt (oder zusätzlich zu) einem Emoji-Icon ein echtes Bild haben (item.image)
+function itemIconHtml(item, size) {
+  if (item.image) {
+    return `<img src="${item.image}?v=${AVATAR_VERSION}" style="width:${size}px;height:${size}px;object-fit:contain;" alt="${item.name}" />`;
+  }
+  return `<span class="ic">${item.icon}</span>`;
+}
+
+// Stellt sicher, dass neu ergänzte Katalog-Items (wie z. B. lion_sandals) automatisch ins
+// Inventar bestehender Accounts nachgetragen werden, statt nur bei brandneuen Accounts zu greifen.
+function backfillNewCatalogItems() {
+  let added = false;
+  STARTER_ITEMS.forEach((id) => {
+    if (!accountInventory.includes(id)) {
+      accountInventory.push(id);
+      added = true;
+    }
+  });
+  return added;
+}
 
 let accountInventory = [];
 
@@ -742,7 +764,7 @@ function renderEquipSlots() {
     const item = equippedId ? ITEM_CATALOG[equippedId] : null;
     el.classList.toggle('filled', !!item);
     el.innerHTML = item
-      ? `<span class="ic">${item.icon}</span>${item.name}`
+      ? `${itemIconHtml(item, 26)}${item.name}`
       : `<span class="ic">${SLOT_ICONS[slot]}</span>${SLOT_LABELS[slot]}`;
   });
 }
@@ -764,7 +786,7 @@ function renderInventory() {
       const item = ITEM_CATALOG[id];
       const wornBy = findEquippedByAthlete(id);
       return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''}">
-        ${item.icon}
+        ${itemIconHtml(item, 30)}
         <span class="item-name">${item.name}</span>
         ${wornBy ? `<span class="item-name" style="color:var(--gold);">Worn by ${wornBy.name}</span>` : ''}
       </div>`;
@@ -797,13 +819,13 @@ function openItemPicker(slot) {
       if (wornByOther) {
         return `
         <div class="item-pick-btn" style="opacity:.4;cursor:not-allowed;">
-          <span class="ic">${item.icon}</span>
+          ${itemIconHtml(item, 30)}
           <span style="flex:1;">${item.name} <span style="color:var(--muted);font-size:12px;">(worn by ${wornByOther.name})</span></span>
         </div>`;
       }
       return `
       <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
-        <span class="ic">${item.icon}</span>
+        ${itemIconHtml(item, 30)}
         <span style="flex:1;">${item.name}${isEquipped ? ' <span style="color:var(--gold);font-size:12px;">(Equipped)</span>' : ''}</span>
       </button>`;
     }).join('')
@@ -1618,7 +1640,7 @@ function renderAttrs(level) {
     </div>`).join('<div style="height:10px"></div>');
 }
 
-const AVATAR_VERSION = 16; // increment whenever a portrait image changes, forces a fresh load
+const AVATAR_VERSION = 17; // increment whenever a portrait/item image changes, forces a fresh load
 const PORTRAITS = ['athlete-portrait.png', 'athlete-portrait-2.png', 'athlete-portrait-3.png', 'athlete-portrait-4.png'];
 
 function portraitUrl(entry) {
@@ -2372,10 +2394,13 @@ window.handleAuthState = async function (user) {
 
     accountInventory = Array.isArray(data.inventory) ? data.inventory : [];
     const inventoryMigrated = ensureAccountInventory();
+    // Falls das Inventar schon existierte (nicht frisch angelegt), trotzdem neu ergänzte
+    // Katalog-Items (wie z. B. die Sandalen) automatisch nachtragen
+    const backfilled = !inventoryMigrated && backfillNewCatalogItems();
 
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
-    if (isNewDoc || inventoryMigrated) persist();
+    if (isNewDoc || inventoryMigrated || backfilled) persist();
 
     // If the email was actually changed in the meantime via a confirmation link
     // (verifyBeforeUpdateEmail), sync Firestore now
