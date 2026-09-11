@@ -71,7 +71,7 @@
     align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; cursor:pointer; padding:0; font-family:inherit; }
   .equip-slot .ic{ font-size:17px; opacity:.55; }
   .equip-slot.filled{ border-color:var(--gold); }
-  .equip-slot.filled .ic{ opacity:1; }
+  .equip-slot.filled .ic{ opacity:1; font-size:32px; }
   .item-pick-btn{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1px solid var(--border); border-radius:14px; background:var(--surface); padding:12px 14px; cursor:pointer; color:var(--text); font:inherit; margin-bottom:8px; }
   .item-pick-btn.equipped{ border-color:var(--gold); }
   .item-pick-btn .ic{ font-size:22px; }
@@ -764,7 +764,7 @@ function renderEquipSlots() {
     const item = equippedId ? ITEM_CATALOG[equippedId] : null;
     el.classList.toggle('filled', !!item);
     el.innerHTML = item
-      ? `${itemIconHtml(item, 26)}${item.name}`
+      ? itemIconHtml(item, 42)
       : `<span class="ic">${SLOT_ICONS[slot]}</span>${SLOT_LABELS[slot]}`;
   });
 }
