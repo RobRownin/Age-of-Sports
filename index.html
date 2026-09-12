@@ -409,10 +409,13 @@
         <h1 class="title">Stadium</h1>
       </div>
 
-      <div class="card" style="text-align:center;padding:32px 16px;">
-        <div style="font-size:40px;margin-bottom:8px;">🏟️</div>
-        <p class="hint" style="margin:0;">Athlete duels are coming in a future version.</p>
-        <p class="hint" style="margin-top:4px;">Soon you'll be able to challenge other athletes here, with outcomes based on your athlete's stats.</p>
+      <div class="card" style="text-align:center;">
+        <p class="hint" style="margin:0 0 10px;">Roll 1–100 against another athlete. Highest roll wins.</p>
+        <button class="btn-primary" onclick="createChallenge()">⚔️ Create Challenge</button>
+      </div>
+
+      <div id="stadiumChallengeList" style="display:flex;flex-direction:column;gap:10px;">
+        <p class="hint">Loading…</p>
       </div>
     </section>
 
@@ -1764,6 +1767,130 @@ function renderAthleteAndHero() {
   renderInventory();
 }
 
+// ---------- Stadium: simple 1-100 dice duels ----------
+let challengesCache = [];
+
+async function createChallenge() {
+  if (!currentUid || !window.fb || !window.fb.createChallenge) return;
+  const entry = activeAthleteEntry();
+  if (!entry) return;
+  const roll = Math.floor(Math.random() * 100) + 1;
+  try {
+    await window.fb.createChallenge({
+      creatorUid: currentUid,
+      creatorAthleteId: entry.id,
+      creatorAthleteName: entry.name,
+      creatorUsername: currentUsername,
+      creatorRoll: roll,
+    });
+    loadChallenges();
+  } catch (e) {
+    console.error(e);
+    alert('Could not create the challenge. Please try again.');
+  }
+}
+
+async function joinChallenge(challengeId) {
+  if (!currentUid || !window.fb || !window.fb.joinChallenge) return;
+  const entry = activeAthleteEntry();
+  if (!entry) return;
+  const challenge = challengesCache.find((c) => c.id === challengeId);
+  if (!challenge) return;
+
+  const roll = Math.floor(Math.random() * 100) + 1;
+  let winner = 'tie';
+  if (roll > challenge.creatorRoll) winner = 'opponent';
+  else if (challenge.creatorRoll > roll) winner = 'creator';
+
+  try {
+    await window.fb.joinChallenge(challengeId, {
+      opponentUid: currentUid,
+      opponentAthleteId: entry.id,
+      opponentAthleteName: entry.name,
+      opponentUsername: currentUsername,
+      opponentRoll: roll,
+      winner: winner,
+    });
+    loadChallenges();
+  } catch (e) {
+    console.error(e);
+    alert('Could not join the challenge. Please try again.');
+  }
+}
+
+async function cancelChallenge(challengeId) {
+  if (!window.fb || !window.fb.cancelChallenge) return;
+  try {
+    await window.fb.cancelChallenge(challengeId);
+    loadChallenges();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadChallenges() {
+  const listEl = document.getElementById('stadiumChallengeList');
+  if (!listEl) return;
+  if (!window.fb || !window.fb.fetchChallenges) {
+    listEl.innerHTML = '<p class="hint">Challenges currently unavailable.</p>';
+    return;
+  }
+  listEl.innerHTML = '<p class="hint">Loading…</p>';
+  try {
+    challengesCache = await window.fb.fetchChallenges();
+    renderChallengeList();
+  } catch (e) {
+    console.error(e);
+    listEl.innerHTML = '<p class="hint">Could not load challenges.</p>';
+  }
+}
+
+function renderChallengeList() {
+  const listEl = document.getElementById('stadiumChallengeList');
+  if (!listEl) return;
+  if (challengesCache.length === 0) {
+    listEl.innerHTML = '<p class="hint">No challenges yet. Be the first to create one!</p>';
+    return;
+  }
+  listEl.innerHTML = challengesCache.map((c) => {
+    if (c.status === 'open') {
+      const isMine = c.creatorUid === currentUid;
+      if (isMine) {
+        return `
+        <div class="card">
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${c.creatorAthleteName} (You)</div>
+          <p class="hint" style="margin:6px 0;">Waiting for an opponent…</p>
+          <button onclick="cancelChallenge('${c.id}')" style="background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:13px;padding:6px 12px;cursor:pointer;">Cancel</button>
+        </div>`;
+      }
+      return `
+      <div class="card">
+        <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${c.creatorAthleteName} <span style="color:var(--muted);font-size:12px;">(${c.creatorUsername})</span></div>
+        <p class="hint" style="margin:6px 0;">Challenges you to a duel!</p>
+        <button class="btn-primary" onclick="joinChallenge('${c.id}')">🎲 Roll &amp; Accept</button>
+      </div>`;
+    }
+
+    const creatorWon = c.winner === 'creator';
+    const opponentWon = c.winner === 'opponent';
+    return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:13px;color:${creatorWon ? 'var(--gold)' : 'var(--text)'};">${c.creatorAthleteName}${creatorWon ? ' 🏆' : ''}</div>
+          <div class="stat-value" style="font-size:22px;margin-top:4px;">${c.creatorRoll}</div>
+        </div>
+        <div style="color:var(--muted);font-size:12px;padding:0 8px;">vs</div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:13px;color:${opponentWon ? 'var(--gold)' : 'var(--text)'};">${c.opponentAthleteName}${opponentWon ? ' 🏆' : ''}</div>
+          <div class="stat-value" style="font-size:22px;margin-top:4px;">${c.opponentRoll}</div>
+        </div>
+      </div>
+      ${c.winner === 'tie' ? '<p class="hint" style="text-align:center;margin-top:8px;">A tie!</p>' : ''}
+    </div>`;
+  }).join('');
+}
+
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -1774,6 +1901,7 @@ function showScreen(name) {
   localStorage.setItem('aos_lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
   if (name === 'inventory') renderInventory();
+  if (name === 'stadium') loadChallenges();
   if (name === 'account') loadAccountScreen();
 }
 
@@ -2854,7 +2982,7 @@ if ('serviceWorker' in navigator) {
     sendPasswordResetEmail, updatePassword, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit
+    getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -2967,6 +3095,22 @@ if ('serviceWorker' in navigator) {
     },
     async deleteLeaderboardEntry(docId) {
       await deleteDoc(doc(db, "leaderboard", docId));
+    },
+    async createChallenge(data) {
+      const ref = doc(collection(db, "challenges"));
+      await setDoc(ref, { ...data, status: "open", createdAt: new Date().toISOString() });
+      return ref.id;
+    },
+    async joinChallenge(challengeId, opponentData) {
+      await updateDoc(doc(db, "challenges", challengeId), { ...opponentData, status: "completed", completedAt: new Date().toISOString() });
+    },
+    async cancelChallenge(challengeId) {
+      await deleteDoc(doc(db, "challenges", challengeId));
+    },
+    async fetchChallenges() {
+      const q = query(collection(db, "challenges"), orderBy("createdAt", "desc"), limit(50));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     },
     async fetchLeaderboard() {
       const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
