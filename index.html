@@ -4,180 +4,421 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Age of Sports</title>
-<meta name="theme-color" content="#070604" />
+<meta name="theme-color" content="#0B0B0E" />
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <style>
+  /* ===== Design tokens ===== */
   :root{
-    --bg:#070604; --surface:#1A140E; --surface2:#150F0A; --border:#3C2E1E;
-    --gold:#C9A227; --gold-light:#E3C878; --red:#A61C1C; --text:#EDE1C4; --muted:#9C8B6C;
+    --bg:#0B0B0E; --surface:#15151A; --surface2:#1C1C23; --surface3:#25252E;
+    --border:rgba(255,255,255,.07); --border-strong:rgba(255,255,255,.14);
+    --text:#F4F2EE; --muted:#8E8B97; --faint:#5D5B67;
+    --gold:#F2B33D; --gold-light:#FFD583; --gold-deep:#D9851A;
+    --gold-grad:linear-gradient(135deg,#FFD683 0%,#F2B33D 48%,#DE8A1C 100%);
+    --red:#F0544F; --green:#3DD68C;
+    --radius-lg:24px; --radius:18px; --radius-sm:12px;
+    --shadow:0 12px 32px -14px rgba(0,0,0,.7);
+    --font-display:'Sora','Inter',system-ui,sans-serif;
+    --font-brand:'Cinzel','Times New Roman',serif;
+    --nav-h:64px;
+    --safe-b:env(safe-area-inset-bottom,0px);
   }
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; -webkit-font-smoothing:antialiased; }
+  html{ background:var(--bg); }
+  body{ background:radial-gradient(900px 420px at 50% -160px, rgba(242,179,61,.10), transparent 70%), var(--bg); background-attachment:fixed; min-height:100vh; }
+  button{ font-family:inherit; color:inherit; }
+  .num{ font-family:var(--font-display); font-variant-numeric:tabular-nums; }
+  .i{ width:20px; height:20px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+
   .app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; }
 
-  header{ display:flex; align-items:center; justify-content:center; gap:8px; padding:22px 0 10px; }
-  .wordmark{ font-size:14px; letter-spacing:.18em; text-transform:uppercase; }
-  .wordmark .accent{ font-family:'Cinzel',serif; color:var(--gold); font-weight:600; }
-  .divider{ height:2px; margin:0 32px 6px; background:linear-gradient(90deg, transparent, var(--gold), transparent); opacity:.7; }
-  .sticky-header{ position:sticky; top:0; z-index:8; background:var(--bg); }
+  /* ===== Top bar ===== */
+  .sticky-header{ position:sticky; top:0; z-index:8; background:rgba(11,11,14,.72); backdrop-filter:saturate(160%) blur(18px); -webkit-backdrop-filter:saturate(160%) blur(18px);
+    border-bottom:1px solid transparent; transition:border-color .2s; }
+  .sticky-header.scrolled{ border-bottom-color:var(--border); }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top,0px)) 20px 10px; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:30px; height:30px; border-radius:9px; background:var(--gold-grad); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px -6px rgba(242,179,61,.6); }
+  .brand-mark .logo{ width:21px; height:21px; color:#1A1206; }
+  .wordmark{ margin:0; font-size:13px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--text); }
+  .wordmark .accent{ font-family:var(--font-brand); color:var(--gold); }
+  .icon-btn{ width:38px; height:38px; border-radius:12px; border:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); padding:0; }
+  .icon-btn:active{ transform:scale(.95); }
 
-  main{ flex:1; overflow-y:auto; padding-bottom:24px; -webkit-overflow-scrolling:touch; }
-  .screen{ padding:20px; display:none; flex-direction:column; gap:12px; }
+  main{ flex:1; padding-bottom:calc(var(--nav-h) + var(--safe-b) + 28px); }
+  .screen{ padding:12px 20px 0; display:none; flex-direction:column; gap:14px; animation:fadeUp .28s ease; }
   .screen.active{ display:flex; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
 
-  .label{ font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin:0; }
-  h1.title{ font-family:'Cinzel','Times New Roman',serif; font-size:22px; margin:2px 0 0; color:var(--text); }
+  .label{ font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0; }
+  h1.title{ font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:-.02em; margin:2px 0 0; color:var(--text); }
+  .screen-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:2px; }
+  .hint{ text-align:center; font-size:12px; color:var(--muted); margin:2px 0 0; line-height:1.45; }
+  .section-title{ font-family:var(--font-display); font-size:15px; font-weight:600; margin:6px 0 -4px; display:flex; align-items:center; justify-content:space-between; }
 
-  .hero-card{ display:flex; gap:16px; align-items:center; background:linear-gradient(to bottom, var(--surface), var(--surface2));
-    border:1px solid var(--border); border-radius:16px; padding:16px; cursor:pointer; text-align:left; width:100%; color:inherit; font:inherit; }
-  .hero-card:active{ transform:scale(0.99); }
-  .hero-info{ flex:1; min-width:0; }
-  .hero-info .name{ font-family:'Cinzel','Times New Roman',serif; font-size:17px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .mini-bar{ height:6px; border-radius:3px; background:var(--bg); overflow:hidden; margin-top:6px; }
-  .mini-bar > div{ height:100%; background:var(--gold); }
-  .chevron{ color:var(--muted); font-size:18px; flex-shrink:0; }
+  /* ===== Cards & buttons ===== */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .card.highlight{ border-color:rgba(242,179,61,.55); box-shadow:0 0 0 1px rgba(242,179,61,.18) inset; }
+  .btn-primary{ display:flex; align-items:center; justify-content:center; gap:8px; background:var(--gold-grad); color:#1A1206; border:none; border-radius:16px; padding:15px;
+    font-weight:700; font-size:15px; cursor:pointer; font-family:inherit; box-shadow:0 10px 24px -12px rgba(242,179,61,.75); transition:transform .12s, filter .12s; }
+  .btn-primary:active{ transform:scale(.98); filter:brightness(.95); }
+  .btn-primary .i{ stroke-width:2.4; }
+  .btn-secondary{ display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border-strong); border-radius:16px; padding:14px; font-weight:600; font-size:14px; cursor:pointer; }
+  .btn-secondary:active{ transform:scale(.98); }
+  .btn-danger{ background:rgba(240,84,79,.12); color:var(--red); border:1px solid rgba(240,84,79,.35); border-radius:16px; padding:14px; font-weight:600; font-size:14px; cursor:pointer; }
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row > *{ flex:1; }
+  .btn-sm{ padding:9px 14px; font-size:13px; border-radius:12px; }
+  .text-btn{ background:none; border:none; color:var(--gold); font-size:13px; font-weight:600; cursor:pointer; padding:6px 4px; display:inline-flex; align-items:center; gap:5px; }
+  .text-btn .i{ width:15px; height:15px; }
 
-  .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; }
-  .activity-row{ display:flex; align-items:center; gap:12px; }
-  .activity-icon{ width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-  .activity-name{ font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .activity-sub{ font-size:12px; color:var(--muted); }
-  .activity-right{ margin-left:auto; text-align:right; flex-shrink:0; }
-  .activity-km{ font-family:'JetBrains Mono', monospace; font-size:14px; }
-  .activity-mins{ font-size:11px; color:var(--muted); }
+  .list-btn{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; cursor:pointer; color:var(--text); }
+  .list-btn:active{ background:var(--surface2); }
+  .list-btn-ic{ width:40px; height:40px; border-radius:12px; background:var(--surface3); display:flex; align-items:center; justify-content:center; color:var(--gold); flex-shrink:0; }
+  .list-btn-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .list-btn-text .t{ font-weight:600; font-size:14px; }
+  .list-btn-text .s{ font-size:12px; color:var(--muted); }
+  .chevron{ color:var(--faint); display:flex; }
 
-  .btn-primary{ background:var(--gold); color:var(--bg); border:none; border-radius:16px; padding:13px; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit; }
-  .hint{ text-align:center; font-size:10px; color:var(--muted); margin:2px 0 0; }
-  .date-header{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:8px 0 -2px; }
-  .date-header:first-child{ margin-top:0; }
+  /* ===== Athlete hero ===== */
+  .hero{ position:relative; overflow:hidden; border-radius:var(--radius-lg); border:1px solid var(--border);
+    background:radial-gradient(120% 70% at 50% 38%, rgba(242,179,61,.16), transparent 62%), linear-gradient(180deg, #1A1A21, #131318); padding:16px 16px 18px; }
+  .hero::before{ content:''; position:absolute; inset:0; background:radial-gradient(60% 40% at 50% 100%, rgba(242,179,61,.07), transparent 70%); pointer-events:none; }
+  .hero-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; z-index:1; }
+  .select-pill{ position:relative; display:flex; align-items:center; min-width:0; }
+  .name-select{ appearance:none; -webkit-appearance:none; font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-.01em; color:var(--text); background:transparent;
+    border:none; padding:4px 26px 4px 0; cursor:pointer; max-width:230px; text-overflow:ellipsis; outline:none; }
+  .name-select option{ background:var(--surface2); color:var(--text); font-size:15px; }
+  .select-pill .i{ position:absolute; right:2px; width:18px; height:18px; color:var(--muted); pointer-events:none; }
+  .level-chip{ display:inline-flex; align-items:center; gap:6px; background:rgba(242,179,61,.14); color:var(--gold-light); border:1px solid rgba(242,179,61,.3);
+    font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:.04em; padding:6px 11px; border-radius:999px; white-space:nowrap; margin:0; }
+  .equip-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px; position:relative; z-index:1; }
+  .equip-group{ display:flex; flex-direction:column; gap:22px; }
+  .equip-item{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .equip-item-label{ font-size:9.5px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+  .equip-slot{ width:62px; height:62px; border:1px dashed var(--border-strong); border-radius:18px; background:rgba(255,255,255,.03); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; color:var(--muted); cursor:pointer; padding:0; transition:transform .12s, border-color .15s; backdrop-filter:blur(6px); }
+  .equip-slot:active{ transform:scale(.94); }
+  .equip-slot .ic{ font-size:20px; opacity:.35; filter:grayscale(1); }
+  .equip-slot.filled{ border:1px solid rgba(242,179,61,.45); background:linear-gradient(180deg, rgba(242,179,61,.14), rgba(242,179,61,.04)); box-shadow:0 8px 20px -12px rgba(242,179,61,.6); }
+  .equip-slot.filled .ic{ opacity:1; font-size:30px; filter:none; }
+  .hero-portrait{ position:relative; flex:1; display:flex; justify-content:center; min-width:0; }
+  .hero-portrait::after{ content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:120px; height:16px; border-radius:50%; background:rgba(0,0,0,.55); filter:blur(8px); z-index:0; }
+  #athleteAvatar{ position:relative; z-index:1; width:100%; max-width:148px; }
+  #athleteAvatar img{ width:100%; height:auto; display:block; }
+  .xp{ margin-top:14px; position:relative; z-index:1; }
+  .xp-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .xp-remain{ font-size:12px; color:var(--muted); margin:0; }
+  .xp-track{ height:10px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden; position:relative; }
+  .xp-fill{ height:100%; border-radius:999px; background:var(--gold-grad); box-shadow:0 0 14px rgba(242,179,61,.55); position:relative; min-width:10px; }
+  .xp-fill::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); background-size:200% 100%; animation:shine 2.6s ease-in-out infinite; border-radius:inherit; }
+  @keyframes shine{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+  .xp-scale{ display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:var(--faint); }
 
-  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .stat-value{ font-family:'JetBrains Mono', monospace; font-size:24px; margin-top:2px; }
-  .stat-value span{ font-size:13px; color:var(--muted); }
-  .chart-row{ display:flex; align-items:flex-end; gap:4px; margin-top:8px; padding:4px 0 2px; }
-  .chart-col{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px; }
-  .chart-bar-area{ height:100px; width:100%; display:flex; align-items:flex-end; justify-content:center; }
-  .chart-bar{ width:100%; max-width:26px; background:var(--gold); border-radius:6px 6px 0 0; min-height:2px; }
-  .chart-day{ font-size:11px; color:var(--muted); white-space:nowrap; text-align:center; line-height:1.4; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
-  .chart-value{ font-size:9px; color:var(--muted); white-space:nowrap; text-align:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; line-height:1.3; min-height:22px; }
+  /* ===== Attributes ===== */
+  .attr-card{ display:flex; flex-direction:column; gap:14px; }
+  .attr-row-wrap{ --c:var(--gold); }
+  .attr-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; font-size:14px; font-weight:500; }
+  .attr-name{ display:flex; align-items:center; gap:9px; }
+  .attr-dot{ width:8px; height:8px; border-radius:50%; background:var(--c); box-shadow:0 0 10px var(--c); }
+  .attr-row span.val{ font-family:var(--font-display); font-weight:700; font-variant-numeric:tabular-nums; }
+  .attr-track{ height:7px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; }
+  .attr-track > div{ height:100%; border-radius:999px; background:linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), var(--c)); }
+  .attr-row-mini{ display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px; color:var(--muted); }
+  .attr-row-mini span.val{ color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
+  .attr-track-mini{ height:4px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; }
+  .attr-track-mini > div{ height:100%; border-radius:999px; background:var(--c, var(--gold)); }
+  .a-endurance{ --c:#2EC4B6; } .a-pace{ --c:#5B8CFF; } .a-strength{ --c:#FF7A45; } .a-mental{ --c:#A685FF; } .a-discipline{ --c:#F2B33D; }
 
-  .athlete-card{ display:flex; flex-direction:column; align-items:center; padding:20px; gap:4px; }
-  .equip-row{ display:flex; align-items:center; justify-content:center; gap:22px; }
-  .equip-group{ display:flex; flex-direction:column; gap:34px; }
-  .equip-item{ display:flex; flex-direction:column; align-items:center; gap:5px; }
-  .equip-item-label{ font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-  .equip-slot{ width:60px; height:60px; border:1px solid var(--border); border-radius:10px; background:var(--surface); display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:2px; color:var(--muted); font-size:9px; text-align:center; cursor:pointer; padding:0; font-family:inherit; }
-  .equip-slot .ic{ font-size:17px; opacity:.55; }
-  .equip-slot.filled{ border-color:var(--gold); }
-  .equip-slot.filled .ic{ opacity:1; font-size:32px; }
-  .item-pick-btn{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1px solid var(--border); border-radius:14px; background:var(--surface); padding:12px 14px; cursor:pointer; color:var(--text); font:inherit; margin-bottom:8px; }
-  .item-pick-btn.equipped{ border-color:var(--gold); }
-  .item-pick-btn .ic{ font-size:22px; }
-
-  .inv-section{ margin-bottom:4px; }
-  .inv-section-title{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text); margin-bottom:8px; }
-  .inv-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
-  .inv-item-slot{ aspect-ratio:1; border:1px dashed var(--border); border-radius:10px; background:var(--surface);
-    display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:16px; opacity:.5; }
-  .inv-item-slot.filled{ border-style:solid; opacity:1; flex-direction:column; gap:2px; font-size:22px; cursor:default; }
-  .inv-item-slot.filled.equipped{ border-color:var(--gold); }
-  .inv-item-slot .item-name{ font-size:8px; color:var(--muted); text-align:center; line-height:1.1; padding:0 2px; }
-  .inv-empty-hint{ font-size:11px; color:var(--muted); margin:0 0 8px; }
-  .portrait-avatar{ object-fit:contain; border-radius:4px; }
-  .name-select{ font-family:'Cinzel','Times New Roman',serif; font-weight:600; font-size:16px; color:var(--text); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 14px; margin-top:6px; text-align:center; text-align-last:center; cursor:pointer; width:auto; max-width:220px; }
-
-  .attr-card{ margin-top:2px; }
-  .attr-row{ display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px; }
-  .attr-row span.val{ color:var(--gold); font-family:'JetBrains Mono', monospace; }
-  .attr-track{ height:6px; border-radius:3px; background:var(--bg); overflow:hidden; }
-  .attr-track > div{ height:100%; background:var(--red); }
-  .attr-row-mini{ display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; color:var(--muted); }
-  .attr-row-mini span.val{ color:var(--gold); font-family:'JetBrains Mono', monospace; }
-  .attr-track-mini{ height:4px; border-radius:2px; background:var(--bg); overflow:hidden; }
-  .attr-track-mini > div{ height:100%; background:var(--red); }
-
-  .duel-btn{ display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; width:100%; cursor:pointer; color:var(--text); font:inherit; }
-  .duel-btn .left{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; }
-
-  .hamburger-btn{ position:fixed; top:14px; left:16px; background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    color:var(--text); font-size:22px; cursor:pointer; z-index:9; line-height:1; padding:8px 10px; }
-  .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:90; display:none; }
-  .drawer-overlay.open{ display:block; }
-  .drawer{ position:fixed; top:0; left:0; height:100%; width:230px; background:var(--surface); border-right:1px solid var(--border);
-    padding:24px 16px; box-sizing:border-box; transform:translateX(-100%); transition:transform .25s ease; z-index:95; display:flex; flex-direction:column; gap:4px; }
-  .drawer.open{ transform:translateX(0); }
-  .drawer-title{ font-family:'Cinzel','Times New Roman',serif; color:var(--gold); font-size:13px; letter-spacing:.15em; text-transform:uppercase; margin:0 0 14px 4px; }
-  .drawer-item{ display:flex; align-items:center; gap:12px; background:none; border:none; color:var(--muted); font-size:14px;
-    padding:11px 10px; border-radius:10px; cursor:pointer; text-align:left; font-family:inherit; }
-  .drawer-item .ic{ font-size:17px; width:22px; text-align:center; }
-  .drawer-item.active{ background:var(--gold); color:var(--bg); font-weight:600; }
-
-  /* ---- Add-activity bottom sheet ---- */
-  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; justify-content:center; z-index:50; }
-  .overlay.open{ display:flex; }
-  .sheet{ width:100%; max-width:480px; background:var(--surface); border-top:1px solid var(--border); border-radius:20px 20px 0 0;
-    padding:18px 20px 26px; display:flex; flex-direction:column; gap:14px; max-height:88vh; overflow-y:auto; }
-  .sheet-header{ display:flex; align-items:center; justify-content:space-between; }
-  .sheet-header h2{ font-family:'Cinzel','Times New Roman',serif; font-size:17px; margin:0; }
-  .sheet-close{ background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; }
-  .sheet-nav-btn{ background:none; border:none; color:var(--text); font-size:22px; cursor:pointer; line-height:1; padding:2px 6px; }
-  .sheet-nav-btn:disabled{ opacity:.25; cursor:not-allowed; }
-
-  .type-row{ display:flex; gap:8px; }
-  .type-btn{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 4px;
-    background:var(--bg); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-size:11px; cursor:pointer; font-family:inherit; }
-  .type-btn.active{ border-color:var(--gold); color:var(--text); background:rgba(201,162,39,0.12); }
-  .type-btn .ic{ font-size:18px; }
-
-  .metric-row{ display:flex; gap:8px; }
-  .metric-btn{ flex:1; padding:8px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; }
-  .metric-btn.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
-
-  .field label{ display:block; font-size:11px; color:var(--muted); margin-bottom:5px; letter-spacing:.05em; text-transform:uppercase; }
-  .field input, .field textarea{ width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px;
-    padding:10px 12px; font-size:14px; font-family:inherit; outline:none; }
-.field input:focus, .field textarea:focus{ border-color:var(--gold); }
+  /* ===== Activity list ===== */
+  .t-run{ --tint:#FF7A45; } .t-ride{ --tint:#5B8CFF; } .t-walk{ --tint:#3DD68C; } .t-row{ --tint:#2EC4B6; } .t-strength{ --tint:#A685FF; } .t-sleep{ --tint:#7C8CFF; }
   .activity-row-btn{ display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; color:inherit; font:inherit; }
+  .activity-row-btn:active .card{ background:var(--surface2); }
+  .activity-row{ display:flex; align-items:center; gap:14px; padding:14px; }
+  .activity-icon{ width:46px; height:46px; border-radius:14px; background:color-mix(in srgb, var(--tint, var(--gold)) 16%, transparent); border:1px solid color-mix(in srgb, var(--tint, var(--gold)) 30%, transparent);
+    display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; }
+  .activity-name{ font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .activity-sub{ font-size:12.5px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .activity-right{ margin-left:auto; text-align:right; flex-shrink:0; }
+  .activity-km{ font-family:var(--font-display); font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; }
+  .activity-mins{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .date-header{ font-size:12px; font-weight:600; color:var(--muted); margin:12px 2px 0; }
+  .date-header:first-child{ margin-top:0; }
+  .list{ display:flex; flex-direction:column; gap:8px; }
+  .empty{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:40px 20px; color:var(--muted); text-align:center; font-size:13px; }
+  .empty .em{ font-size:34px; opacity:.8; }
 
-  /* ---- Auth screen ---- */
-  .auth-screen{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px; }
-  .auth-box{ width:100%; max-width:340px; display:flex; flex-direction:column; gap:14px; }
-  .auth-logo{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px; }
-  .auth-tabs{ display:flex; gap:8px; }
-  .auth-tab{ flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; }
-  .auth-tab.active{ border-color:var(--gold); color:var(--gold); font-weight:600; }
-  .auth-error{ color:var(--red); font-size:12px; text-align:center; margin:0; }
-  .logout-btn{ position:fixed; top:20px; right:16px; background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; z-index:9; }
+  /* ===== Chips, segmented control ===== */
+  .type-row{ display:flex; gap:8px; }
+  .chip-row{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin:0 -20px; padding:2px 20px; }
+  .chip-row::-webkit-scrollbar{ display:none; }
+  .chip-row .type-btn{ flex:0 0 auto; flex-direction:row; gap:6px; padding:9px 14px; border-radius:999px; font-size:13px; font-weight:600; }
+  .chip-row .type-btn .ic{ font-size:15px; }
+  .type-btn{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:12px 4px; background:var(--surface); border:1px solid var(--border); border-radius:14px; color:var(--muted);
+    font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:background .15s, border-color .15s, color .15s; }
+  .type-btn.active{ border-color:rgba(242,179,61,.6); color:var(--text); background:rgba(242,179,61,.13); }
+  .type-btn .ic{ font-size:20px; }
+  #typeRow{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 
-  .time-select{ background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 6px; font-size:14px; font-family:'JetBrains Mono', monospace; outline:none; flex:1; text-align:center; }
-  .time-select:focus{ border-color:var(--gold); }
+  .metric-row{ display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px; }
+  .metric-btn{ flex:1; padding:9px 6px; border-radius:10px; border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s, color .15s; }
+  .metric-btn.active{ background:var(--surface3); color:var(--text); box-shadow:0 2px 8px -2px rgba(0,0,0,.5); }
+
+  /* ===== Stats ===== */
+  .period-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .period-nav .lbl{ font-family:var(--font-display); font-weight:600; font-size:14px; text-align:center; flex:1; }
+  .round-btn{ width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .round-btn:disabled{ opacity:.3; cursor:not-allowed; }
+  .round-btn .i{ width:18px; height:18px; }
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-value{ font-family:var(--font-display); font-weight:700; font-size:28px; letter-spacing:-.02em; margin:6px 0 0; font-variant-numeric:tabular-nums; }
+  .stat-value span{ font-size:14px; font-weight:500; color:var(--muted); letter-spacing:0; }
+  .stat-card.accent{ background:linear-gradient(160deg, rgba(242,179,61,.16), rgba(242,179,61,.03) 70%), var(--surface); border-color:rgba(242,179,61,.25); }
+  .chart-row{ display:flex; align-items:flex-end; gap:6px; margin-top:12px; padding:4px 0 2px; }
+  .chart-col{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .chart-bar-area{ height:110px; width:100%; display:flex; align-items:flex-end; justify-content:center; }
+  .chart-bar{ width:100%; max-width:24px; background:linear-gradient(180deg, rgba(242,179,61,.75), rgba(242,179,61,.28)); border-radius:8px; min-height:4px; transition:height .3s ease; }
+  .chart-col.current .chart-bar{ background:var(--gold-grad); box-shadow:0 0 16px rgba(242,179,61,.5); }
+  .chart-col.nodata .chart-bar{ background:rgba(255,255,255,.07); }
+  .chart-day{ font-size:11px; color:var(--muted); white-space:nowrap; text-align:center; line-height:1.35; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  .chart-value{ font-size:10px; color:var(--muted); white-space:nowrap; text-align:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; line-height:1.3; min-height:26px; display:flex; flex-direction:column; justify-content:flex-end; font-variant-numeric:tabular-nums; }
+  .chart-col.current .chart-day, .chart-col.current .chart-value{ color:var(--gold-light); font-weight:600; }
+
+  /* ===== Inventory ===== */
+  .inv-section{ display:flex; flex-direction:column; gap:10px; }
+  .inv-section-title{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:15px; font-weight:600; color:var(--text); }
+  .inv-section-title .cnt{ margin-left:auto; font-family:'Inter',sans-serif; font-size:12px; color:var(--muted); font-weight:500; }
+  .inv-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  .inv-item-slot{ aspect-ratio:1; border:1px dashed var(--border-strong); border-radius:16px; background:rgba(255,255,255,.02); display:flex; align-items:center; justify-content:center; color:var(--faint); font-size:15px; position:relative; }
+  .inv-item-slot.filled{ border:1px solid var(--border); background:var(--surface); flex-direction:column; gap:4px; font-size:24px; color:var(--text); padding:6px 4px; }
+  .inv-item-slot.filled.equipped{ border-color:rgba(242,179,61,.5); background:linear-gradient(180deg, rgba(242,179,61,.12), rgba(242,179,61,.02)), var(--surface); }
+  .inv-item-slot .item-name{ font-size:9.5px; color:var(--muted); text-align:center; line-height:1.15; padding:0 2px; font-weight:500; }
+  .inv-item-slot .worn{ position:absolute; top:-6px; right:-4px; max-width:100%; background:var(--gold-grad); color:#1A1206; font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:999px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .inv-empty-hint{ font-size:12px; color:var(--muted); margin:0; }
+  .portrait-avatar{ object-fit:contain; display:block; }
+
+  /* ===== Item picker ===== */
+  .item-pick-btn{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; border:1px solid var(--border); border-radius:16px; background:var(--surface2); padding:12px 14px; cursor:pointer; color:var(--text); font:inherit; margin-bottom:8px; }
+  .item-pick-btn.equipped{ border-color:rgba(242,179,61,.6); background:rgba(242,179,61,.1); }
+  .item-pick-btn.disabled{ opacity:.4; cursor:not-allowed; }
+  .item-pick-btn .ic{ font-size:24px; width:32px; text-align:center; }
+  .item-pick-btn .nm{ flex:1; font-weight:500; }
+  .item-pick-btn .tag{ font-size:11px; font-weight:600; color:var(--muted); }
+  .item-pick-btn.equipped .tag{ color:var(--gold-light); }
+
+  /* ===== Gymnasium ===== */
+  .gym-card{ width:100%; text-align:left; cursor:pointer; display:flex; gap:14px; align-items:stretch; color:var(--text); font:inherit; }
+  .gym-card:active{ background:var(--surface2); }
+  .gym-portrait{ width:76px; flex-shrink:0; border-radius:14px; background:radial-gradient(80% 60% at 50% 40%, rgba(242,179,61,.18), transparent 70%), var(--surface2); display:flex; align-items:flex-end; justify-content:center; overflow:hidden; padding-top:6px; }
+  .gym-portrait img{ width:66px; height:auto; }
+  .gym-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; }
+  .gym-head{ display:flex; align-items:center; gap:8px; }
+  .gym-name{ font-family:var(--font-display); font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge{ display:inline-flex; align-items:center; font-size:10px; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface3); color:var(--muted); white-space:nowrap; }
+  .badge.gold{ background:rgba(242,179,61,.16); color:var(--gold-light); }
+  .gym-attrs{ display:flex; flex-direction:column; gap:3px; }
+  .portrait-option{ padding:0; border:2px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface2); cursor:pointer; width:62px; height:86px; }
+  .portrait-option.selected{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(242,179,61,.2); }
+  .portrait-option img{ width:100%; height:100%; object-fit:contain; }
+
+  /* ===== Stadium ===== */
+  .arena-hero{ text-align:center; padding:22px 18px; background:radial-gradient(90% 80% at 50% 0%, rgba(240,84,79,.16), transparent 65%), var(--surface); }
+  .arena-hero .em{ font-size:34px; }
+  .arena-hero h3{ font-family:var(--font-display); font-size:18px; margin:6px 0 4px; }
+  .duel-name{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .duel-name small{ font-family:'Inter',sans-serif; color:var(--muted); font-weight:500; font-size:12px; }
+  .duel{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; }
+  .duel-side{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
+  .duel-side .nm{ font-family:var(--font-display); font-weight:600; font-size:13px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .duel-roll{ font-family:var(--font-display); font-weight:700; font-size:30px; font-variant-numeric:tabular-nums; color:var(--muted); }
+  .duel-side.win .duel-roll{ color:var(--gold-light); text-shadow:0 0 18px rgba(242,179,61,.5); }
+  .duel-side.win .nm{ color:var(--gold-light); }
+  .vs{ width:34px; height:34px; border-radius:50%; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.04em; }
+  .duel-open{ display:flex; align-items:center; gap:12px; }
+  .duel-open .info{ flex:1; min-width:0; }
+  .duel-open .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .duel-result{ text-align:center; font-size:12px; color:var(--muted); margin-top:10px; }
+
+  /* ===== Leaderboard ===== */
+  .lb-row{ display:flex; align-items:center; gap:14px; padding:12px 14px; }
+  .lb-rank{ width:34px; height:34px; border-radius:11px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--muted); flex-shrink:0; }
+  .lb-rank.r1{ background:linear-gradient(135deg,#FFE29A,#E6A92A); color:#2A1C04; }
+  .lb-rank.r2{ background:linear-gradient(135deg,#F1F3F6,#A9B0BC); color:#1E2228; }
+  .lb-rank.r3{ background:linear-gradient(135deg,#F2B98A,#B36A35); color:#2A1405; }
+  .lb-name{ font-family:var(--font-display); font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lb-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .lb-score{ font-family:var(--font-display); font-weight:700; font-size:17px; font-variant-numeric:tabular-nums; text-align:right; }
+  .lb-score small{ display:block; font-family:'Inter',sans-serif; font-size:10px; font-weight:500; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+
+  /* ===== Account ===== */
+  .settings-group{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .settings-item{ padding:14px 16px; }
+  .settings-item + .settings-item{ border-top:1px solid var(--border); }
+  .settings-row{ display:flex; align-items:center; gap:12px; }
+  .settings-row .k{ font-size:12px; color:var(--muted); font-weight:500; }
+  .settings-row .v{ font-size:15px; font-weight:600; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .settings-row .grow{ flex:1; min-width:0; }
+  .edit-fields{ margin-top:14px; display:flex; flex-direction:column; gap:12px; }
+  .success{ color:var(--green) !important; }
+
+  /* ===== Bottom navigation ===== */
+  .bottom-nav{ position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:480px; z-index:40;
+    padding:0 12px var(--safe-b); background:rgba(14,14,18,.82); backdrop-filter:saturate(160%) blur(20px); -webkit-backdrop-filter:saturate(160%) blur(20px); border-top:1px solid var(--border);
+    display:flex; height:calc(var(--nav-h) + var(--safe-b)); }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:var(--faint); font-size:10.5px; font-weight:600; cursor:pointer; position:relative; padding:0; }
+  .nav-item .i{ width:23px; height:23px; transition:transform .15s; }
+  .nav-item.active{ color:var(--gold); }
+  .nav-item.active::before{ content:''; position:absolute; top:0; width:28px; height:3px; border-radius:0 0 3px 3px; background:var(--gold-grad); }
+  .nav-item:active .i{ transform:scale(.9); }
+
+  .fab{ position:fixed; z-index:39; right:max(20px, calc(50% - 240px + 20px)); bottom:calc(var(--nav-h) + var(--safe-b) + 16px); width:56px; height:56px; border-radius:18px; border:none;
+    background:var(--gold-grad); color:#1A1206; display:none; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 14px 30px -10px rgba(242,179,61,.75); }
+  .fab .i{ width:26px; height:26px; stroke-width:2.4; }
+  .fab:active{ transform:scale(.94); }
+  body[data-screen="activities"] .fab, body[data-screen="sleep"] .fab{ display:flex; }
+
+  /* ===== Drawer (More) ===== */
+  .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); z-index:90; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
+  .drawer{ position:fixed; top:0; left:0; height:100%; width:280px; max-width:84vw; background:#111116; border-right:1px solid var(--border);
+    padding:calc(22px + env(safe-area-inset-top,0px)) 14px calc(18px + var(--safe-b)); transform:translateX(-100%); transition:transform .28s cubic-bezier(.2,.8,.2,1); z-index:95; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-brand{ display:flex; align-items:center; gap:10px; margin:0 6px 22px; }
+  .drawer-title{ font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:14px 10px 6px; }
+  .drawer-item{ display:flex; align-items:center; gap:14px; background:none; border:none; color:var(--muted); font-size:15px; font-weight:500;
+    padding:12px 12px; border-radius:12px; cursor:pointer; text-align:left; font-family:inherit; }
+  .drawer-item .i{ width:21px; height:21px; }
+  .drawer-item:active{ background:var(--surface2); }
+  .drawer-item.active{ background:rgba(242,179,61,.12); color:var(--gold-light); font-weight:600; }
+  .drawer-item.danger{ color:var(--red); }
+  .drawer-spacer{ flex:1; min-height:16px; }
+
+  /* ===== Bottom sheets ===== */
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); display:none; align-items:flex-end; justify-content:center; z-index:50; }
+  .overlay.open{ display:flex; animation:fadeIn .2s ease; }
+  .overlay.open .sheet{ animation:sheetUp .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes sheetUp{ from{ transform:translateY(40px); opacity:.6; } to{ transform:none; opacity:1; } }
+  .sheet{ width:100%; max-width:480px; background:#131318; border:1px solid var(--border); border-bottom:none; border-radius:28px 28px 0 0;
+    padding:10px 20px calc(24px + var(--safe-b)); display:flex; flex-direction:column; gap:14px; max-height:90vh; overflow-y:auto; }
+  .sheet::before{ content:''; display:block; width:40px; height:5px; border-radius:999px; background:var(--surface3); margin:0 auto 2px; flex-shrink:0; }
+  .sheet .card{ background:var(--surface2); }
+  .sheet-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .sheet-header h2{ font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.01em; margin:0; }
+  .sheet-close{ width:34px; height:34px; border-radius:50%; background:var(--surface2); border:none; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; }
+  .sheet-close .i{ width:17px; height:17px; }
+  .sheet-nav-btn{ width:34px; height:34px; border-radius:50%; background:var(--surface2); border:none; color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; }
+  .sheet-nav-btn .i{ width:18px; height:18px; }
+  .sheet-nav-btn:disabled{ opacity:.25; cursor:not-allowed; }
+  .view-head{ display:flex; align-items:center; gap:14px; }
+  .view-head .activity-icon{ width:56px; height:56px; font-size:26px; border-radius:18px; }
+  .score-card{ text-align:center; background:linear-gradient(160deg, rgba(242,179,61,.14), rgba(242,179,61,.02) 70%), var(--surface2) !important; border-color:rgba(242,179,61,.22); }
+  .score-big{ font-family:var(--font-display); font-weight:800; font-size:38px; letter-spacing:-.02em; color:var(--gold-light); margin:4px 0 0; font-variant-numeric:tabular-nums; }
+  .breakdown{ text-align:left; margin-top:12px; border-top:1px solid var(--border); padding-top:10px; }
+  .bd-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin:5px 0; }
+  .bd-row span:last-child{ color:var(--text); font-variant-numeric:tabular-nums; font-weight:500; }
+  .bd-total{ color:var(--gold-light); font-weight:700; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
+  .bd-total span:last-child{ color:var(--gold-light); font-weight:700; }
+  .extra-row{ display:flex; align-items:center; gap:10px; font-size:13.5px; padding:6px 0; }
+  .extra-row + .extra-row{ border-top:1px solid var(--border); }
+  .extra-row .k{ color:var(--muted); flex:1; }
+  .extra-row .v{ font-weight:600; font-variant-numeric:tabular-nums; }
+
+  /* ===== Forms ===== */
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:7px; }
+  .field input, .field textarea{ width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:14px;
+    padding:13px 14px; font-size:15px; font-family:inherit; outline:none; transition:border-color .15s, box-shadow .15s; }
+  .field input::placeholder{ color:var(--faint); }
+  .field input:focus, .field textarea:focus{ border-color:rgba(242,179,61,.65); box-shadow:0 0 0 4px rgba(242,179,61,.12); }
+  .field input[type="datetime-local"]{ color-scheme:dark; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row > .field{ flex:1; min-width:0; }
+  .time-select{ appearance:none; -webkit-appearance:none; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:14px; padding:13px 6px; font-size:15px;
+    font-family:var(--font-display); font-variant-numeric:tabular-nums; outline:none; flex:1; text-align:center; text-align-last:center; }
+  .time-select:focus{ border-color:rgba(242,179,61,.65); }
+  .pw-wrap{ position:relative; }
+  .pw-wrap input{ padding-right:46px; }
+  .pw-toggle{ position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:8px; display:flex; }
+
+  /* ===== Auth ===== */
+  .auth-screen{ position:fixed; inset:0; background:radial-gradient(700px 420px at 50% 0%, rgba(242,179,61,.14), transparent 70%), var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px; overflow-y:auto; }
+  .auth-box{ width:100%; max-width:360px; display:flex; flex-direction:column; gap:14px; }
+  .auth-logo{ display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:10px; }
+  .auth-logo .brand-mark{ width:64px; height:64px; border-radius:20px; box-shadow:0 18px 40px -14px rgba(242,179,61,.7); }
+  .auth-logo .brand-mark .logo{ width:42px; height:42px; }
+  .auth-logo .wordmark{ font-size:16px; }
+  .auth-tagline{ font-size:13px; color:var(--muted); margin:-6px 0 0; text-align:center; }
+  .auth-tabs{ display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px; }
+  .auth-tab{ flex:1; padding:10px; border-radius:10px; border:none; background:transparent; color:var(--muted); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .auth-tab.active{ background:var(--surface3); color:var(--text); }
+  .auth-error{ color:var(--red); font-size:13px; text-align:center; margin:0; }
+  .link-btn{ background:none; border:none; color:var(--muted); font-size:13px; font-weight:500; cursor:pointer; padding:6px; }
+  .loading-pulse .brand-mark{ animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(.94); opacity:.75; } }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
-<body>
+<body data-screen="athlete">
 
-<!-- AUTH SCREEN -->
-<div class="auth-screen" id="loadingScreen">
+<!-- ICON SPRITE (line icons) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-athlete" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 8L9 4l-3 8H2"/></symbol>
+    <symbol id="i-stats" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 17v-4"/><path d="M13 17V8"/><path d="M18 17v-7"/></symbol>
+    <symbol id="i-swords" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="m5 14 4 4"/><path d="m7 17-3 3"/><path d="m3 19 2 2"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 10a7 7 0 0 1 14 0v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M9 5.5V4a3 3 0 0 1 6 0v1.5"/><path d="M8.5 21v-5.5h7V21"/><path d="M5 12h14"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13.5A8.5 8.5 0 1 1 10.5 3.5a6.5 6.5 0 0 0 10 10z"/></symbol>
+    <symbol id="i-temple" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 18h14"/><path d="M6.5 18v-7"/><path d="M10.5 18v-7"/><path d="M13.5 18v-7"/><path d="M17.5 18v-7"/><path d="M4 11h16"/><path d="m12 3 8.5 5h-17z"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 16.5V21"/><path d="M7 3.5h10V9a5 5 0 0 1-10 0z"/><path d="M17 5h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/><path d="M7 5H4v1.5A3.5 3.5 0 0 0 7.5 10"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></symbol>
+    <symbol id="i-laurel" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10.5 20.5C5.5 19 3.2 14 4.6 7.5"/><path d="M13.5 20.5C18.5 19 20.8 14 19.4 7.5"/></g>
+      <g fill="currentColor" stroke="none">
+        <ellipse cx="3.3" cy="9.4" rx="1.05" ry="2.1" transform="rotate(-18 3.3 9.4)"/><ellipse cx="6.3" cy="8.6" rx="1.05" ry="2.1" transform="rotate(32 6.3 8.6)"/>
+        <ellipse cx="3.4" cy="13.6" rx="1.05" ry="2.1" transform="rotate(-40 3.4 13.6)"/><ellipse cx="6.7" cy="12.9" rx="1.05" ry="2.1" transform="rotate(18 6.7 12.9)"/>
+        <ellipse cx="5.4" cy="17.4" rx="1.05" ry="2.1" transform="rotate(-62 5.4 17.4)"/><ellipse cx="8.4" cy="16.4" rx="1.05" ry="2.1"/>
+        <ellipse cx="5.1" cy="5.2" rx="1" ry="1.9" transform="rotate(8 5.1 5.2)"/>
+        <ellipse cx="20.7" cy="9.4" rx="1.05" ry="2.1" transform="rotate(18 20.7 9.4)"/><ellipse cx="17.7" cy="8.6" rx="1.05" ry="2.1" transform="rotate(-32 17.7 8.6)"/>
+        <ellipse cx="20.6" cy="13.6" rx="1.05" ry="2.1" transform="rotate(40 20.6 13.6)"/><ellipse cx="17.3" cy="12.9" rx="1.05" ry="2.1" transform="rotate(-18 17.3 12.9)"/>
+        <ellipse cx="18.6" cy="17.4" rx="1.05" ry="2.1" transform="rotate(62 18.6 17.4)"/><ellipse cx="15.6" cy="16.4" rx="1.05" ry="2.1"/>
+        <ellipse cx="18.9" cy="5.2" rx="1" ry="1.9" transform="rotate(-8 18.9 5.2)"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- LOADING SCREEN -->
+<div class="auth-screen loading-pulse" id="loadingScreen">
   <div class="auth-logo">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-    </svg>
+    <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
     <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
   </div>
 </div>
 
+<!-- AUTH SCREEN -->
 <div class="auth-screen" id="authScreen" style="display:none;">
   <div class="auth-box">
     <div class="auth-logo">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-        <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      </svg>
+      <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
       <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+      <p class="auth-tagline">Train like an Olympian. Level up your legend.</p>
     </div>
 
     <div class="auth-tabs">
@@ -195,77 +436,85 @@
     </div>
     <div class="field">
       <label>Password</label>
-      <div style="position:relative;">
-        <input id="authPassword" type="password" autocomplete="current-password" style="padding-right:42px;" />
-        <button type="button" onclick="toggleAuthPasswordVisibility()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px;">👁️</button>
+      <div class="pw-wrap">
+        <input id="authPassword" type="password" autocomplete="current-password" />
+        <button type="button" class="pw-toggle" onclick="toggleAuthPasswordVisibility()" aria-label="Show password"><svg class="i"><use href="#i-eye"/></svg></button>
       </div>
     </div>
 
     <p class="auth-error" id="authError" style="display:none;"></p>
     <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Log In</button>
-    <button class="drawer-item" id="forgotPasswordBtn" style="justify-content:center;" onclick="forgotPassword()">Forgot password?</button>
+    <button class="link-btn" id="forgotPasswordBtn" onclick="forgotPassword()">Forgot password?</button>
     <p class="hint" id="authHint">No account yet? Tap "Register" above.</p>
   </div>
 </div>
 
 <div class="app" id="appRoot" style="display:none;">
-  <button class="hamburger-btn" onclick="openDrawer()">☰</button>
 
   <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
   <nav class="drawer" id="drawerMenu">
-    <p class="drawer-title">Navigation</p>
-    <button class="drawer-item" data-tab="athlete" onclick="showScreen('athlete')"><span class="ic">🎽</span>Athlete</button>
-    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><span class="ic">🎒</span>Inventory</button>
-    <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><span class="ic">🔥</span>Activities</button>
-    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><span class="ic">😴</span>Sleep</button>
-    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><span class="ic">📊</span>Stats</button>
-    <button class="drawer-item" data-tab="gymnasium" onclick="showScreen('gymnasium')"><span class="ic">🏛️</span>Gymnasium</button>
-    <button class="drawer-item" data-tab="stadium" onclick="showScreen('stadium')"><span class="ic">🏟️</span>Stadium</button>
-    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><span class="ic">🏆</span>Leaderboard</button>
-    <button class="drawer-item" data-tab="account" style="margin-top:auto;" onclick="showScreen('account')"><span class="ic">👤</span>Account</button>
-    <button class="drawer-item" style="border-top:1px solid var(--border);border-radius:0;padding-top:16px;color:var(--red);" onclick="logout()"><span class="ic">🚪</span>Log Out</button>
+    <div class="drawer-brand">
+      <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
+      <span class="wordmark">Age of <span class="accent">Sports</span></span>
+    </div>
+    <p class="drawer-title">Train</p>
+    <button class="drawer-item" data-tab="athlete" onclick="showScreen('athlete')"><svg class="i"><use href="#i-athlete"/></svg>Athlete</button>
+    <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><svg class="i"><use href="#i-activity"/></svg>Activities</button>
+    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><svg class="i"><use href="#i-moon"/></svg>Sleep</button>
+    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><svg class="i"><use href="#i-stats"/></svg>Stats</button>
+    <p class="drawer-title">Collect &amp; Compete</p>
+    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><svg class="i"><use href="#i-bag"/></svg>Inventory</button>
+    <button class="drawer-item" data-tab="gymnasium" onclick="showScreen('gymnasium')"><svg class="i"><use href="#i-temple"/></svg>Gymnasium</button>
+    <button class="drawer-item" data-tab="stadium" onclick="showScreen('stadium')"><svg class="i"><use href="#i-swords"/></svg>Stadium</button>
+    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><svg class="i"><use href="#i-trophy"/></svg>Leaderboard</button>
+    <div class="drawer-spacer"></div>
+    <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><svg class="i"><use href="#i-settings"/></svg>Account</button>
+    <button class="drawer-item danger" onclick="logout()"><svg class="i"><use href="#i-logout"/></svg>Log Out</button>
   </nav>
 
-  <div class="sticky-header">
-    <header>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M4,20 C4,12 7,6 11,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-        <path d="M20,20 C20,12 17,6 13,3" stroke="#C9A227" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      </svg>
-      <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+  <div class="sticky-header" id="stickyHeader">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
+        <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
+      </div>
+      <button class="icon-btn" onclick="showScreen('leaderboard')" aria-label="Leaderboard"><svg class="i"><use href="#i-trophy"/></svg></button>
     </header>
-    <div class="divider"></div>
   </div>
 
   <main>
     <!-- ACTIVITIES -->
     <section class="screen" id="screen-activities">
-      <div>
-        <p class="label">This Week</p>
-        <h1 class="title">Activities</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Training log</p>
+          <h1 class="title">Activities</h1>
+        </div>
       </div>
-
-      <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="activityList" class="list"></div>
     </section>
 
     <!-- SLEEP -->
     <section class="screen" id="screen-sleep">
-      <div>
-        <p class="label">Recovery</p>
-        <h1 class="title">Sleep</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Recovery</p>
+          <h1 class="title">Sleep</h1>
+        </div>
       </div>
-
-      <div id="sleepList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="sleepList" class="list"></div>
     </section>
 
     <!-- STATS -->
     <section class="screen" id="screen-stats">
-      <div>
-        <p class="label">Overview</p>
-        <h1 class="title">Stats</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Overview</p>
+          <h1 class="title">Stats</h1>
+        </div>
       </div>
 
-      <div class="type-row" id="statsFilterRow" style="flex-wrap:wrap;">
+      <div class="type-row chip-row" id="statsFilterRow">
         <button class="type-btn active" data-filter="all" onclick="setStatsFilter('all', this)"><span class="ic">⭐</span>All</button>
         <button class="type-btn" data-filter="run" onclick="setStatsFilter('run', this)"><span class="ic">🏃</span>Run</button>
         <button class="type-btn" data-filter="ride" onclick="setStatsFilter('ride', this)"><span class="ic">🚴</span>Ride</button>
@@ -282,39 +531,43 @@
         <button class="metric-btn" data-period="alltime" onclick="setStatsPeriod('alltime')">All-time</button>
       </div>
 
-      <div id="statsPeriodNav" style="display:flex;align-items:center;justify-content:center;gap:10px;">
-        <button class="sheet-nav-btn" onclick="statsPeriodPrev()">‹</button>
-        <span id="statsPeriodLabel" class="hint" style="margin:0;min-width:150px;text-align:center;"></span>
-        <button class="sheet-nav-btn" id="statsPeriodNextBtn" onclick="statsPeriodNext()">›</button>
+      <div id="statsPeriodNav" class="period-nav">
+        <button class="round-btn" onclick="statsPeriodPrev()" aria-label="Previous period"><svg class="i"><use href="#i-left"/></svg></button>
+        <span id="statsPeriodLabel" class="lbl"></span>
+        <button class="round-btn" id="statsPeriodNextBtn" onclick="statsPeriodNext()" aria-label="Next period"><svg class="i"><use href="#i-right"/></svg></button>
       </div>
 
       <div class="stat-grid">
-        <div class="card">
+        <div class="card stat-card accent">
           <p class="label" id="statPeriodLabel">This Week</p>
           <p class="stat-value" id="statWeekKm">0 <span>km</span></p>
         </div>
-        <div class="card">
+        <div class="card stat-card">
           <p class="label">Activities</p>
           <p class="stat-value" id="statCount">0</p>
         </div>
       </div>
 
       <div class="card">
-        <p class="label" id="chartTitle" style="margin-bottom:4px;">Kilometers per Day</p>
+        <p class="label" id="chartTitle">Kilometers per Day</p>
         <div class="chart-row" id="chartRow" style="overflow-x:auto;"></div>
-        <p class="hint" id="statsMonthNote" style="display:none;text-align:left;margin-top:10px;">
+        <p class="hint" id="statsMonthNote" style="display:none;text-align:left;margin-top:12px;">
           Weeks run Monday–Sunday. The monthly total above only counts days from the 1st to the last day of the calendar month, so the first/last week shown here may extend slightly beyond it.
         </p>
       </div>
     </section>
 
-    <!-- CHARACTER -->
+    <!-- ATHLETE -->
     <section class="screen active" id="screen-athlete">
-      <div>
-        <h1 class="title">Active Athlete</h1>
-      </div>
+      <div class="hero">
+        <div class="hero-top">
+          <div class="select-pill">
+            <select id="athleteNameSelect" class="name-select" onchange="switchActiveAthlete(this.value)" aria-label="Active athlete"></select>
+            <svg class="i"><use href="#i-down"/></svg>
+          </div>
+          <p class="level-chip" id="athleteLevel">Level 1</p>
+        </div>
 
-      <div class="card athlete-card">
         <div class="equip-row">
           <div class="equip-group">
             <div class="equip-item">
@@ -326,7 +579,7 @@
               <button class="equip-slot" id="slot-equipment" onclick="openItemPicker('equipment')"></button>
             </div>
           </div>
-          <div id="athleteAvatar"></div>
+          <div class="hero-portrait"><div id="athleteAvatar"></div></div>
           <div class="equip-group">
             <div class="equip-item">
               <div class="equip-item-label">Supplies</div>
@@ -339,30 +592,38 @@
           </div>
         </div>
 
-        <select id="athleteNameSelect" class="name-select" onchange="switchActiveAthlete(this.value)"></select>
-
-        <p class="label" style="margin-top:8px;" id="athleteLevel">Level 1</p>
-        <p class="hint" id="athleteRemain" style="margin-bottom:6px;"></p>
-        <div id="laurelBarWrap"></div>
+        <div class="xp">
+          <div class="xp-head">
+            <span class="label">Progress</span>
+            <p class="xp-remain" id="athleteRemain"></p>
+          </div>
+          <div id="laurelBarWrap"></div>
+        </div>
       </div>
 
+      <p class="section-title">Attributes</p>
       <div class="card attr-card" id="attrCard"></div>
 
-      <button class="btn-primary" onclick="openActivityModal('run')">+ Log Activity</button>
+      <button class="btn-primary" onclick="openActivityModal('run')"><svg class="i"><use href="#i-plus"/></svg>Log Activity</button>
 
-      <button class="duel-btn" onclick="document.getElementById('garminFileInput').click()">
-        <span class="left">⛰️ Import Garmin File (.gpx/.tcx)</span>
-        <span class="chevron">›</span>
+      <button class="list-btn" onclick="document.getElementById('garminFileInput').click()">
+        <span class="list-btn-ic"><svg class="i"><use href="#i-upload"/></svg></span>
+        <span class="list-btn-text">
+          <span class="t">Import Garmin file</span>
+          <span class="s">.gpx / .tcx – pick both of one activity for the most complete data</span>
+        </span>
+        <span class="chevron"><svg class="i"><use href="#i-right"/></svg></span>
       </button>
-      <p class="hint">Tip: select both the .gpx and .tcx of the same activity together for the most complete data</p>
       <input type="file" id="garminFileInput" accept=".gpx,.tcx,.xml" multiple style="display:none;" onchange="handleGarminFile(event)" />
     </section>
 
     <!-- INVENTORY -->
     <section class="screen" id="screen-inventory">
-      <div>
-        <p class="label">Your Collection</p>
-        <h1 class="title">Inventory</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Your collection</p>
+          <h1 class="title">Inventory</h1>
+        </div>
       </div>
 
       <div class="inv-section">
@@ -392,131 +653,161 @@
 
     <!-- GYMNASIUM -->
     <section class="screen" id="screen-gymnasium">
-      <div>
-        <p class="label">Your Athletes</p>
-        <h1 class="title">Gymnasium</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Your athletes</p>
+          <h1 class="title">Gymnasium</h1>
+        </div>
       </div>
 
-      <div id="gymnasiumList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="gymnasiumList" class="list"></div>
 
-      <button class="btn-primary" onclick="createNewAthlete()">+ Create New Athlete</button>
+      <button class="btn-secondary" onclick="createNewAthlete()"><svg class="i"><use href="#i-plus"/></svg>Create New Athlete</button>
     </section>
 
     <!-- STADIUM -->
     <section class="screen" id="screen-stadium">
-      <div>
-        <p class="label">Enter the arena</p>
-        <h1 class="title">Stadium</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Enter the arena</p>
+          <h1 class="title">Stadium</h1>
+        </div>
       </div>
 
-      <div class="card" style="text-align:center;">
-        <p class="hint" style="margin:0 0 10px;">Roll 1–100 against another athlete. Highest roll wins.</p>
-        <button class="btn-primary" onclick="createChallenge()">⚔️ Create Challenge</button>
+      <div class="card arena-hero">
+        <div class="em">⚔️</div>
+        <h3>Dice Duel</h3>
+        <p class="hint" style="margin:0 0 16px;">Roll 1–100 against another athlete. Highest roll wins.</p>
+        <button class="btn-primary" style="width:100%;" onclick="createChallenge()">Create Challenge</button>
       </div>
 
-      <div id="stadiumChallengeList" style="display:flex;flex-direction:column;gap:10px;">
+      <p class="section-title">Challenges</p>
+      <div id="stadiumChallengeList" class="list">
         <p class="hint">Loading…</p>
       </div>
     </section>
 
-    <!-- LEADERBOARD -->
     <!-- ACCOUNT -->
     <section class="screen" id="screen-account">
-      <div>
-        <p class="label">Settings</p>
-        <h1 class="title">Account</h1>
-      </div>
-
-      <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Username</label>
-        <div id="accountUsernameDisplayRow" style="display:flex;align-items:center;gap:8px;">
-          <span id="accountUsernameDisplay" style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">Leonidas</span>
-          <button onclick="startEditAccountUsername()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
-        </div>
-
-        <div id="accountUsernameEditFields" style="display:none;">
-          <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>New Username</label>
-            <input id="accountUsername" />
-          </div>
-          <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
-          <p class="hint" id="accountUsernameSuccess" style="display:none;color:var(--gold);"></p>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountUsername()">Change Username</button>
-            <button onclick="cancelEditAccountUsername()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
-          </div>
+      <div class="screen-head">
+        <div>
+          <p class="label">Settings</p>
+          <h1 class="title">Account</h1>
         </div>
       </div>
 
-      <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Email Address</label>
-        <div id="accountEmailDisplayRow" style="display:flex;align-items:center;gap:8px;">
-          <span id="accountEmailMasked" style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••</span>
-          <button onclick="startEditAccountEmail()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div id="accountUsernameDisplayRow" class="settings-row">
+            <div class="grow">
+              <div class="k">Username</div>
+              <div class="v" id="accountUsernameDisplay">Leonidas</div>
+            </div>
+            <button class="text-btn" onclick="startEditAccountUsername()"><svg class="i"><use href="#i-pencil"/></svg>Edit</button>
+          </div>
+          <div id="accountUsernameEditFields" class="edit-fields" style="display:none;">
+            <div class="field">
+              <label>New Username</label>
+              <input id="accountUsername" />
+            </div>
+            <p class="auth-error" id="accountUsernameError" style="display:none;"></p>
+            <p class="hint success" id="accountUsernameSuccess" style="display:none;"></p>
+            <div class="btn-row">
+              <button class="btn-primary" onclick="saveAccountUsername()">Save</button>
+              <button class="btn-secondary" onclick="cancelEditAccountUsername()">Cancel</button>
+            </div>
+          </div>
         </div>
 
-        <div id="accountEmailEditFields" style="display:none;">
-          <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>New Email Address</label>
-            <input id="accountEmail" type="email" placeholder="you@email.com" />
+        <div class="settings-item">
+          <div id="accountEmailDisplayRow" class="settings-row">
+            <div class="grow">
+              <div class="k">Email Address</div>
+              <div class="v num" id="accountEmailMasked">••••••</div>
+            </div>
+            <button class="text-btn" onclick="startEditAccountEmail()"><svg class="i"><use href="#i-pencil"/></svg>Edit</button>
           </div>
-          <div class="field" style="margin-bottom:10px;">
-            <label>Current Password (to confirm)</label>
-            <input id="accountEmailPassword" type="password" autocomplete="current-password" />
+          <div id="accountEmailEditFields" class="edit-fields" style="display:none;">
+            <div class="field">
+              <label>New Email Address</label>
+              <input id="accountEmail" type="email" placeholder="you@email.com" />
+            </div>
+            <div class="field">
+              <label>Current Password (to confirm)</label>
+              <input id="accountEmailPassword" type="password" autocomplete="current-password" />
+            </div>
+            <p class="auth-error" id="accountEmailError" style="display:none;"></p>
+            <p class="hint success" id="accountEmailSuccess" style="display:none;"></p>
+            <div class="btn-row">
+              <button class="btn-primary" onclick="saveAccountEmail()">Save</button>
+              <button class="btn-secondary" onclick="cancelEditAccountEmail()">Cancel</button>
+            </div>
           </div>
-          <p class="auth-error" id="accountEmailError" style="display:none;"></p>
-          <p class="hint" id="accountEmailSuccess" style="display:none;color:var(--gold);"></p>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountEmail()">Change Email</button>
-            <button onclick="cancelEditAccountEmail()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
+        </div>
+
+        <div class="settings-item">
+          <div id="accountPasswordDisplayRow" class="settings-row">
+            <div class="grow">
+              <div class="k">Password</div>
+              <div class="v num">••••••••</div>
+            </div>
+            <button class="text-btn" onclick="startEditAccountPassword()"><svg class="i"><use href="#i-pencil"/></svg>Edit</button>
+          </div>
+          <div id="accountPasswordEditFields" class="edit-fields" style="display:none;">
+            <div class="field">
+              <label>Current Password</label>
+              <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
+            </div>
+            <div class="field">
+              <label>New Password</label>
+              <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="min. 6 characters" />
+            </div>
+            <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
+            <p class="hint success" id="accountPasswordSuccess" style="display:none;"></p>
+            <div class="btn-row">
+              <button class="btn-primary" onclick="saveAccountPassword()">Save</button>
+              <button class="btn-secondary" onclick="cancelEditAccountPassword()">Cancel</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;">Password</label>
-        <div id="accountPasswordDisplayRow" style="display:flex;align-items:center;gap:8px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);">••••••••</span>
-          <button onclick="startEditAccountPassword()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">✎ Edit</button>
-        </div>
-
-        <div id="accountPasswordEditFields" style="display:none;">
-          <div class="field" style="margin-top:10px;margin-bottom:10px;">
-            <label>Current Password</label>
-            <input id="accountCurrentPassword" type="password" autocomplete="current-password" />
-          </div>
-          <div class="field" style="margin-bottom:10px;">
-            <label>New Password</label>
-            <input id="accountNewPassword" type="password" autocomplete="new-password" placeholder="min. 6 characters" />
-          </div>
-          <p class="auth-error" id="accountPasswordError" style="display:none;"></p>
-          <p class="hint" id="accountPasswordSuccess" style="display:none;color:var(--gold);"></p>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-primary" style="flex:1;" onclick="saveAccountPassword()">Change Password</button>
-            <button onclick="cancelEditAccountPassword()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Cancel</button>
-          </div>
-        </div>
-      </div>
+      <button class="btn-danger" onclick="logout()">Log Out</button>
     </section>
 
+    <!-- LEADERBOARD -->
     <section class="screen" id="screen-leaderboard">
-      <div>
-        <p class="label">Who's leading?</p>
-        <h1 class="title">Leaderboard</h1>
+      <div class="screen-head">
+        <div>
+          <p class="label">Who's leading?</p>
+          <h1 class="title">Leaderboard</h1>
+        </div>
       </div>
 
-      <div id="leaderboardList" style="display:flex;flex-direction:column;gap:8px;">
+      <div id="leaderboardList" class="list">
         <p class="hint">Loading…</p>
       </div>
     </section>
   </main>
+
+  <!-- FLOATING ACTION BUTTON (Activities / Sleep) -->
+  <button class="fab" onclick="openActivityModal(document.body.dataset.screen === 'sleep' ? 'sleep' : 'run')" aria-label="Log activity"><svg class="i"><use href="#i-plus"/></svg></button>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item" data-nav="athlete" onclick="showScreen('athlete')"><svg class="i"><use href="#i-athlete"/></svg>Athlete</button>
+    <button class="nav-item" data-nav="activities" onclick="showScreen('activities')"><svg class="i"><use href="#i-activity"/></svg>Activities</button>
+    <button class="nav-item" data-nav="stats" onclick="showScreen('stats')"><svg class="i"><use href="#i-stats"/></svg>Stats</button>
+    <button class="nav-item" data-nav="stadium" onclick="showScreen('stadium')"><svg class="i"><use href="#i-swords"/></svg>Stadium</button>
+    <button class="nav-item" data-nav="more" onclick="openDrawer()"><svg class="i"><use href="#i-grid"/></svg>More</button>
+  </nav>
 
   <!-- ITEM PICKER (equip slot) -->
   <div class="overlay" id="itemPickerOverlay" onclick="if(event.target===this) closeItemPicker()">
     <div class="sheet">
       <div class="sheet-header">
         <h2 id="itemPickerTitle">Clothing</h2>
-        <button class="sheet-close" onclick="closeItemPicker()">✕</button>
+        <button class="sheet-close" onclick="closeItemPicker()" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
       </div>
       <div id="itemPickerList"></div>
     </div>
@@ -527,39 +818,39 @@
     <div class="sheet">
       <div class="sheet-header">
         <h2>Athlete</h2>
-        <button class="sheet-close" onclick="closeAthleteDialog()">✕</button>
+        <button class="sheet-close" onclick="closeAthleteDialog()" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
       </div>
 
-      <div class="card" style="display:flex;align-items:center;gap:12px;">
-        <div id="athleteDialogAvatar"></div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;">
+        <div class="gym-portrait" id="athleteDialogAvatar"></div>
         <div style="flex:1;min-width:0;">
-          <p class="label" style="margin:0 0 4px;">Level <span id="athleteDialogLevel"></span></p>
-          <p class="hint" id="athleteDialogRemain" style="margin:0;"></p>
+          <p class="level-chip" style="display:inline-flex;margin-bottom:8px;">Level <span id="athleteDialogLevel"></span></p>
+          <p class="hint" id="athleteDialogRemain" style="margin:0;text-align:left;"></p>
         </div>
       </div>
 
       <div class="card" id="athleteDialogFixedNote" style="display:none;">
-        <p class="hint" style="margin:0 0 12px;text-align:left;">Athleticus is a fixed test athlete - name and portrait are locked. The portrait is tied to its level, which can be set manually here for testing.</p>
-        <div class="field" style="margin-bottom:10px;">
+        <p class="hint" style="margin:0 0 14px;text-align:left;">Athleticus is a fixed test athlete - name and portrait are locked. The portrait is tied to its level, which can be set manually here for testing.</p>
+        <div class="field" style="margin-bottom:12px;">
           <label>Level (manual, for testing)</label>
           <input id="athleteDialogManualLevel" type="number" min="1" max="5" />
         </div>
-        <p class="auth-error" id="athleteDialogLevelError" style="display:none;"></p>
-        <button class="btn-primary" onclick="saveAthleticusLevel()">Save Level</button>
+        <p class="auth-error" id="athleteDialogLevelError" style="display:none;margin-bottom:10px;"></p>
+        <button class="btn-primary" style="width:100%;" onclick="saveAthleticusLevel()">Save Level</button>
       </div>
 
       <div class="card" id="athleteDialogPortraitSection">
-        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.05em;text-transform:uppercase;">Portrait</label>
+        <p class="label" style="margin-bottom:12px;">Portrait</p>
         <div id="athleteDialogPortraitPicker" style="display:flex;gap:10px;justify-content:center;"></div>
       </div>
 
-      <div id="athleteDialogNameSection">
-        <div class="field" style="margin-bottom:10px;">
+      <div id="athleteDialogNameSection" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="field">
           <label>Name</label>
           <input id="athleteDialogNameInput" maxlength="20" />
         </div>
         <p class="auth-error" id="athleteDialogError" style="display:none;"></p>
-        <p class="hint" id="athleteDialogSuccess" style="display:none;color:var(--gold);"></p>
+        <p class="hint success" id="athleteDialogSuccess" style="display:none;"></p>
         <button class="btn-primary" onclick="saveAthleteDialogName()">Save Name</button>
       </div>
     </div>
@@ -569,16 +860,16 @@
   <div class="overlay" id="activityViewOverlay" onclick="if(event.target===this) closeViewModal()">
     <div class="sheet">
       <div class="sheet-header">
-        <button id="viewPrevBtn" class="sheet-nav-btn" onclick="viewPrev()">‹</button>
+        <button id="viewPrevBtn" class="sheet-nav-btn" onclick="viewPrev()" aria-label="Previous"><svg class="i"><use href="#i-left"/></svg></button>
         <h2 id="viewTitle" style="flex:1;text-align:center;">Activity</h2>
-        <button id="viewNextBtn" class="sheet-nav-btn" onclick="viewNext()">›</button>
-        <button class="sheet-close" onclick="closeViewModal()">✕</button>
+        <button id="viewNextBtn" class="sheet-nav-btn" onclick="viewNext()" aria-label="Next"><svg class="i"><use href="#i-right"/></svg></button>
+        <button class="sheet-close" onclick="closeViewModal()" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
       </div>
 
-      <div class="card" style="display:flex;align-items:center;gap:12px;">
-        <div class="activity-icon" id="viewIcon" style="width:48px;height:48px;font-size:22px;"></div>
+      <div class="view-head">
+        <div class="activity-icon" id="viewIcon"></div>
         <div style="flex:1;min-width:0;">
-          <div class="activity-name" id="viewLabel" style="font-size:16px;"></div>
+          <div class="activity-name" id="viewLabel" style="font-size:17px;"></div>
           <div class="activity-sub" id="viewTypeDate"></div>
         </div>
       </div>
@@ -594,19 +885,19 @@
         </div>
       </div>
 
-      <div class="card" id="viewExtraCard" style="display:none;">
+      <div class="card" id="viewExtraCard" style="display:none;padding:8px 16px;">
         <div id="viewExtraRows"></div>
       </div>
 
-      <div class="card" style="text-align:center;">
+      <div class="card score-card">
         <p class="label">Leaderboard Points</p>
-        <p class="stat-value" id="viewScore" style="color:var(--gold);font-size:28px;">0</p>
-        <div id="viewScoreBreakdown" style="text-align:left;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
+        <p class="score-big" id="viewScore">0</p>
+        <div id="viewScoreBreakdown" class="breakdown"></div>
       </div>
 
-      <div style="display:flex;gap:8px;">
-        <button class="btn-primary" style="flex:1;" onclick="editFromView()">Edit</button>
-        <button onclick="closeViewModal()" style="flex:1;background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:14px;cursor:pointer;">Close</button>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="editFromView()"><svg class="i"><use href="#i-pencil"/></svg>Edit</button>
+        <button class="btn-secondary" onclick="closeViewModal()">Close</button>
       </div>
     </div>
   </div>
@@ -616,18 +907,18 @@
     <div class="sheet">
       <div class="sheet-header">
         <h2 id="sheetTitle">Log Activity</h2>
-        <button class="sheet-close" onclick="closeActivityModal()">✕</button>
+        <button class="sheet-close" onclick="closeActivityModal()" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
       </div>
 
       <div class="field">
         <label>Activity Type</label>
-        <div class="type-row" id="typeRow" style="flex-wrap:wrap;">
-          <button class="type-btn active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Run</button>
-          <button class="type-btn" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Ride</button>
-          <button class="type-btn" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Walk</button>
-          <button class="type-btn" data-type="row" data-icon="🚣" data-metric="distance" onclick="selectType(this)"><span class="ic">🚣</span>Rowing</button>
-          <button class="type-btn" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
-          <button class="type-btn" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Sleep</button>
+        <div class="type-row" id="typeRow">
+          <button class="type-btn t-run active" data-type="run" data-icon="🏃" data-metric="distance" onclick="selectType(this)"><span class="ic">🏃</span>Run</button>
+          <button class="type-btn t-ride" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Ride</button>
+          <button class="type-btn t-walk" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Walk</button>
+          <button class="type-btn t-row" data-type="row" data-icon="🚣" data-metric="distance" onclick="selectType(this)"><span class="ic">🚣</span>Rowing</button>
+          <button class="type-btn t-strength" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
+          <button class="type-btn t-sleep" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Sleep</button>
         </div>
       </div>
 
@@ -639,18 +930,19 @@
         </div>
       </div>
 
-      <div class="field" id="distanceField">
-        <label>Distance (km)</label>
-        <input type="number" id="inputDistance" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 5.0" />
-      </div>
-      <div class="field" id="repsField" style="display:none;">
-        <label>Reps</label>
-        <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="e.g. 40" />
-      </div>
-
-      <div class="field" id="durationField">
-        <label>Duration (minutes)</label>
-        <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="e.g. 30" />
+      <div class="field-row">
+        <div class="field" id="distanceField">
+          <label>Distance (km)</label>
+          <input type="number" id="inputDistance" inputmode="decimal" step="0.1" min="0" placeholder="e.g. 5.0" />
+        </div>
+        <div class="field" id="repsField" style="display:none;">
+          <label>Reps</label>
+          <input type="number" id="inputReps" inputmode="numeric" step="1" min="0" placeholder="e.g. 40" />
+        </div>
+        <div class="field" id="durationField">
+          <label>Duration (min)</label>
+          <input type="number" id="inputDuration" inputmode="numeric" step="1" min="0" placeholder="e.g. 30" />
+        </div>
       </div>
 
       <div class="field" id="dateTimeField">
@@ -658,28 +950,28 @@
         <input type="datetime-local" id="inputDateTime" />
       </div>
 
-      <div id="extraStatsField" style="display:flex; gap:8px; margin-bottom:0;">
-        <div class="field" style="flex:1;">
+      <div id="extraStatsField" class="field-row">
+        <div class="field">
           <label>Heart Rate (bpm)</label>
           <input type="number" id="inputHeartRate" inputmode="numeric" step="1" min="0" placeholder="optional" />
         </div>
-        <div class="field" style="flex:1;">
-          <label>Elevation Gain</label>
+        <div class="field">
+          <label>Elevation Gain (m)</label>
           <input type="number" id="inputElevation" inputmode="numeric" step="1" min="0" placeholder="optional" />
         </div>
       </div>
 
-      <div id="sleepTimeField" style="display:none; gap:8px; margin-bottom:0;">
-        <div class="field" style="flex:1;">
+      <div id="sleepTimeField" class="field-row" style="display:none;">
+        <div class="field">
           <label>Bedtime</label>
-          <div style="display:flex; gap:4px;">
+          <div style="display:flex; gap:6px;">
             <select class="time-select" id="inputBedHour" onchange="updateSleepDurationHint()"></select>
             <select class="time-select" id="inputBedMinute" onchange="updateSleepDurationHint()"></select>
           </div>
         </div>
-        <div class="field" style="flex:1;">
+        <div class="field">
           <label>Wake Time</label>
-          <div style="display:flex; gap:4px;">
+          <div style="display:flex; gap:6px;">
             <select class="time-select" id="inputWakeHour" onchange="updateSleepDurationHint()"></select>
             <select class="time-select" id="inputWakeMinute" onchange="updateSleepDurationHint()"></select>
           </div>
@@ -693,7 +985,7 @@
       </div>
 
       <button class="btn-primary" id="sheetSubmitBtn" onclick="submitActivity()">Save</button>
-      <button class="btn-primary" id="sheetDeleteBtn" style="display:none;background:var(--red);color:var(--text);" onclick="deleteActivity()">Delete Activity</button>
+      <button class="btn-danger" id="sheetDeleteBtn" style="display:none;" onclick="deleteActivity()">Delete Activity</button>
     </div>
   </div>
 </div>
@@ -832,10 +1124,10 @@ function renderInventory() {
     const tiles = owned.map((id) => {
       const item = ITEM_CATALOG[id];
       const wornBy = findEquippedByAthlete(id);
-      return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''}">
-        ${itemIconHtml(item, 30)}
+      return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''}" title="${item.name}${wornBy ? ' – worn by ' + wornBy.name : ''}">
+        ${wornBy ? `<span class="worn">${wornBy.name}</span>` : ''}
+        ${itemIconHtml(item, 34)}
         <span class="item-name">${item.name}</span>
-        ${wornBy ? `<span class="item-name" style="color:var(--gold);">Worn by ${wornBy.name}</span>` : ''}
       </div>`;
     });
     while (tiles.length < 4) tiles.push('<div class="inv-item-slot">?</div>');
@@ -865,18 +1157,20 @@ function openItemPicker(slot) {
       const wornByOther = !isEquipped && findEquippedByAthlete(id);
       if (wornByOther) {
         return `
-        <div class="item-pick-btn" style="opacity:.4;cursor:not-allowed;">
-          ${itemIconHtml(item, 30)}
-          <span style="flex:1;">${item.name} <span style="color:var(--muted);font-size:12px;">(worn by ${wornByOther.name})</span></span>
+        <div class="item-pick-btn disabled">
+          ${itemIconHtml(item, 32)}
+          <span class="nm">${item.name}</span>
+          <span class="tag">Worn by ${wornByOther.name}</span>
         </div>`;
       }
       return `
       <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
-        ${itemIconHtml(item, 30)}
-        <span style="flex:1;">${item.name}${isEquipped ? ' <span style="color:var(--gold);font-size:12px;">(Equipped)</span>' : ''}</span>
+        ${itemIconHtml(item, 32)}
+        <span class="nm">${item.name}</span>
+        ${isEquipped ? '<span class="tag">Equipped</span>' : ''}
       </button>`;
     }).join('')
-    + (equippedId ? `<button class="item-pick-btn" onclick="equipItem(null)"><span class="ic">✕</span><span style="flex:1;">Unequip</span></button>` : '');
+    + (equippedId ? `<button class="item-pick-btn" onclick="equipItem(null)"><span class="ic" style="color:var(--muted);">✕</span><span class="nm">Unequip</span></button>` : '');
   }
   document.getElementById('itemPickerOverlay').classList.add('open');
 }
@@ -961,22 +1255,22 @@ function renderGymnasiumList() {
     const lvl = athleteLevel(a);
     const attrs = computeAttrs(lvl);
     return `
-    <button class="card" style="width:100%;text-align:left;border:1px solid ${isActive ? 'var(--gold)' : 'var(--border)'};cursor:pointer;display:flex;flex-direction:column;gap:8px;"
-      onclick="openAthleteDialog('${a.id}')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <img class="portrait-avatar" src="${portraitUrl(a)}" width="46" height="64" alt="Athlete" />
-        <div style="flex:1;min-width:0;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:15px;color:var(--text);">${a.name}${isActive ? ' <span style=\"color:var(--gold);font-size:11px;\">(Active)</span>' : ''}</div>
-          <div class="label" style="margin-top:2px;">Level ${lvl}</div>
+    <button class="card gym-card ${isActive ? 'highlight' : ''}" onclick="openAthleteDialog('${a.id}')">
+      <div class="gym-portrait"><img class="portrait-avatar" src="${portraitUrl(a)}" alt="Athlete" /></div>
+      <div class="gym-body">
+        <div class="gym-head">
+          <span class="gym-name">${a.name}</span>
+          ${isActive ? '<span class="badge gold">Active</span>' : ''}
+          <span class="chevron" style="margin-left:auto;"><svg class="i" style="width:18px;height:18px;"><use href="#i-right"/></svg></span>
         </div>
-        <span class="chevron">›</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;padding-left:52px;">
-        ${attrs.map(attr => `
-          <div class="attr-row-mini">
-            <span>${attr.name}</span><span class="val">${attr.value}</span>
-          </div>
-          <div class="attr-track-mini"><div style="width:${attr.value}%"></div></div>`).join('')}
+        <span class="badge" style="align-self:flex-start;">Level ${lvl}</span>
+        <div class="gym-attrs">
+          ${attrs.map(attr => `
+            <div class="${attrClass(attr.name)}">
+              <div class="attr-row-mini"><span>${attr.name}</span><span class="val">${attr.value}</span></div>
+              <div class="attr-track-mini"><div style="width:${attr.value}%"></div></div>
+            </div>`).join('')}
+        </div>
       </div>
     </button>`;
   }).join('');
@@ -1042,8 +1336,8 @@ function renderPortraitPicker(entry) {
     const num = i + 1;
     const isSelected = num === current;
     return `
-    <button onclick="selectAthleteDialogPortrait(${num})" style="padding:0;border:2px solid ${isSelected ? 'var(--gold)' : 'var(--border)'};border-radius:10px;overflow:hidden;background:var(--surface2);cursor:pointer;width:56px;height:78px;">
-      <img src="${file}?v=${AVATAR_VERSION}" style="width:100%;height:100%;object-fit:contain;" alt="Portrait ${num}" />
+    <button class="portrait-option ${isSelected ? 'selected' : ''}" onclick="selectAthleteDialogPortrait(${num})">
+      <img src="${file}?v=${AVATAR_VERSION}" alt="Portrait ${num}" />
     </button>`;
   }).join('');
 }
@@ -1127,7 +1421,7 @@ function computeActivityScoreBreakdown(a) {
   if (a.mins) rows.push({ label: 'Duration', calc: `${a.mins} min × 1`, value: a.mins * 1 });
   if (a.reps) rows.push({ label: 'Reps', calc: `${a.reps} reps × 0.5`, value: a.reps * 0.5 });
   if (a.avgHeartRate) rows.push({ label: 'Heart Rate', calc: `${a.avgHeartRate} bpm × 0.3`, value: a.avgHeartRate * 0.3 });
-  if (a.elevationGain) rows.push({ label: 'Elevation Gain', calc: `${a.elevationGain} hm × 0.2`, value: a.elevationGain * 0.2 });
+  if (a.elevationGain) rows.push({ label: 'Elevation Gain', calc: `${a.elevationGain} m × 0.2`, value: a.elevationGain * 0.2 });
   return rows;
 }
 
@@ -1135,13 +1429,8 @@ function renderScoreBreakdown(a) {
   const el = document.getElementById('viewScoreBreakdown');
   const rows = computeActivityScoreBreakdown(a);
   el.innerHTML = rows.map(r => `
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:3px 0;">
-      <span>${r.label}: ${r.calc}</span>
-      <span style="color:var(--text);font-family:'JetBrains Mono',monospace;">${r.value.toFixed(1)}</span>
-    </div>`).join('')
-    + `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold);margin:6px 0 0;padding-top:6px;border-top:1px solid var(--border);font-weight:600;">
-        <span>Total (rounded)</span><span style="font-family:'JetBrains Mono',monospace;">${computeActivityScore(a)}</span>
-      </div>`;
+    <div class="bd-row"><span>${r.label}: ${r.calc}</span><span>${r.value.toFixed(1)}</span></div>`).join('')
+    + `<div class="bd-row bd-total"><span>Total (rounded)</span><span>${computeActivityScore(a)}</span></div>`;
 }
 
 function computeScore() {
@@ -1208,15 +1497,15 @@ async function loadLeaderboard() {
     }
     listEl.innerHTML = entries.map((e, i) => {
       const isMe = e.uid === currentUid;
-      const suffix = isMe ? ' (You)' : (e.username ? ` (${e.username})` : '');
+      const owner = isMe ? 'You' : (e.username || '');
       return `
-      <div class="card" style="display:flex;align-items:center;gap:12px;${isMe ? 'border-color:var(--gold);' : ''}">
-        <div style="width:26px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;">#${i + 1}</div>
+      <div class="card lb-row ${isMe ? 'highlight' : ''}">
+        <div class="lb-rank ${i < 3 ? 'r' + (i + 1) : ''}">${i + 1}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${e.athleteName || e.characterName || '???'}${suffix}</div>
-          <div class="label" style="margin-top:1px;">Level ${e.level || 1}</div>
+          <div class="lb-name">${e.athleteName || e.characterName || '???'}</div>
+          <div class="lb-sub">Level ${e.level || 1}${owner ? ' · ' + owner : ''}</div>
         </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600;">${e.score || 0}</div>
+        <div class="lb-score">${e.score || 0}<small>pts</small></div>
       </div>`;
     }).join('');
   } catch (err) {
@@ -1384,17 +1673,9 @@ function avatarSVG(size) {
 
 // ---------- Laurel XP bar ----------
 function laurelBarSVG(pct) {
-  const w = 220, fillW = (w * pct) / 100;
   return `
-  <div style="display:flex;align-items:center;gap:6px;">
-    <svg width="14" height="20"><path d="M12,10 C6,10 6,3 12,3 C12,7 8,7 8,10 C8,13 12,13 12,17 C6,17 6,10 12,10 Z" fill="#8FA84A"/></svg>
-    <svg width="${w}" height="20" viewBox="0 0 ${w} 20">
-      <rect x="0" y="7" width="${w}" height="6" rx="3" fill="#3C2E1E"/>
-      <rect x="0" y="7" width="${fillW}" height="6" rx="3" fill="#C9A227"/>
-      <polygon points="${fillW},3 ${fillW + 6},10 ${fillW},17" fill="#A61C1C" stroke="#0D0A07" stroke-width="1"/>
-    </svg>
-    <svg width="14" height="20"><path d="M2,10 C8,10 8,3 2,3 C2,7 6,7 6,10 C6,13 2,13 2,17 C8,17 8,10 2,10 Z" fill="#8FA84A"/></svg>
-  </div>`;
+  <div class="xp-track"><div class="xp-fill" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
+  <div class="xp-scale"><span>${pct}%</span><span>Next level</span></div>`;
 }
 
 // ---------- UI state ----------
@@ -1408,13 +1689,13 @@ function primaryMetricDisplay(a) {
 function renderActivityRow(a, realIndex) {
   const extras = [];
   if (a.avgHeartRate) extras.push(`❤ ${a.avgHeartRate} bpm`);
-  if (a.elevationGain) extras.push(`⛰ ${a.elevationGain} hm`);
-  const extraLine = extras.length > 0 ? `<div class="activity-sub" style="opacity:.75;">${extras.join(' · ')}</div>` : '';
+  if (a.elevationGain) extras.push(`⛰ ${a.elevationGain} m`);
+  const extraLine = extras.length > 0 ? `<div class="activity-sub" style="opacity:.8;">${extras.join(' · ')}</div>` : '';
 
   return `
     <button class="activity-row-btn" onclick="openViewModal(${realIndex})">
       <div class="card activity-row">
-        <div class="activity-icon">${a.icon}</div>
+        <div class="activity-icon t-${a.type}">${a.icon}</div>
         <div style="flex:1;min-width:0;">
           <div class="activity-name">${a.label}</div>
           <div class="activity-sub">${TYPE_LABEL[a.type] || a.type} · ${a.date}</div>
@@ -1422,7 +1703,7 @@ function renderActivityRow(a, realIndex) {
         </div>
         <div class="activity-right">
           <div class="activity-km">${primaryMetricDisplay(a)}</div>
-          <div class="activity-mins">⏱ ${a.mins} min</div>
+          <div class="activity-mins">${a.mins} min</div>
         </div>
       </div>
     </button>`;
@@ -1496,11 +1777,12 @@ function renderActivities() {
   const sorted = withIndex.slice().sort((x, y) => activitySortTime(y.a) - activitySortTime(x.a));
 
   const list = document.getElementById('activityList');
-  list.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type !== 'sleep'));
+  list.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type !== 'sleep'))
+    || '<div class="empty"><span class="em">🏃</span>No activities yet.<br>Tap + to log your first one.</div>';
 
   const sleepListEl = document.getElementById('sleepList');
   sleepListEl.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type === 'sleep'))
-    || '<p class="hint">No sleep activity logged yet.</p>';
+    || '<div class="empty"><span class="em">🌙</span>No sleep logged yet.<br>Tap + to add a night.</div>';
 }
 
 let statsFilter = 'all';
@@ -1672,12 +1954,12 @@ function renderStats() {
   const buckets = buildChartBuckets(statsPeriodType, statsPeriodOffset, typeFiltered);
   const max = Math.max(...buckets.map((d) => d.km), 1);
   document.getElementById('chartRow').innerHTML = buckets.map(d => `
-    <div class="chart-col">
-      <div class="chart-value" style="${d.isCurrent ? 'color:var(--gold-light);font-weight:600;' : ''}">${d.count ? `${d.km.toFixed(1)}<br>(${d.count})` : ''}</div>
+    <div class="chart-col ${d.isCurrent ? 'current' : ''} ${d.km ? '' : 'nodata'}">
+      <div class="chart-value">${d.count ? `<span>${d.km.toFixed(1)}</span><span style="opacity:.7;">(${d.count})</span>` : ''}</div>
       <div class="chart-bar-area">
-        <div class="chart-bar" style="height:${Math.max(2, (d.km / max) * 100)}%;${d.isCurrent ? 'background:var(--gold-light);box-shadow:inset 0 0 0 2px var(--text);' : ''}"></div>
+        <div class="chart-bar" style="height:${Math.max(4, (d.km / max) * 100)}%;"></div>
       </div>
-      <div class="chart-day" style="${d.isCurrent ? 'color:var(--gold-light);font-weight:600;' : ''}">${d.label}</div>
+      <div class="chart-day">${d.label}</div>
     </div>`).join('') || '<p class="hint">No data for this period.</p>';
 }
 
@@ -1714,12 +1996,17 @@ function computeAttrs(level) {
   ];
 }
 
+// Colour class per attribute (see .a-* in the stylesheet)
+function attrClass(name) {
+  return { 'Endurance': 'a-endurance', 'Pace': 'a-pace', 'Strength': 'a-strength', 'Mental power': 'a-mental', 'Discipline': 'a-discipline' }[name] || '';
+}
+
 function renderAttrs(level) {
   document.getElementById('attrCard').innerHTML = computeAttrs(level).map(a => `
-    <div class="attr-row-wrap">
-      <div class="attr-row"><span>${a.name}</span><span class="val">${a.value}</span></div>
+    <div class="attr-row-wrap ${attrClass(a.name)}">
+      <div class="attr-row"><span class="attr-name"><span class="attr-dot"></span>${a.name}</span><span class="val">${a.value}</span></div>
       <div class="attr-track"><div style="width:${a.value}%"></div></div>
-    </div>`).join('<div style="height:10px"></div>');
+    </div>`).join('');
 }
 
 const AVATAR_VERSION = 19; // increment whenever a portrait/item image changes, forces a fresh load
@@ -1868,7 +2155,7 @@ function renderChallengeList() {
   const listEl = document.getElementById('stadiumChallengeList');
   if (!listEl) return;
   if (challengesCache.length === 0) {
-    listEl.innerHTML = '<p class="hint">No challenges yet. Be the first to create one!</p>';
+    listEl.innerHTML = '<div class="empty"><span class="em">🏟️</span>No challenges yet.<br>Be the first to create one!</div>';
     return;
   }
   listEl.innerHTML = challengesCache.map((c) => {
@@ -1876,17 +2163,21 @@ function renderChallengeList() {
       const isMine = c.creatorUid === currentUid;
       if (isMine) {
         return `
-        <div class="card">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${c.creatorAthleteName} (You)</div>
-          <p class="hint" style="margin:6px 0;">Waiting for an opponent…</p>
-          <button onclick="cancelChallenge('${c.id}')" style="background:none;border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:13px;padding:6px 12px;cursor:pointer;">Cancel</button>
+        <div class="card duel-open">
+          <div class="info">
+            <div class="duel-name">${c.creatorAthleteName} <small>(You)</small></div>
+            <div class="sub">Waiting for an opponent…</div>
+          </div>
+          <button class="btn-secondary btn-sm" onclick="cancelChallenge('${c.id}')">Cancel</button>
         </div>`;
       }
       return `
-      <div class="card">
-        <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:14px;color:var(--text);">${c.creatorAthleteName} <span style="color:var(--muted);font-size:12px;">(${c.creatorUsername})</span></div>
-        <p class="hint" style="margin:6px 0;">Challenges you to a duel!</p>
-        <button class="btn-primary" onclick="joinChallenge('${c.id}')">🎲 Roll &amp; Accept</button>
+      <div class="card duel-open">
+        <div class="info">
+          <div class="duel-name">${c.creatorAthleteName} <small>(${c.creatorUsername})</small></div>
+          <div class="sub">Challenges you to a duel!</div>
+        </div>
+        <button class="btn-primary btn-sm" onclick="joinChallenge('${c.id}')">🎲 Accept</button>
       </div>`;
     }
 
@@ -1894,18 +2185,18 @@ function renderChallengeList() {
     const opponentWon = c.winner === 'opponent';
     return `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="text-align:center;flex:1;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:13px;color:${creatorWon ? 'var(--gold)' : 'var(--text)'};">${c.creatorAthleteName}${creatorWon ? ' 🏆' : ''}</div>
-          <div class="stat-value" style="font-size:22px;margin-top:4px;">${c.creatorRoll}</div>
+      <div class="duel">
+        <div class="duel-side ${creatorWon ? 'win' : ''}">
+          <div class="nm">${c.creatorAthleteName}${creatorWon ? ' 🏆' : ''}</div>
+          <div class="duel-roll">${c.creatorRoll}</div>
         </div>
-        <div style="color:var(--muted);font-size:12px;padding:0 8px;">vs</div>
-        <div style="text-align:center;flex:1;">
-          <div style="font-family:'Cinzel','Times New Roman',serif;font-weight:600;font-size:13px;color:${opponentWon ? 'var(--gold)' : 'var(--text)'};">${c.opponentAthleteName}${opponentWon ? ' 🏆' : ''}</div>
-          <div class="stat-value" style="font-size:22px;margin-top:4px;">${c.opponentRoll}</div>
+        <div class="vs">VS</div>
+        <div class="duel-side ${opponentWon ? 'win' : ''}">
+          <div class="nm">${c.opponentAthleteName}${opponentWon ? ' 🏆' : ''}</div>
+          <div class="duel-roll">${c.opponentRoll}</div>
         </div>
       </div>
-      ${c.winner === 'tie' ? '<p class="hint" style="text-align:center;margin-top:8px;">A tie!</p>' : ''}
+      ${c.winner === 'tie' ? '<p class="duel-result">A tie!</p>' : ''}
     </div>`;
   }).join('');
 }
@@ -1916,6 +2207,11 @@ function showScreen(name) {
   document.querySelectorAll('.drawer-item').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
+  // Bottom navigation: screens without their own tab are reached via "More"
+  const navTarget = document.querySelector(`.nav-item[data-nav="${name}"]`) ? name : 'more';
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
+  document.body.dataset.screen = name;
+  window.scrollTo(0, 0);
   closeDrawer();
   localStorage.setItem(LS_PREFIX + 'lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
@@ -2014,7 +2310,7 @@ function resetForm(defaultType) {
   setBedTime('23:00');
   setWakeTime('07:00');
   document.getElementById('inputDescription').value = '';
-  const btn = document.querySelector(`.type-btn[data-type="${defaultType || 'run'}"]`) || document.querySelector('.type-btn[data-type="run"]');
+  const btn = document.querySelector(`#typeRow .type-btn[data-type="${defaultType || 'run'}"]`) || document.querySelector('#typeRow .type-btn[data-type="run"]');
   btn.click();
 }
 
@@ -2045,7 +2341,9 @@ function renderViewModal(index) {
   const isSleep = a.type === 'sleep';
 
   document.getElementById('viewTitle').textContent = TYPE_LABEL[a.type] || 'Activity';
-  document.getElementById('viewIcon').textContent = a.icon;
+  const viewIcon = document.getElementById('viewIcon');
+  viewIcon.textContent = a.icon;
+  viewIcon.className = 'activity-icon t-' + a.type;
   document.getElementById('viewLabel').textContent = a.label;
   document.getElementById('viewTypeDate').textContent = `${TYPE_LABEL[a.type] || a.type} · ${a.date}`;
 
@@ -2056,14 +2354,15 @@ function renderViewModal(index) {
   document.getElementById('viewDuration').innerHTML = a.mins + ' <span>min</span>';
 
   const extras = [];
-  if (a.avgHeartRate) extras.push(`❤ Heart Rate: ${a.avgHeartRate} bpm`);
-  if (a.elevationGain) extras.push(`⛰ Elevation Gain: ${a.elevationGain} hm`);
-  if (isSleep && a.bedTime) extras.push(`🌙 Bedtime: ${a.bedTime}`);
-  if (isSleep && a.wakeTime) extras.push(`☀️ Wake Time: ${a.wakeTime}`);
+  if (a.avgHeartRate) extras.push(['❤️', 'Heart Rate', `${a.avgHeartRate} bpm`]);
+  if (a.elevationGain) extras.push(['⛰️', 'Elevation Gain', `${a.elevationGain} m`]);
+  if (isSleep && a.bedTime) extras.push(['🌙', 'Bedtime', a.bedTime]);
+  if (isSleep && a.wakeTime) extras.push(['☀️', 'Wake Time', a.wakeTime]);
   const extraCard = document.getElementById('viewExtraCard');
   if (extras.length > 0) {
     extraCard.style.display = 'block';
-    document.getElementById('viewExtraRows').innerHTML = extras.map(t => `<p class="hint" style="text-align:left;margin:4px 0;">${t}</p>`).join('');
+    document.getElementById('viewExtraRows').innerHTML = extras.map(([ic, k, v]) =>
+      `<div class="extra-row"><span>${ic}</span><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
   } else {
     extraCard.style.display = 'none';
   }
@@ -2179,12 +2478,12 @@ function openEditModal(index) {
   document.getElementById('sheetSubmitBtn').textContent = 'Save Changes';
   document.getElementById('sheetDeleteBtn').style.display = 'block';
 
-  const typeBtn = document.querySelector(`.type-btn[data-type="${a.type}"]`) || document.querySelector('.type-btn[data-type="run"]');
+  const typeBtn = document.querySelector(`#typeRow .type-btn[data-type="${a.type}"]`) || document.querySelector('#typeRow .type-btn[data-type="run"]');
   typeBtn.click(); // setzt via selectType() bereits die passende Erfassungsart (inkl. "none" bei Schlaf)
 
   if (a.type !== 'sleep') {
     const metric = a.reps != null && a.reps > 0 ? 'reps' : 'distance';
-    const metricBtn = document.querySelector(`.metric-btn[data-metric="${metric}"]`);
+    const metricBtn = document.querySelector(`#metricRow .metric-btn[data-metric="${metric}"]`);
     if (metricBtn) selectMetric(metricBtn);
   }
 
@@ -2207,7 +2506,7 @@ function closeActivityModal() {
 }
 
 function selectType(btn) {
-  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#typeRow .type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedType = btn.dataset.type;
   // suggest a sensible default tracking method per activity type, but keep it changeable
@@ -2229,13 +2528,13 @@ function selectType(btn) {
     document.getElementById('repsField').style.display = 'none';
   } else {
     document.getElementById('metricField').style.display = 'block';
-    const metricBtn = document.querySelector(`.metric-btn[data-metric="${suggestedMetric}"]`);
+    const metricBtn = document.querySelector(`#metricRow .metric-btn[data-metric="${suggestedMetric}"]`);
     if (metricBtn) selectMetric(metricBtn);
   }
 }
 
 function selectMetric(btn) {
-  document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#metricRow .metric-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedMetric = btn.dataset.metric;
   document.getElementById('distanceField').style.display = selectedMetric === 'distance' ? 'block' : 'none';
@@ -2988,6 +3287,10 @@ setWakeTime('07:00');
 setupViewSwipeNav();
 setupDrawerSwipeNav();
 setupStatsSwipeNav();
+window.addEventListener('scroll', () => {
+  const h = document.getElementById('stickyHeader');
+  if (h) h.classList.toggle('scrolled', window.scrollY > 4);
+}, { passive: true });
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});

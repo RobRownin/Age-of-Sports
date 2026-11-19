@@ -132,9 +132,16 @@ Cache-busting: bump `AVATAR_VERSION` whenever a portrait/item image changes (URL
 
 ## Design
 
-CSS variables in `:root`: `--bg #070604`, `--surface #1A140E`, `--surface2 #150F0A`, `--border #3C2E1E`, `--gold #C9A227`, `--gold-light #E3C878`, `--red #A61C1C`, `--text #EDE1C4`, `--muted #9C8B6C`.
+Modern dark UI (redesign 2026-11), the ancient theme lives in the content (athletes, laurel logo, wording), not in ornate chrome.
 
-Patterns: edit via pencil button with Save/Cancel; sensitive data masked (email) and password toggle; highlights in light gold, not red; chart bars live in a fixed 100 px bar area so labels never clip; flex columns in charts need `min-width: 0`; mobile first, swipe gestures preferred over extra buttons; migrations stay backward compatible.
+- Tokens in `:root`: `--bg #0B0B0E`, `--surface #15151A`, `--surface2 #1C1C23`, `--surface3 #25252E`, `--border rgba(255,255,255,.07)`, `--text #F4F2EE`, `--muted #8E8B97`, `--faint`, `--gold #F2B33D` (+ `--gold-light`, `--gold-grad` gradient), `--red #F0544F`, `--green`. Radii `--radius-lg/--radius/--radius-sm`.
+- Fonts: Inter (UI), Sora (`--font-display`: headings, numbers with tabular figures), Cinzel only in the wordmark.
+- Icons: inline SVG sprite at the top of `<body>` (`<symbol id="i-…">`, used as `<svg class="i"><use href="#i-…"/></svg>`), line style. `#i-laurel` is the logo. Activity types and items still use emojis (stored in data).
+- Navigation: bottom nav (`.nav-item[data-nav]`: athlete, activities, stats, stadium, more). "More" opens the drawer with all screens; screens without their own tab highlight "More". `showScreen()` sets `body[data-screen]`, which also controls the floating "+" button (`.fab`, visible on Activities and Sleep).
+- Colour coding: activity types via `.t-run/.t-ride/.t-walk/.t-row/.t-strength/.t-sleep` (sets `--tint`), attributes via `.a-endurance/.a-pace/.a-strength/.a-mental/.a-discipline` (sets `--c`, see `attrClass()`).
+- Components: `.card` (+ `.highlight`), `.btn-primary` (gradient), `.btn-secondary`, `.btn-danger`, `.list-btn`, `.chip-row`, `.metric-row` (segmented control), `.sheet` (bottom sheet with grab handle), `.settings-group`, `.empty` (empty state), `.badge`.
+- Patterns: edit via "Edit" text button with Save/Cancel; sensitive data masked (email) and password toggle; highlights in gold, not red; chart bars live in a fixed bar area so labels never clip; flex columns in charts need `min-width: 0`; mobile first, swipe gestures preferred over extra buttons; migrations stay backward compatible.
+- Avoid generic class names that collide (e.g. `.empty` is the empty state; the chart uses `.nodata`).
 
 Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnasium", "Sport" tab -> "Activities".
 
@@ -151,6 +158,6 @@ Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnas
 - Stadium: more rules to come (currently pure dice, no effect on level/score/attributes).
 - Real level progression for Athleticus (replaces the manual level); level > 5 shows the level-5 image.
 - Item system: earning/unlocking (everyone gets the starter set now), item effects, more item images, name the fourth slot category.
-- Probably dead code: `avatarSVG`, per-athlete `week[]`.
+- Probably dead code: `avatarSVG`, per-athlete `week[]`; `laurelBarSVG()` now renders the plain XP bar (name kept).
 - Challenge outcome is decided client-side; harden server-side if it ever matters.
 - Ruled out: Health Connect, automatic Garmin API sync (needs developer program + server), FIT import (needs a library), in-app GPS tracking.
