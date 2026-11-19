@@ -1,0 +1,72 @@
+# Builds the GitHub Pages site from two branches:
+#   main    -> https://robrownin.github.io/Age-of-Sports/          (production)
+#   staging -> https://robrownin.github.io/Age-of-Sports/staging/  (staging, separate Firebase project)
+# Runs on pushes to main. Pushes to staging trigger it via trigger-staging-deploy.yml,
+# so the deployment always runs on main (the github-pages environment only allows main).
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      - name: Check out staging
+        id: staging
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+          path: staging
+
+      - name: Assemble site
+        run: |
+          set -e
+          copy_app() {
+            cp -a "$1/." "$2/"
+            rm -rf "$2/.git" "$2/.github" "$2/docs" "$2/CLAUDE.md"
+          }
+          mkdir -p _site
+          copy_app main _site
+          if [ "${{ steps.staging.outcome }}" = "success" ]; then
+            mkdir -p _site/staging
+            copy_app staging _site/staging
+            # Distinct name so the installed staging PWA is distinguishable from production.
+            sed -i 's/"name": "Age of Sports"/"name": "Age of Sports (Staging)"/; s/"short_name": "Age of Sports"/"short_name": "AoS Staging"/' _site/staging/manifest.json
+          else
+            echo "No staging branch found, deploying production only."
+          fi
+          touch _site/.nojekyll
+          find _site -maxdepth 2 -type f | sort
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

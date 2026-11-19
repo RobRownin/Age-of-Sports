@@ -1,0 +1,18 @@
+# A push to staging re-runs the Pages deployment on main, which picks up the new staging branch content.
+name: Trigger deploy from staging
+
+on:
+  push:
+    branches: [staging]
+
+permissions:
+  actions: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Pages deployment on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --repo "${{ github.repository }}" --ref main

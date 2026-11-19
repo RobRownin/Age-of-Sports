@@ -699,6 +699,24 @@
 </div>
 
 <script>
+// Environment: the staging build lives under /staging/ and talks to the staging Firebase project.
+window.AOS_ENV = /\/staging\//.test(location.pathname) ? 'staging' : 'production';
+const IS_STAGING = window.AOS_ENV === 'staging';
+// Keep localStorage keys separate per environment (both builds share one origin).
+const LS_PREFIX = IS_STAGING ? 'aos_staging_' : 'aos_';
+if (IS_STAGING) {
+  document.title = 'Age of Sports (Staging)';
+  document.addEventListener('DOMContentLoaded', () => {
+    const b = document.createElement('div');
+    b.id = 'stagingBanner';
+    b.textContent = 'STAGING';
+    b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;' +
+      'background:var(--red);color:var(--text);font:600 10px/1 Inter,sans-serif;letter-spacing:2px;' +
+      'padding:3px 10px;border-radius:0 0 6px 6px;pointer-events:none;';
+    document.body.appendChild(b);
+  });
+}
+
 // ---------- App data model (stored per account in Firestore) ----------
 const TYPE_LABEL = { run: "Run", ride: "Ride", walk: "Walk", row: "Rowing", strength: "Strength", sleep: "Sleep" };
 const EMPTY_WEEK = () => [
@@ -1899,7 +1917,7 @@ function showScreen(name) {
     b.classList.toggle('active', b.dataset.tab === name);
   });
   closeDrawer();
-  localStorage.setItem('aos_lastScreen', name);
+  localStorage.setItem(LS_PREFIX + 'lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
   if (name === 'inventory') renderInventory();
   if (name === 'stadium') loadChallenges();
@@ -2388,7 +2406,7 @@ async function submitAuth() {
     } else {
       await window.fb.login(username, password);
     }
-    localStorage.setItem('aos_lastUsername', username);
+    localStorage.setItem(LS_PREFIX + 'lastUsername', username);
     // Passwortfeld sofort leeren, sonst fragt der Browser bei jedem weiteren
     // every subsequent save click in the app whether to store the (still filled) field
     document.getElementById('authPassword').value = '';
@@ -2519,7 +2537,7 @@ async function saveAccountUsername() {
   try {
     const saved = await window.fb.updateUsername(currentUid, currentUsername, newUsername, currentEmail);
     currentUsername = saved;
-    localStorage.setItem('aos_lastUsername', saved);
+    localStorage.setItem(LS_PREFIX + 'lastUsername', saved);
     syncLeaderboard();
     document.getElementById('accountUsernameDisplay').textContent = saved;
     document.getElementById('accountUsernameDisplayRow').style.display = 'flex';
@@ -2647,14 +2665,14 @@ window.handleAuthState = async function (user) {
     renderStats();
     renderAthleteAndHero();
     syncLeaderboard();
-    const lastScreen = localStorage.getItem('aos_lastScreen');
+    const lastScreen = localStorage.getItem(LS_PREFIX + 'lastScreen');
     const validScreen = lastScreen && document.getElementById('screen-' + lastScreen);
     showScreen(validScreen ? lastScreen : 'athlete');
   } else {
     currentUid = null;
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appRoot').style.display = 'none';
-    document.getElementById('authUsername').value = localStorage.getItem('aos_lastUsername') || '';
+    document.getElementById('authUsername').value = localStorage.getItem(LS_PREFIX + 'lastUsername') || '';
     document.getElementById('authPassword').value = '';
   }
 };
@@ -2986,14 +3004,27 @@ if ('serviceWorker' in navigator) {
     getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCZROEvWpYcl-G-it57kMOPeKiqbLKe1xs",
-    authDomain: "age-of-sports.firebaseapp.com",
-    projectId: "age-of-sports",
-    storageBucket: "age-of-sports.firebasestorage.app",
-    messagingSenderId: "124500024791",
-    appId: "1:124500024791:web:27d917799e0afa536c3f92"
+  // Production and staging use separate Firebase projects.
+  // The staging build is served from the /staging/ sub-path (see .github/workflows/deploy.yml).
+  const FIREBASE_CONFIGS = {
+    production: {
+      apiKey: "AIzaSyCZROEvWpYcl-G-it57kMOPeKiqbLKe1xs",
+      authDomain: "age-of-sports.firebaseapp.com",
+      projectId: "age-of-sports",
+      storageBucket: "age-of-sports.firebasestorage.app",
+      messagingSenderId: "124500024791",
+      appId: "1:124500024791:web:27d917799e0afa536c3f92"
+    },
+    staging: {
+      apiKey: "AIzaSyCWiW4_qwHPUszTVW-tS_dDHXmxWzkwxhA",
+      authDomain: "age-of-sports-staging-53048.firebaseapp.com",
+      projectId: "age-of-sports-staging-53048",
+      storageBucket: "age-of-sports-staging-53048.firebasestorage.app",
+      messagingSenderId: "433427405412",
+      appId: "1:433427405412:web:69dcdb6041b870e2471d71"
+    }
   };
+  const firebaseConfig = FIREBASE_CONFIGS[window.AOS_ENV] || FIREBASE_CONFIGS.production;
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);

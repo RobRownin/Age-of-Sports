@@ -7,9 +7,10 @@ Conversations with the owner (Robert) are in **German**; all app UI, code commen
 
 Sports-tracking PWA in a Greek/Roman RPG style: log activities, level up athletes, equip items, duel in the Stadium.
 
-- Repo: https://github.com/RobRownin/Age-of-Sports (branch `main`, push = deployment)
-- Live: https://robrownin.github.io/Age-of-Sports/
-- Firebase project: `age-of-sports` (Auth + Firestore)
+- Repo: https://github.com/RobRownin/Age-of-Sports
+- Live (production, branch `main`): https://robrownin.github.io/Age-of-Sports/
+- Staging (branch `staging`): https://robrownin.github.io/Age-of-Sports/staging/
+- Firebase projects: `age-of-sports` (production) and `age-of-sports-staging-53048` (staging), both Auth + Firestore, location `eur3`
 - **Never commit access tokens.** The GitHub token is handed over out-of-band.
 
 ## Architecture
@@ -22,6 +23,14 @@ Sports-tracking PWA in a Greek/Roman RPG style: log activities, level up athlete
 - Key state: `athletes`, `activeAthleteId`, `accountInventory`; working copies `ACTIVITIES`, `WEEK`, `athleteName` of the active athlete. `persist()` saves to Firestore and calls `syncLeaderboard()`.
 - Navigation: hamburger drawer; screens `athlete`, `inventory`, `activities`, `sleep`, `stats`, `gymnasium`, `stadium`, `leaderboard`, `account`. `showScreen(name)`; last screen kept in `localStorage` (`aos_lastScreen`).
 
+## Environments (production / staging)
+
+- Deployment runs via GitHub Actions (`.github/workflows/deploy.yml`; Pages source = "GitHub Actions"). It checks out `main` into the site root and `staging` into `/staging/`, and renames the staging PWA in its `manifest.json` ("Age of Sports (Staging)").
+- A push to `main` runs the deploy directly. A push to `staging` runs `trigger-staging-deploy.yml`, which dispatches the deploy on `main` (the `github-pages` environment only allows `main`). Both workflow files must exist on both branches.
+- `index.html` is identical on both branches: `window.AOS_ENV` is `'staging'` when the path contains `/staging/`. That selects the Firebase config from `FIREBASE_CONFIGS`, shows a small "STAGING" badge, and uses the localStorage prefix `aos_staging_` instead of `aos_` (both builds share one origin).
+- The service worker scopes its caches per environment (`age-of-sports-` vs `age-of-sports-staging-` prefix) and only deletes its own old caches.
+- Firebase rules, authorized domains (`robrownin.github.io`) and Email/Password sign-in must be kept identical in both projects. Staging data is independent from production.
+
 ## Firebase
 
 Login is username + password. `usernames/{name}` maps a username to the real email; there is a fallback for legacy accounts (`{name}@ageofsports.app`) and direct email login. Email changes use `verifyBeforeUpdateEmail`; Firestore is synced on next login (`syncEmailIfChanged`).
@@ -33,7 +42,7 @@ Login is username + password. `usernames/{name}` maps a username to the real ema
 | `leaderboard` | `{uid}_{athleteId}` | name, level, score per athlete |
 | `challenges` | auto id | Stadium dice duels |
 
-Rules are maintained manually in the Firebase Console (not in the repo). **Every new collection or changed doc ID needs a rules update, otherwise access fails silently.** Last known rules (verify in the Console, especially `challenges`):
+Rules are maintained manually in the Firebase Console (not in the repo), in **both** projects. **Every new collection or changed doc ID needs a rules update, otherwise access fails silently.** Current rules (verified identical in production and staging, 2026-11):
 
 ```
 rules_version = '2';
@@ -106,7 +115,9 @@ Migrations run on load: single-athlete -> `athletes[]`; per-athlete inventory ->
 1. Edit `index.html` (and assets).
 2. Syntax check: extract the classic block (`re.search(r'<script>(.*?)</script>', c, re.S)`) and the module block (`re.findall(r'<script type="module">(.*?)</script>', c, re.S)[0]`), run `node --check` on each.
 3. Headless test with jsdom: strip the module script from the HTML, mock `window.fb`, call `window.handleAuthState({uid, email})`, assert via the DOM.
-4. Commit and push to `main`.
+4. Commit and push to `staging`; the owner tests on https://robrownin.github.io/Age-of-Sports/staging/.
+5. After the owner's approval, merge `staging` into `main` and push (= production release).
+6. Data-model changes or migrations: test on staging first, warn the owner explicitly before releasing, keep migrations backward compatible.
 
 Testing pitfalls: top-level `let` variables are not on `window` (assert via DOM); in jsdom override `window.Math.random`, not the global one; async renders need a short wait.
 
@@ -140,7 +151,6 @@ Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnas
 - Stadium: more rules to come (currently pure dice, no effect on level/score/attributes).
 - Real level progression for Athleticus (replaces the manual level); level > 5 shows the level-5 image.
 - Item system: earning/unlocking (everyone gets the starter set now), item effects, more item images, name the fourth slot category.
-- Verify Firestore rules in the Console (especially `challenges`).
 - Probably dead code: `avatarSVG`, per-athlete `week[]`.
 - Challenge outcome is decided client-side; harden server-side if it ever matters.
 - Ruled out: Health Connect, automatic Garmin API sync (needs developer program + server), FIT import (needs a library), in-app GPS tracking.

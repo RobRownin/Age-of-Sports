@@ -1,4 +1,12 @@
-const CACHE_NAME = "age-of-sports-v3";
+// Production (/) and staging (/staging/) share one origin and therefore one Cache Storage.
+// Each environment only manages caches with its own prefix.
+const ENV_PREFIX = self.registration.scope.includes("/staging/") ? "age-of-sports-staging-" : "age-of-sports-";
+const CACHE_NAME = ENV_PREFIX + "v4";
+
+function isOwnCache(key) {
+  const isStagingKey = key.startsWith("age-of-sports-staging-");
+  return ENV_PREFIX === "age-of-sports-staging-" ? isStagingKey : !isStagingKey;
+}
 const ASSETS = ["./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -11,7 +19,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k !== CACHE_NAME && isOwnCache(k)).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
