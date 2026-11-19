@@ -84,13 +84,21 @@ service cloud.firestore {
 
 `users/{uid}`: `username`, `email`, `athletes[]`, `activeAthleteId`, `inventory[]` (account-wide item IDs).
 
-Athlete entry: `id` (`athlete_<ts>_<rand>`), `name` (max 20), `activities[]`, `week[]` (legacy aggregate, no longer displayed), `equipped` (`{clothing, equipment, supplies, slot4}` -> item id or null), `portrait` (1-4), `isFixedType` (`'athleticus'`), `manualLevel` (Athleticus only).
+Athlete entry: `id` (`athlete_<ts>_<rand>`), `name` (max 20), `baseAttrs` (`{endurance, pace, strength, mental, discipline}`, set once by `ensureBaseAttrs`), `activities[]`, `week[]` (legacy aggregate, no longer displayed), `equipped` (`{clothing, equipment, supplies, slot4}` -> item id or null), `portrait` (1-4), `isFixedType` (`'athleticus'`), `manualLevel` (Athleticus only).
 
-Activity: type, km, reps, mins, date, `dateISO`, avgHeartRate, elevationGain, bedTime, wakeTime. Types are fixed: `run, ride, walk, row, strength, sleep`.
+Activity: type, km, reps, `exercises` (Strength only: `[{id, reps}]`, ids `pushups|situps|pullups|burpees|other`; `reps` = total), mins, date, `dateISO`, avgHeartRate, elevationGain, bedTime, wakeTime. Types are fixed: `run, ride, walk, row, strength, sleep`. Old Strength entries without `exercises` count as `other`.
 
-Level: 1 level per 50 lifetime km (`levelFromKm`). Attributes are level-derived, capped at 99: Endurance 20+6L, Pace 15+5L, Strength 10+4L, Mental power 12+4L, Discipline 16+5L (`computeAttrs`).
+### Fitness model (all in the "Fitness model" block of `index.html`)
 
-Leaderboard score per activity (`computeActivityScore`): 10/km, 1/min, 0.5/rep, 0.3/bpm, 0.2/m elevation; sleep 5/h capped at 9 h.
+**Fitness Points (FP)** per activity (`activityFPParts` / `computeActivityScore`): 10/km, 1/min, 0.3/bpm, 0.2/m elevation; sleep 5/h capped at 9 h; Strength exercises per rep: push-up 0.6, sit-up 0.4, pull-up 1.5, burpee 1.0, other 0.5 (`EXERCISES`). FP are the leaderboard score and drive the level.
+
+**Level** (`levelFromFP`): each level needs 100 FP more than the previous one (step = 300 + 100·(L−1); Level 2 at 300 FP, 5 at 1,500, 10 at 6,300). Athleticus keeps its manual level.
+
+**Attributes** = base + training (`computeAttrs(entry)`), keys `endurance, pace, strength, mental, discipline` (`ATTRIBUTES`):
+- Base points: assigned once per athlete in `ensureBaseAttrs` (22–38 each), deterministic from the athlete id (seeded PRNG) so all devices agree; stored as `baseAttrs`, migrated on load.
+- Training points: not stored, replayed from the activity history in `computeTrainingPoints` (consistent across devices, editing old activities recalculates). Each activity gives a stimulus per attribute = FP parts × weights (`TYPE_TRAINING` per activity type, `EXERCISES[].train` per exercise). Gain = (max − current) · (1 − e^(−stimulus/2000)), max = 1.5 × base, i.e. fast at first and asymptotically slower. Decay: 10 % of the training points per week, applied continuously between activities and up to now. Constants in `TRAINING`.
+- Reference: daily 50 push-ups + three 5 km runs per week, base 30 (max 45): strength training ≈ 6 after 1 week, 15 after 4, 20 after 8 weeks; after a 4-week break ≈ 13.
+- UI: bar shows base (muted) + training (colour) and a tick at the maximum; the activity view lists which attributes an activity trains.
 
 Challenge: `creatorUid/AthleteId/AthleteName/Username/Roll`, `status` (`open|completed`), then `opponent*` fields and `winner` (`creator|opponent|tie`).
 
@@ -155,7 +163,8 @@ Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnas
 
 ## Open points
 
-- Stadium: more rules to come (currently pure dice, no effect on level/score/attributes).
+- Stadium: more rules to come (currently pure dice, no effect on level/score/attributes); attributes could now influence duels.
+- Fitness model is a first draft: tune weights/constants after real use; Stats still charts km only (FP or reps per exercise would fit better).
 - Real level progression for Athleticus (replaces the manual level); level > 5 shows the level-5 image.
 - Item system: earning/unlocking (everyone gets the starter set now), item effects, more item images, name the fourth slot category.
 - Probably dead code: `avatarSVG`, per-athlete `week[]`; `laurelBarSVG()` now renders the plain XP bar (name kept).

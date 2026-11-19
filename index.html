@@ -132,6 +132,35 @@
   .attr-row-mini span.val{ color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
   .attr-track-mini{ height:4px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; }
   .attr-track-mini > div{ height:100%; border-radius:999px; background:var(--c, var(--gold)); }
+  .attr-vals{ display:flex; align-items:baseline; gap:8px; }
+  .attr-split{ font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .attr-split b{ color:var(--c); font-weight:700; }
+  .split{ position:relative; display:flex; overflow:visible; }
+  .split .seg-base{ height:100%; background:color-mix(in srgb, var(--c) 38%, #3a3a44); border-radius:999px 0 0 999px; }
+  .split .seg-train{ height:100%; background:var(--c); box-shadow:0 0 10px color-mix(in srgb, var(--c) 60%, transparent); border-radius:0 999px 999px 0; }
+  .split .seg-max{ position:absolute; top:-3px; bottom:-3px; width:2px; margin-left:-1px; border-radius:2px; background:rgba(255,255,255,.28); }
+  .attr-track-mini.split .seg-max{ top:-2px; bottom:-2px; }
+  .attr-row-mini .tr{ color:var(--c); font-weight:700; }
+  .attr-legend{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:var(--muted); margin:2px 0 0; }
+  .attr-legend > span{ display:inline-flex; align-items:center; gap:6px; }
+  .attr-legend .note{ margin-left:auto; color:var(--faint); }
+  .attr-legend .lg{ display:inline-block; width:10px; height:6px; border-radius:3px; }
+  .attr-legend .lg.base{ background:#55556a; } .attr-legend .lg.train{ background:var(--gold); } .attr-legend .lg.max{ width:2px; height:10px; background:rgba(255,255,255,.4); }
+  .activity-mins .fp{ color:var(--gold-light); font-weight:600; }
+  .ex-list{ display:flex; flex-direction:column; gap:8px; }
+  .ex-row{ display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:8px 8px 8px 14px; }
+  .ex-name{ flex:1; min-width:0; font-weight:600; font-size:14px; display:flex; flex-direction:column; white-space:nowrap; }
+  .stepper{ flex-shrink:0; }
+  .ex-name span{ font-size:11px; color:var(--muted); font-weight:500; }
+  .stepper{ display:flex; align-items:center; background:var(--surface3); border-radius:12px; overflow:hidden; }
+  .stepper button{ width:36px; height:38px; border:none; background:none; color:var(--text); font-size:18px; cursor:pointer; }
+  .field .stepper input{ width:52px; padding:0; border-radius:0; box-shadow:none; height:38px; border:none; background:transparent; color:var(--text); text-align:center; font-family:var(--font-display); font-weight:700; font-size:16px; outline:none; -moz-appearance:textfield; }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .ex-remove{ width:30px; height:30px; border-radius:50%; border:none; background:none; color:var(--faint); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+  .ex-remove .i{ width:16px; height:16px; }
+  .ex-add{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .ex-chip{ border:1px dashed var(--border-strong); background:transparent; color:var(--muted); border-radius:999px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; }
+  .ex-chip:active{ background:var(--surface2); }
   .a-endurance{ --c:#2EC4B6; } .a-pace{ --c:#5B8CFF; } .a-strength{ --c:#FF7A45; } .a-mental{ --c:#A685FF; } .a-discipline{ --c:#F2B33D; }
 
   /* ===== Activity list ===== */
@@ -594,7 +623,7 @@
 
         <div class="xp">
           <div class="xp-head">
-            <span class="label">Progress</span>
+            <span class="label" id="athleteFP">0 FP</span>
             <p class="xp-remain" id="athleteRemain"></p>
           </div>
           <div id="laurelBarWrap"></div>
@@ -890,7 +919,7 @@
       </div>
 
       <div class="card score-card">
-        <p class="label">Leaderboard Points</p>
+        <p class="label">Fitness Points</p>
         <p class="score-big" id="viewScore">0</p>
         <div id="viewScoreBreakdown" class="breakdown"></div>
       </div>
@@ -917,9 +946,15 @@
           <button class="type-btn t-ride" data-type="ride" data-icon="🚴" data-metric="distance" onclick="selectType(this)"><span class="ic">🚴</span>Ride</button>
           <button class="type-btn t-walk" data-type="walk" data-icon="🚶" data-metric="distance" onclick="selectType(this)"><span class="ic">🚶</span>Walk</button>
           <button class="type-btn t-row" data-type="row" data-icon="🚣" data-metric="distance" onclick="selectType(this)"><span class="ic">🚣</span>Rowing</button>
-          <button class="type-btn t-strength" data-type="strength" data-icon="🏋️" data-metric="reps" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
+          <button class="type-btn t-strength" data-type="strength" data-icon="🏋️" data-metric="exercises" onclick="selectType(this)"><span class="ic">🏋️</span>Strength</button>
           <button class="type-btn t-sleep" data-type="sleep" data-icon="😴" data-metric="none" onclick="selectType(this)"><span class="ic">😴</span>Sleep</button>
         </div>
+      </div>
+
+      <div class="field" id="exercisesField" style="display:none;">
+        <label>Exercises</label>
+        <div id="exerciseRows" class="ex-list"></div>
+        <div id="exerciseAddRow" class="ex-add"></div>
       </div>
 
       <div class="field" id="metricField">
@@ -1229,6 +1264,7 @@ function createNewAthlete() {
   if (!name || !name.trim()) return;
   syncActiveAthleteIntoRoster();
   const entry = { id: makeAthleteId(), name: name.trim().slice(0, 20), activities: [], week: EMPTY_WEEK() };
+  ensureBaseAttrs(entry);
   athletes.push(entry);
   activeAthleteId = entry.id;
   loadAthleteIntoWorkingState(entry);
@@ -1253,7 +1289,7 @@ function renderGymnasiumList() {
   listEl.innerHTML = athletes.map((a) => {
     const isActive = a.id === activeAthleteId;
     const lvl = athleteLevel(a);
-    const attrs = computeAttrs(lvl);
+    const attrs = computeAttrs(a);
     return `
     <button class="card gym-card ${isActive ? 'highlight' : ''}" onclick="openAthleteDialog('${a.id}')">
       <div class="gym-portrait"><img class="portrait-avatar" src="${portraitUrl(a)}" alt="Athlete" /></div>
@@ -1267,8 +1303,8 @@ function renderGymnasiumList() {
         <div class="gym-attrs">
           ${attrs.map(attr => `
             <div class="${attrClass(attr.name)}">
-              <div class="attr-row-mini"><span>${attr.name}</span><span class="val">${attr.value}</span></div>
-              <div class="attr-track-mini"><div style="width:${attr.value}%"></div></div>
+              <div class="attr-row-mini"><span>${attr.name}</span><span class="val">${attr.value}${attr.training ? ` <span class="tr">+${attr.training}</span>` : ''}</span></div>
+              ${attrBarHtml(attr, true)}
             </div>`).join('')}
         </div>
       </div>
@@ -1297,8 +1333,8 @@ function openAthleteDialog(id) {
     document.getElementById('athleteDialogRemain').textContent = 'Level set manually (testing)';
     document.getElementById('athleteDialogManualLevel').value = level;
   } else {
-    const { remaining } = levelFromKm(totalKm(entry.activities || []));
-    document.getElementById('athleteDialogRemain').textContent = `${remaining} km until Level ${level + 1}`;
+    const { remaining } = levelFromFP(totalFP(entry.activities));
+    document.getElementById('athleteDialogRemain').textContent = `${remaining} FP until Level ${level + 1}`;
     document.getElementById('athleteDialogNameInput').value = entry.name;
     document.getElementById('athleteDialogError').style.display = 'none';
     document.getElementById('athleteDialogSuccess').style.display = 'none';
@@ -1392,37 +1428,154 @@ function lifetimeKm() { return totalKm(ACTIVITIES); }
 // First version of the leaderboard scoring formula - factors: distance, duration,
 // reps, heart rate (intensity bonus), elevation gain, and sleep.
 // Weights are an initial draft and can be adjusted anytime.
-function computeActivityScore(a) {
+// ---------- Fitness model ----------
+// Every activity earns Fitness Points (FP). FP count for the leaderboard and drive the level.
+
+// Bodyweight exercises inside a Strength activity: FP per rep and which attributes they train.
+const EXERCISES = {
+  pushups: { name: 'Push-ups', fp: 0.6, train: { strength: 1.0, discipline: 0.2 } },
+  situps:  { name: 'Sit-ups',  fp: 0.4, train: { strength: 0.8, endurance: 0.2, discipline: 0.2 } },
+  pullups: { name: 'Pull-ups', fp: 1.5, train: { strength: 1.2, discipline: 0.2 } },
+  burpees: { name: 'Burpees',  fp: 1.0, train: { strength: 0.6, endurance: 0.6, pace: 0.3, discipline: 0.2 } },
+  other:   { name: 'Other',    fp: 0.5, train: { strength: 1.0, discipline: 0.2 } },
+};
+const EXERCISE_ORDER = ['pushups', 'situps', 'pullups', 'burpees', 'other'];
+
+// Which attributes an activity type trains (multiplied with the activity's FP).
+const TYPE_TRAINING = {
+  run:      { endurance: 1.0, pace: 0.7, mental: 0.2, discipline: 0.3 },
+  ride:     { endurance: 1.0, pace: 0.4, strength: 0.2, discipline: 0.3 },
+  walk:     { endurance: 0.5, mental: 0.4, discipline: 0.3 },
+  row:      { endurance: 0.8, strength: 0.8, pace: 0.3, discipline: 0.3 },
+  strength: { strength: 1.0, discipline: 0.3 },
+  sleep:    { mental: 0.8, discipline: 0.3 },
+};
+
+const ATTRIBUTES = [
+  { key: 'endurance', name: 'Endurance' },
+  { key: 'pace', name: 'Pace' },
+  { key: 'strength', name: 'Strength' },
+  { key: 'mental', name: 'Mental power' },
+  { key: 'discipline', name: 'Discipline' },
+];
+
+// Training model per attribute:
+//   gain  = (max - current) * (1 - e^(-stimulus / SCALE))  -> fast at first, then asymptotically slower
+//   max   = base * MAX_FACTOR                               -> higher base, higher potential
+//   decay = WEEKLY_DECAY of the training points per week, applied continuously
+const TRAINING = { MAX_FACTOR: 1.5, SCALE: 2000, WEEKLY_DECAY: 0.10 };
+const BASE_RANGE = { min: 22, max: 38 };
+const DAY_MS = 86400000;
+
+function exerciseFP(ex) {
+  const def = EXERCISES[ex.id] || EXERCISES.other;
+  return (ex.reps || 0) * def.fp;
+}
+
+// Unrounded FP split into components (also used for the breakdown and the training stimulus)
+function activityFPParts(a) {
+  const parts = [];
   if (a.type === 'sleep') {
     const hours = (a.mins || 0) / 60;
-    return Math.round(Math.min(hours, 9) * 5); // capped at 9h so oversleeping doesn't count disproportionately
+    const capped = Math.min(hours, 9); // capped at 9h so oversleeping doesn't count disproportionately
+    parts.push({ label: 'Sleep', calc: `${capped.toFixed(1)}h × 5${hours > 9 ? ' (capped at 9h)' : ''}`, value: capped * 5 });
+    return parts;
   }
-  let score = (a.km || 0) * 10;
-  score += (a.mins || 0) * 1;
-  score += (a.reps || 0) * 0.5;
-  if (a.avgHeartRate) score += a.avgHeartRate * 0.3;
-  if (a.elevationGain) score += a.elevationGain * 0.2;
-  return Math.round(score);
+  if (a.km) parts.push({ label: 'Distance', calc: `${a.km.toFixed(1)} km × 10`, value: a.km * 10 });
+  if (a.mins) parts.push({ label: 'Duration', calc: `${a.mins} min × 1`, value: a.mins * 1 });
+  if (Array.isArray(a.exercises) && a.exercises.length > 0) {
+    a.exercises.forEach((ex) => {
+      const def = EXERCISES[ex.id] || EXERCISES.other;
+      parts.push({ label: def.name, calc: `${ex.reps} × ${def.fp}`, value: exerciseFP(ex), exercise: ex.id });
+    });
+  } else if (a.reps) {
+    parts.push({ label: 'Reps', calc: `${a.reps} reps × 0.5`, value: a.reps * 0.5, exercise: 'other' });
+  }
+  if (a.avgHeartRate) parts.push({ label: 'Heart Rate', calc: `${a.avgHeartRate} bpm × 0.3`, value: a.avgHeartRate * 0.3 });
+  if (a.elevationGain) parts.push({ label: 'Elevation Gain', calc: `${a.elevationGain} m × 0.2`, value: a.elevationGain * 0.2 });
+  return parts;
+}
+
+function computeActivityScore(a) {
+  return Math.round(activityFPParts(a).reduce((s, p) => s + p.value, 0));
 }
 
 function computeActivityScoreBreakdown(a) {
-  const rows = [];
-  if (a.type === 'sleep') {
-    const hours = (a.mins || 0) / 60;
-    const capped = Math.min(hours, 9);
-    rows.push({
-      label: 'Sleep',
-      calc: `${capped.toFixed(1)}h × 5${hours > 9 ? ' (capped at 9h)' : ''}`,
-      value: capped * 5,
-    });
-    return rows;
+  return activityFPParts(a);
+}
+
+function totalFP(list) {
+  return (list || []).reduce((s, a) => s + computeActivityScore(a), 0);
+}
+
+// Training stimulus per attribute caused by one activity
+function activityStimulus(a) {
+  const stim = {};
+  const add = (weights, amount) => {
+    Object.entries(weights).forEach(([k, w]) => { stim[k] = (stim[k] || 0) + w * amount; });
+  };
+  const typeWeights = TYPE_TRAINING[a.type] || { discipline: 0.3 };
+  activityFPParts(a).forEach((p) => {
+    if (p.exercise) add((EXERCISES[p.exercise] || EXERCISES.other).train, p.value);
+    else add(typeWeights, p.value);
+  });
+  return stim;
+}
+
+// Simple deterministic PRNG so an athlete's base points are the same on every device
+function seededRandom(seedStr) {
+  let h = 1779033703 ^ seedStr.length;
+  for (let i = 0; i < seedStr.length; i++) {
+    h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
   }
-  if (a.km) rows.push({ label: 'Distance', calc: `${a.km.toFixed(1)} km × 10`, value: a.km * 10 });
-  if (a.mins) rows.push({ label: 'Duration', calc: `${a.mins} min × 1`, value: a.mins * 1 });
-  if (a.reps) rows.push({ label: 'Reps', calc: `${a.reps} reps × 0.5`, value: a.reps * 0.5 });
-  if (a.avgHeartRate) rows.push({ label: 'Heart Rate', calc: `${a.avgHeartRate} bpm × 0.3`, value: a.avgHeartRate * 0.3 });
-  if (a.elevationGain) rows.push({ label: 'Elevation Gain', calc: `${a.elevationGain} m × 0.2`, value: a.elevationGain * 0.2 });
-  return rows;
+  return function () {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+// Assigns base points once (stored on the athlete). Returns true if something was added.
+function ensureBaseAttrs(entry) {
+  if (entry.baseAttrs && ATTRIBUTES.every((at) => typeof entry.baseAttrs[at.key] === 'number')) return false;
+  const rand = seededRandom(entry.id || entry.name || 'athlete');
+  entry.baseAttrs = {};
+  ATTRIBUTES.forEach((at) => {
+    entry.baseAttrs[at.key] = BASE_RANGE.min + Math.floor(rand() * (BASE_RANGE.max - BASE_RANGE.min + 1));
+  });
+  return true;
+}
+
+// Replays the activity history: training points rise with each activity and decay over time.
+function computeTrainingPoints(base, activities, now) {
+  now = now || Date.now();
+  const tp = {};
+  ATTRIBUTES.forEach((at) => { tp[at.key] = 0; });
+  const decayTo = (from, to) => {
+    if (from == null || to <= from) return;
+    const f = Math.pow(1 - TRAINING.WEEKLY_DECAY, (to - from) / (7 * DAY_MS));
+    ATTRIBUTES.forEach((at) => { tp[at.key] *= f; });
+  };
+  const sorted = (activities || [])
+    .map((a) => ({ a, t: activitySortTime(a) }))
+    .filter((x) => x.t > 0 && x.t <= now)
+    .sort((x, y) => x.t - y.t);
+  let last = null;
+  sorted.forEach(({ a, t }) => {
+    decayTo(last, t);
+    last = t;
+    const stim = activityStimulus(a);
+    ATTRIBUTES.forEach((at) => {
+      const s = stim[at.key] || 0;
+      if (s <= 0) return;
+      const max = base[at.key] * TRAINING.MAX_FACTOR;
+      tp[at.key] += Math.max(0, max - tp[at.key]) * (1 - Math.exp(-s / TRAINING.SCALE));
+    });
+  });
+  decayTo(last, now);
+  return tp;
 }
 
 function renderScoreBreakdown(a) {
@@ -1505,7 +1658,7 @@ async function loadLeaderboard() {
           <div class="lb-name">${e.athleteName || e.characterName || '???'}</div>
           <div class="lb-sub">Level ${e.level || 1}${owner ? ' · ' + owner : ''}</div>
         </div>
-        <div class="lb-score">${e.score || 0}<small>pts</small></div>
+        <div class="lb-score">${(e.score || 0).toLocaleString('en-US')}<small>FP</small></div>
       </div>`;
     }).join('');
   } catch (err) {
@@ -1515,11 +1668,14 @@ async function loadLeaderboard() {
 }
 
 // ---------- Helpers ----------
-function levelFromKm(totalKm) {
-  const level = Math.max(1, Math.floor(totalKm / 50) + 1);
-  const intoLevel = totalKm % 50;
-  const pct = Math.min(100, Math.round((intoLevel / 50) * 100));
-  return { level, pct, remaining: (50 - intoLevel).toFixed(1) };
+// Level from Fitness Points: each level needs 100 FP more than the previous one
+// (Level 2 at 300 FP, Level 5 at 1,500 FP, Level 10 at 6,300 FP).
+function levelStepFP(level) { return 300 + 100 * (level - 1); }
+function levelFromFP(fp) {
+  let level = 1, floor = 0;
+  while (fp >= floor + levelStepFP(level)) { floor += levelStepFP(level); level++; }
+  const need = levelStepFP(level), into = fp - floor;
+  return { level, pct: Math.min(100, Math.round((into / need) * 100)), remaining: Math.max(0, Math.ceil(need - into)), into, need };
 }
 
 function todayLabel() {
@@ -1690,6 +1846,7 @@ function renderActivityRow(a, realIndex) {
   const extras = [];
   if (a.avgHeartRate) extras.push(`❤ ${a.avgHeartRate} bpm`);
   if (a.elevationGain) extras.push(`⛰ ${a.elevationGain} m`);
+  if (Array.isArray(a.exercises)) a.exercises.forEach((ex) => extras.push(`${(EXERCISES[ex.id] || EXERCISES.other).name} ${ex.reps}`));
   const extraLine = extras.length > 0 ? `<div class="activity-sub" style="opacity:.8;">${extras.join(' · ')}</div>` : '';
 
   return `
@@ -1703,7 +1860,7 @@ function renderActivityRow(a, realIndex) {
         </div>
         <div class="activity-right">
           <div class="activity-km">${primaryMetricDisplay(a)}</div>
-          <div class="activity-mins">${a.mins} min</div>
+          <div class="activity-mins">${a.mins} min · <span class="fp">${computeActivityScore(a)} FP</span></div>
         </div>
       </div>
     </button>`;
@@ -1986,14 +2143,17 @@ function setupStatsSwipeNav() {
   }, { passive: true });
 }
 
-function computeAttrs(level) {
-  return [
-    { name: 'Endurance', value: Math.min(99, 20 + level * 6) },
-    { name: 'Pace', value: Math.min(99, 15 + level * 5) },
-    { name: 'Strength', value: Math.min(99, 10 + level * 4) },
-    { name: 'Mental power', value: Math.min(99, 12 + level * 4) },
-    { name: 'Discipline', value: Math.min(99, 16 + level * 5) },
-  ];
+// Attribute = base points (fixed) + training points (dynamic, see computeTrainingPoints)
+function computeAttrs(entry) {
+  if (!entry) return [];
+  ensureBaseAttrs(entry);
+  const tp = computeTrainingPoints(entry.baseAttrs, entry.activities);
+  return ATTRIBUTES.map((at) => {
+    const base = entry.baseAttrs[at.key];
+    const training = Math.round(tp[at.key]);
+    const maxTraining = Math.round(base * TRAINING.MAX_FACTOR);
+    return { key: at.key, name: at.name, base, training, maxTraining, value: base + training, max: base + maxTraining };
+  });
 }
 
 // Colour class per attribute (see .a-* in the stylesheet)
@@ -2001,12 +2161,23 @@ function attrClass(name) {
   return { 'Endurance': 'a-endurance', 'Pace': 'a-pace', 'Strength': 'a-strength', 'Mental power': 'a-mental', 'Discipline': 'a-discipline' }[name] || '';
 }
 
-function renderAttrs(level) {
-  document.getElementById('attrCard').innerHTML = computeAttrs(level).map(a => `
+function attrBarHtml(a, mini) {
+  return `<div class="${mini ? 'attr-track-mini' : 'attr-track'} split">
+      <div class="seg-base" style="width:${a.base}%"></div><div class="seg-train" style="width:${a.training}%"></div>
+      <span class="seg-max" style="left:${a.max}%"></span>
+    </div>`;
+}
+
+function renderAttrs(entry) {
+  document.getElementById('attrCard').innerHTML = computeAttrs(entry).map(a => `
     <div class="attr-row-wrap ${attrClass(a.name)}">
-      <div class="attr-row"><span class="attr-name"><span class="attr-dot"></span>${a.name}</span><span class="val">${a.value}</span></div>
-      <div class="attr-track"><div style="width:${a.value}%"></div></div>
-    </div>`).join('');
+      <div class="attr-row">
+        <span class="attr-name"><span class="attr-dot"></span>${a.name}</span>
+        <span class="attr-vals"><span class="val">${a.value}</span><span class="attr-split">${a.base} + <b>${a.training}</b></span></span>
+      </div>
+      ${attrBarHtml(a, false)}
+    </div>`).join('')
+    + `<div class="attr-legend"><span><span class="lg base"></span>Base</span><span><span class="lg train"></span>Training</span><span><span class="lg max"></span>Max</span><span class="note">Training fades ~10% per week</span></div>`;
 }
 
 const AVATAR_VERSION = 19; // increment whenever a portrait/item image changes, forces a fresh load
@@ -2020,7 +2191,7 @@ const LEVEL_PORTRAITS = ['athlete-level-1.png', 'athlete-level-2.png', 'athlete-
 function athleteLevel(entry) {
   if (!entry) return 1;
   if (entry.manualLevel != null) return entry.manualLevel;
-  return levelFromKm(totalKm(entry.activities || [])).level;
+  return levelFromFP(totalFP(entry.activities)).level;
 }
 
 function portraitUrl(entry) {
@@ -2056,17 +2227,19 @@ function renderAthleteAndHero() {
     pct = 0;
     remaining = 50;
   } else {
-    ({ level, pct, remaining } = levelFromKm(lifetimeKm()));
+    ({ level, pct, remaining } = levelFromFP(totalFP(ACTIVITIES)));
   }
 
   document.getElementById('athleteAvatar').innerHTML = `<img class="portrait-avatar" src="${portraitUrl(active)}" width="130" height="181" alt="Athlete" />`;
   document.getElementById('athleteLevel').textContent = 'Level ' + level;
   document.getElementById('athleteRemain').textContent = active && active.isFixedType === 'athleticus'
     ? 'Level set manually (testing)'
-    : `${remaining} km until Level ${level + 1}`;
+    : `${remaining} FP until Level ${level + 1}`;
+  document.getElementById('athleteFP').textContent = totalFP(ACTIVITIES).toLocaleString('en-US') + ' FP';
   document.getElementById('laurelBarWrap').innerHTML = laurelBarSVG(pct);
 
-  renderAttrs(level);
+  syncActiveAthleteIntoRoster();
+  renderAttrs(active);
   renderAthleteSelector();
   renderGymnasiumList();
   renderEquipSlots();
@@ -2310,6 +2483,7 @@ function resetForm(defaultType) {
   setBedTime('23:00');
   setWakeTime('07:00');
   document.getElementById('inputDescription').value = '';
+  formExercises = [];
   const btn = document.querySelector(`#typeRow .type-btn[data-type="${defaultType || 'run'}"]`) || document.querySelector('#typeRow .type-btn[data-type="run"]');
   btn.click();
 }
@@ -2358,6 +2532,10 @@ function renderViewModal(index) {
   if (a.elevationGain) extras.push(['⛰️', 'Elevation Gain', `${a.elevationGain} m`]);
   if (isSleep && a.bedTime) extras.push(['🌙', 'Bedtime', a.bedTime]);
   if (isSleep && a.wakeTime) extras.push(['☀️', 'Wake Time', a.wakeTime]);
+  if (Array.isArray(a.exercises)) a.exercises.forEach((ex) => extras.push(['💪', (EXERCISES[ex.id] || EXERCISES.other).name, `${ex.reps} reps`]));
+  const stim = activityStimulus(a);
+  const trained = ATTRIBUTES.filter((at) => (stim[at.key] || 0) > 0).sort((x, y) => stim[y.key] - stim[x.key]).map((at) => at.name);
+  if (trained.length) extras.push(['📈', 'Trains', trained.join(', ')]);
   const extraCard = document.getElementById('viewExtraCard');
   if (extras.length > 0) {
     extraCard.style.display = 'block';
@@ -2479,9 +2657,12 @@ function openEditModal(index) {
   document.getElementById('sheetDeleteBtn').style.display = 'block';
 
   const typeBtn = document.querySelector(`#typeRow .type-btn[data-type="${a.type}"]`) || document.querySelector('#typeRow .type-btn[data-type="run"]');
+  formExercises = Array.isArray(a.exercises) && a.exercises.length > 0
+    ? a.exercises.map((ex) => ({ id: ex.id, reps: ex.reps }))
+    : (a.type === 'strength' && a.reps ? [{ id: 'other', reps: a.reps }] : []);
   typeBtn.click(); // setzt via selectType() bereits die passende Erfassungsart (inkl. "none" bei Schlaf)
 
-  if (a.type !== 'sleep') {
+  if (a.type !== 'sleep' && a.type !== 'strength') {
     const metric = a.reps != null && a.reps > 0 ? 'reps' : 'distance';
     const metricBtn = document.querySelector(`#metricRow .metric-btn[data-metric="${metric}"]`);
     if (metricBtn) selectMetric(metricBtn);
@@ -2520,7 +2701,15 @@ function selectType(btn) {
   document.getElementById('sleepDurationHint').style.display = isSleep ? document.getElementById('sleepDurationHint').style.display : 'none';
   if (isSleep) updateSleepDurationHint();
 
-  if (suggestedMetric === 'none') {
+  document.getElementById('exercisesField').style.display = suggestedMetric === 'exercises' ? 'block' : 'none';
+  if (suggestedMetric === 'exercises') {
+    // Strength: bodyweight exercises with reps each, no distance / single reps field
+    selectedMetric = 'exercises';
+    document.getElementById('metricField').style.display = 'none';
+    document.getElementById('distanceField').style.display = 'none';
+    document.getElementById('repsField').style.display = 'none';
+    renderExerciseRows();
+  } else if (suggestedMetric === 'none') {
     // Sleep: neither distance nor reps make sense -> hide the tracking-method field entirely
     selectedMetric = 'none';
     document.getElementById('metricField').style.display = 'none';
@@ -2531,6 +2720,55 @@ function selectType(btn) {
     const metricBtn = document.querySelector(`#metricRow .metric-btn[data-metric="${suggestedMetric}"]`);
     if (metricBtn) selectMetric(metricBtn);
   }
+}
+
+// ---------- Strength exercises in the activity form ----------
+let formExercises = []; // [{ id, reps }]
+
+function renderExerciseRows() {
+  const rowsEl = document.getElementById('exerciseRows');
+  const addEl = document.getElementById('exerciseAddRow');
+  if (!rowsEl || !addEl) return;
+  rowsEl.innerHTML = formExercises.map((ex, i) => {
+    const def = EXERCISES[ex.id] || EXERCISES.other;
+    return `
+    <div class="ex-row">
+      <div class="ex-name">${def.name}<span>${def.fp} FP / rep</span></div>
+      <div class="stepper">
+        <button type="button" onclick="stepExercise(${i}, -5)" aria-label="Less">−</button>
+        <input type="number" inputmode="numeric" min="0" step="1" value="${ex.reps || ''}" placeholder="0" oninput="setExerciseReps(${i}, this.value)" />
+        <button type="button" onclick="stepExercise(${i}, 5)" aria-label="More">+</button>
+      </div>
+      <button type="button" class="ex-remove" onclick="removeExercise(${i})" aria-label="Remove"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>`;
+  }).join('') || '<p class="hint" style="text-align:left;margin:0 0 4px;">Add the exercises you did:</p>';
+  const used = new Set(formExercises.map((ex) => ex.id));
+  addEl.innerHTML = EXERCISE_ORDER.filter((id) => !used.has(id))
+    .map((id) => `<button type="button" class="ex-chip" onclick="addExercise('${id}')">+ ${EXERCISES[id].name}</button>`).join('');
+}
+
+function addExercise(id) {
+  if (formExercises.some((ex) => ex.id === id)) return;
+  formExercises.push({ id, reps: 0 });
+  renderExerciseRows();
+  const inputs = document.querySelectorAll('#exerciseRows input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function removeExercise(i) {
+  formExercises.splice(i, 1);
+  renderExerciseRows();
+}
+
+function setExerciseReps(i, val) {
+  if (!formExercises[i]) return;
+  formExercises[i].reps = Math.max(0, parseInt(val, 10) || 0);
+}
+
+function stepExercise(i, delta) {
+  if (!formExercises[i]) return;
+  formExercises[i].reps = Math.max(0, (formExercises[i].reps || 0) + delta);
+  renderExerciseRows();
 }
 
 function selectMetric(btn) {
@@ -2546,6 +2784,13 @@ function submitActivity() {
   const description = document.getElementById('inputDescription').value.trim();
   const distance = parseFloat(document.getElementById('inputDistance').value) || 0;
   const reps = parseInt(document.getElementById('inputReps').value, 10) || 0;
+  const isStrength = selectedMetric === 'exercises';
+  const exercises = isStrength ? formExercises.filter((ex) => ex.reps > 0).map((ex) => ({ id: ex.id, reps: ex.reps })) : null;
+  if (isStrength && exercises.length === 0) {
+    alert('Please add at least one exercise with reps.');
+    return;
+  }
+  const totalReps = isStrength ? exercises.reduce((s, ex) => s + ex.reps, 0) : (selectedMetric === 'reps' ? reps : null);
 
   let duration;
   let bedTime = null, wakeTime = null;
@@ -2586,7 +2831,8 @@ function submitActivity() {
       icon: iconMap[selectedType] || "🏅",
       label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`,
       km: km,
-      reps: selectedMetric === 'reps' ? reps : null,
+      reps: totalReps,
+      exercises: exercises,
       mins: duration,
       bedTime: isSleep ? bedTime : null,
       wakeTime: isSleep ? wakeTime : null,
@@ -2606,7 +2852,8 @@ function submitActivity() {
     a.icon = iconMap[selectedType] || "🏅";
     a.label = description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`;
     a.km = km;
-    a.reps = selectedMetric === 'reps' ? reps : null;
+    a.reps = totalReps;
+    a.exercises = exercises;
     a.mins = duration;
     a.bedTime = isSleep ? bedTime : null;
     a.wakeTime = isSleep ? wakeTime : null;
@@ -2937,6 +3184,7 @@ window.handleAuthState = async function (user) {
     }
     loadAthleteIntoWorkingState(athletes.find((a) => a.id === activeAthleteId) || athletes[0]);
     athletes.forEach(ensureAthleteEquipped);
+    const baseAttrsAdded = athletes.map(ensureBaseAttrs).some(Boolean);
 
     accountInventory = Array.isArray(data.inventory) ? data.inventory : [];
     const inventoryMigrated = ensureAccountInventory();
@@ -2947,7 +3195,8 @@ window.handleAuthState = async function (user) {
 
     currentUsername = data.username || user.email;
     currentEmail = data.email || user.email;
-    if (isNewDoc || inventoryMigrated || backfilled || athleticusAdded) persist();
+    if (athleticusAdded) athletes.forEach(ensureBaseAttrs);
+    if (isNewDoc || inventoryMigrated || backfilled || athleticusAdded || baseAttrsAdded) persist();
 
     // If the email was actually changed in the meantime via a confirmation link
     // (verifyBeforeUpdateEmail), sync Firestore now
