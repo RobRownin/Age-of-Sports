@@ -146,6 +146,11 @@
   .attr-legend .note{ margin-left:auto; color:var(--faint); }
   .attr-legend .lg{ display:inline-block; width:10px; height:6px; border-radius:3px; }
   .attr-legend .lg.base{ background:#55556a; } .attr-legend .lg.train{ background:var(--gold); } .attr-legend .lg.max{ width:2px; height:10px; background:rgba(255,255,255,.4); }
+  .train-rows{ margin-top:8px; display:flex; flex-direction:column; }
+  .train-row{ display:flex; align-items:center; gap:10px; font-size:14px; padding:6px 0; }
+  .train-row + .train-row{ border-top:1px solid var(--border); }
+  .train-row .k{ flex:1; }
+  .train-row .v{ font-family:var(--font-display); font-weight:700; color:var(--c); font-variant-numeric:tabular-nums; }
   .toast{ position:fixed; left:50%; bottom:calc(var(--nav-h) + var(--safe-b) + 16px); transform:translate(-50%, 20px); width:calc(100% - 32px); max-width:448px; z-index:60;
     background:rgba(30,30,38,.96); border:1px solid var(--border-strong); border-radius:16px; padding:12px 16px; font-size:13px; line-height:1.5; color:var(--text);
     box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
@@ -926,6 +931,11 @@
         <div id="viewExtraRows"></div>
       </div>
 
+      <div class="card" id="viewTrainingCard" style="display:none;">
+        <p class="label">Training Points</p>
+        <div id="viewTrainingRows" class="train-rows"></div>
+      </div>
+
       <div class="card score-card">
         <p class="label">Fitness Points</p>
         <p class="score-big" id="viewScore">0</p>
@@ -1679,6 +1689,24 @@ async function loadLeaderboard() {
 }
 
 // ---------- Helpers ----------
+// Training points one activity added at the time it was done: replay the history up to that
+// moment once without and once with this activity (same base, same decay).
+function activityTrainingGain(entry, a) {
+  if (!entry) return {};
+  ensureBaseAttrs(entry);
+  const t = activitySortTime(a);
+  if (!t) return {};
+  const list = entry.activities || [];
+  const idx = list.indexOf(a);
+  // earlier activities (same timestamp counts as earlier if it was logged before this one)
+  const before = list.filter((x, i) => x !== a && (activitySortTime(x) < t || (activitySortTime(x) === t && i < idx)));
+  const without = computeTrainingPoints(entry.baseAttrs, before, t);
+  const withA = computeTrainingPoints(entry.baseAttrs, before.concat([a]), t);
+  const gain = {};
+  ATTRIBUTES.forEach((at) => { gain[at.key] = withA[at.key] - without[at.key]; });
+  return gain;
+}
+
 // Level from Fitness Points: each level needs 100 FP more than the previous one
 // (Level 2 at 300 FP, Level 5 at 1,500 FP, Level 10 at 6,300 FP).
 function levelStepFP(level) { return 300 + 100 * (level - 1); }
@@ -2545,9 +2573,15 @@ function renderViewModal(index) {
   if (isSleep && a.bedTime) extras.push(['🌙', 'Bedtime', a.bedTime]);
   if (isSleep && a.wakeTime) extras.push(['☀️', 'Wake Time', a.wakeTime]);
   if (Array.isArray(a.exercises)) a.exercises.forEach((ex) => extras.push(['💪', (EXERCISES[ex.id] || EXERCISES.other).name, `${ex.reps} reps`]));
-  const stim = activityStimulus(a);
-  const trained = ATTRIBUTES.filter((at) => (stim[at.key] || 0) > 0).sort((x, y) => stim[y.key] - stim[x.key]).map((at) => at.name);
-  if (trained.length) extras.push(['📈', 'Trains', trained.join(', ')]);
+  syncActiveAthleteIntoRoster();
+  const gain = activityTrainingGain(activeAthleteEntry(), a);
+  const gains = ATTRIBUTES.map((at) => ({ name: at.name, d: gain[at.key] || 0 }))
+    .filter((g) => g.d >= 0.05).sort((x, y) => y.d - x.d);
+  const trainingCard = document.getElementById('viewTrainingCard');
+  trainingCard.style.display = gains.length ? 'block' : 'none';
+  document.getElementById('viewTrainingRows').innerHTML = gains.map((g) => `
+    <div class="train-row ${attrClass(g.name)}"><span class="attr-dot"></span><span class="k">${g.name}</span><span class="v">+${g.d.toFixed(1)}</span></div>`).join('')
+    + '<p class="hint" style="text-align:left;margin:8px 0 0;">Gained when this activity was done; fades 1% daily since.</p>';
   const extraCard = document.getElementById('viewExtraCard');
   if (extras.length > 0) {
     extraCard.style.display = 'block';
