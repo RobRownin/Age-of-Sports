@@ -169,4 +169,10 @@ Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnas
 - Item system: earning/unlocking (everyone gets the starter set now), item effects, more item images, name the fourth slot category.
 - Probably dead code: `avatarSVG`, per-athlete `week[]`; `laurelBarSVG()` now renders the plain XP bar (name kept).
 - Challenge outcome is decided client-side; harden server-side if it ever matters.
+- **Planned: move activities out of the user document** (before the app grows).
+  - Problem: all athletes and activities of an account live in one `users/{uid}` doc. Firestore limit is 1 MB per document; one activity is ~270 bytes, so roughly 3,500 activities per account (≈ 3 years at 3 entries/day). The whole doc is also loaded on every start and rewritten on every save.
+  - Target: subcollection per athlete, e.g. `users/{uid}/athletes/{athleteId}/activities/{activityId}` (or `users/{uid}/activities` with an `athleteId` field). Load only recent months on start; load older data on demand (e.g. Stats "All-time").
+  - Then store training checkpoints per athlete (e.g. training points at the start of each week) and replay only from the last checkpoint; invalidate checkpoints when an activity older than the checkpoint is added/edited/deleted (incl. Garmin import).
+  - Needs: one-time migration of existing data (backward compatible, keep reading the old array until migrated), Firestore rules for the new path in **both** projects, leaderboard sync unchanged (score/level only).
+  - Current cost is not the reason: full training replay measured at ~2 ms for 1,000 and ~16 ms for 10,000 activities (desktop), and each client only computes its own athletes, so the number of users does not affect load time.
 - Ruled out: Health Connect, automatic Garmin API sync (needs developer program + server), FIT import (needs a library), in-app GPS tracking.
