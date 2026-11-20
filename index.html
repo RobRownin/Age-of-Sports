@@ -1470,8 +1470,8 @@ const ATTRIBUTES = [
 // Training model per attribute:
 //   gain  = (max - current) * (1 - e^(-stimulus / SCALE))  -> fast at first, then asymptotically slower
 //   max   = base * MAX_FACTOR                               -> higher base, higher potential
-//   decay = WEEKLY_DECAY of the training points per week, applied continuously
-const TRAINING = { MAX_FACTOR: 1.5, SCALE: 2000, WEEKLY_DECAY: 0.10 };
+//   decay = DAILY_DECAY of the training points present at each midnight (00:00 UTC)
+const TRAINING = { MAX_FACTOR: 1.5, SCALE: 2000, DAILY_DECAY: 0.01 };
 const BASE_RANGE = { min: 22, max: 38 };
 const DAY_MS = 86400000;
 
@@ -1561,9 +1561,12 @@ function computeTrainingPoints(base, activities, now) {
   now = now || Date.now();
   const tp = {};
   ATTRIBUTES.forEach((at) => { tp[at.key] = 0; });
+  // Number of 00:00 UTC boundaries passed between two timestamps (epoch ms are UTC-based)
   const decayTo = (from, to) => {
     if (from == null || to <= from) return;
-    const f = Math.pow(1 - TRAINING.WEEKLY_DECAY, (to - from) / (7 * DAY_MS));
+    const midnights = Math.floor(to / DAY_MS) - Math.floor(from / DAY_MS);
+    if (midnights <= 0) return;
+    const f = Math.pow(1 - TRAINING.DAILY_DECAY, midnights);
     ATTRIBUTES.forEach((at) => { tp[at.key] *= f; });
   };
   const sorted = (activities || [])
@@ -2186,7 +2189,7 @@ function renderAttrs(entry) {
       </div>
       ${attrBarHtml(a, false)}
     </div>`).join('')
-    + `<div class="attr-legend"><span><span class="lg base"></span>Base</span><span><span class="lg train"></span>Training</span><span><span class="lg max"></span>Max</span><span class="note">Training fades ~10% per week</span></div>`;
+    + `<div class="attr-legend"><span><span class="lg base"></span>Base</span><span><span class="lg train"></span>Training</span><span><span class="lg max"></span>Max</span><span class="note">Training −1% daily at 00:00 UTC</span></div>`;
 }
 
 const AVATAR_VERSION = 19; // increment whenever a portrait/item image changes, forces a fresh load
