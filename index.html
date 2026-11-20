@@ -146,6 +146,12 @@
   .attr-legend .note{ margin-left:auto; color:var(--faint); }
   .attr-legend .lg{ display:inline-block; width:10px; height:6px; border-radius:3px; }
   .attr-legend .lg.base{ background:#55556a; } .attr-legend .lg.train{ background:var(--gold); } .attr-legend .lg.max{ width:2px; height:10px; background:rgba(255,255,255,.4); }
+  .toast{ position:fixed; left:50%; bottom:calc(var(--nav-h) + var(--safe-b) + 16px); transform:translate(-50%, 20px); width:calc(100% - 32px); max-width:448px; z-index:60;
+    background:rgba(30,30,38,.96); border:1px solid var(--border-strong); border-radius:16px; padding:12px 16px; font-size:13px; line-height:1.5; color:var(--text);
+    box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .toast b{ color:var(--gold-light); }
+  .toast .tg{ color:var(--c); font-weight:600; }
   .activity-mins .fp{ color:var(--gold-light); font-weight:600; }
   .ex-list{ display:flex; flex-direction:column; gap:8px; }
   .ex-row{ display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:8px 8px 8px 14px; }
@@ -819,6 +825,8 @@
     </section>
   </main>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <!-- FLOATING ACTION BUTTON (Activities / Sleep) -->
   <button class="fab" onclick="openActivityModal(document.body.dataset.screen === 'sleep' ? 'sleep' : 'run')" aria-label="Log activity"><svg class="i"><use href="#i-plus"/></svg></button>
 
@@ -1303,7 +1311,7 @@ function renderGymnasiumList() {
         <div class="gym-attrs">
           ${attrs.map(attr => `
             <div class="${attrClass(attr.name)}">
-              <div class="attr-row-mini"><span>${attr.name}</span><span class="val">${attr.value}${attr.training ? ` <span class="tr">+${attr.training}</span>` : ''}</span></div>
+              <div class="attr-row-mini"><span>${attr.name}</span><span class="val">${attr.value}${attr.training ? ` <span class="tr">+${attr.training.toFixed(1)}</span>` : ''}</span></div>
               ${attrBarHtml(attr, true)}
             </div>`).join('')}
         </div>
@@ -2150,9 +2158,10 @@ function computeAttrs(entry) {
   const tp = computeTrainingPoints(entry.baseAttrs, entry.activities);
   return ATTRIBUTES.map((at) => {
     const base = entry.baseAttrs[at.key];
-    const training = Math.round(tp[at.key]);
+    // One decimal: a single session often adds less than 1 point and would otherwise show as 0
+    const training = Math.round(tp[at.key] * 10) / 10;
     const maxTraining = Math.round(base * TRAINING.MAX_FACTOR);
-    return { key: at.key, name: at.name, base, training, maxTraining, value: base + training, max: base + maxTraining };
+    return { key: at.key, name: at.name, base, training, maxTraining, value: Math.round(base + tp[at.key]), max: base + maxTraining };
   });
 }
 
@@ -2173,7 +2182,7 @@ function renderAttrs(entry) {
     <div class="attr-row-wrap ${attrClass(a.name)}">
       <div class="attr-row">
         <span class="attr-name"><span class="attr-dot"></span>${a.name}</span>
-        <span class="attr-vals"><span class="val">${a.value}</span><span class="attr-split">${a.base} + <b>${a.training}</b></span></span>
+        <span class="attr-vals"><span class="val">${a.value}</span><span class="attr-split">${a.base} + <b>${a.training.toFixed(1)}</b></span></span>
       </div>
       ${attrBarHtml(a, false)}
     </div>`).join('')
@@ -2722,6 +2731,25 @@ function selectType(btn) {
   }
 }
 
+// ---------- Toast ----------
+let toastTimer = null;
+function showToast(html) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.innerHTML = html;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 4200);
+}
+
+// Raw (unrounded) training points of the active athlete, used to show the gain of a new activity
+function activeTrainingSnapshot() {
+  const entry = activeAthleteEntry();
+  if (!entry) return null;
+  ensureBaseAttrs(entry);
+  return computeTrainingPoints(entry.baseAttrs, ACTIVITIES);
+}
+
 // ---------- Strength exercises in the activity form ----------
 let formExercises = []; // [{ id, reps }]
 
@@ -2817,6 +2845,8 @@ function submitActivity() {
   }
 
   const iconMap = { run: "🏃", ride: "🚴", walk: "🚶", row: "🚣", strength: "🏋️", sleep: "😴" };
+  const isNewActivity = editingIndex === null;
+  const trainingBefore = isNewActivity ? activeTrainingSnapshot() : null;
   const km = selectedMetric === 'distance' ? distance : 0;
 
   const dateTimeVal = document.getElementById('inputDateTime').value;
@@ -2829,7 +2859,7 @@ function submitActivity() {
     const activity = {
       type: selectedType,
       icon: iconMap[selectedType] || "🏅",
-      label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`,
+      label: description.length > 0 ? description : `${TYPE_LABEL[selectedType]} activity`,
       km: km,
       reps: totalReps,
       exercises: exercises,
@@ -2850,7 +2880,7 @@ function submitActivity() {
     const oldDayAbbr = dayAbbrFromDate(a.date);
     a.type = selectedType;
     a.icon = iconMap[selectedType] || "🏅";
-    a.label = description.length > 0 ? description : `${TYPE_LABEL[selectedType]}-Aktivität`;
+    a.label = description.length > 0 ? description : `${TYPE_LABEL[selectedType]} activity`;
     a.km = km;
     a.reps = totalReps;
     a.exercises = exercises;
@@ -2874,6 +2904,16 @@ function submitActivity() {
   renderStats();
   renderAthleteAndHero();
   closeActivityModal();
+
+  if (isNewActivity && trainingBefore) {
+    const after = activeTrainingSnapshot();
+    const fp = computeActivityScore(ACTIVITIES[ACTIVITIES.length - 1]);
+    const gains = ATTRIBUTES
+      .map((at) => ({ name: at.name, cls: attrClass(at.name), d: after[at.key] - trainingBefore[at.key] }))
+      .filter((g) => g.d >= 0.05)
+      .sort((x, y) => y.d - x.d);
+    showToast(`<b>+${fp} FP</b>` + gains.map((g) => ` · <span class="${g.cls}"><span class="tg">${g.name} +${g.d.toFixed(1)}</span></span>`).join(''));
+  }
 }
 
 function deleteActivity() {

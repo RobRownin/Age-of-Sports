@@ -98,7 +98,7 @@ Activity: type, km, reps, `exercises` (Strength only: `[{id, reps}]`, ids `pushu
 - Base points: assigned once per athlete in `ensureBaseAttrs` (22–38 each), deterministic from the athlete id (seeded PRNG) so all devices agree; stored as `baseAttrs`, migrated on load.
 - Training points: not stored, replayed from the activity history in `computeTrainingPoints` (consistent across devices, editing old activities recalculates). Each activity gives a stimulus per attribute = FP parts × weights (`TYPE_TRAINING` per activity type, `EXERCISES[].train` per exercise). Gain = (max − current) · (1 − e^(−stimulus/2000)), max = 1.5 × base, i.e. fast at first and asymptotically slower. Decay: 10 % of the training points per week, applied continuously between activities and up to now. Constants in `TRAINING`.
 - Reference: daily 50 push-ups + three 5 km runs per week, base 30 (max 45): strength training ≈ 6 after 1 week, 15 after 4, 20 after 8 weeks; after a 4-week break ≈ 13.
-- UI: bar shows base (muted) + training (colour) and a tick at the maximum; the activity view lists which attributes an activity trains.
+- UI: bar shows base (muted) + training (colour) and a tick at the maximum; training points are shown with one decimal (a single session often adds < 1); after saving a new activity a toast shows the FP and training gains (`showToast`); the activity view lists which attributes an activity trains.
 
 Challenge: `creatorUid/AthleteId/AthleteName/Username/Roll`, `status` (`open|completed`), then `opponent*` fields and `winner` (`creator|opponent|tie`).
 
