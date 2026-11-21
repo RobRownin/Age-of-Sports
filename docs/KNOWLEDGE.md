@@ -130,6 +130,19 @@ Idea: activities only make your own character stronger (level, attributes; priva
 - **Known limitations of this stage**: duels are resolved and attributes computed in the browser (not cheat-proof); all challenges are loaded for the rating replay (`fetchAllChallenges`); profile is a live snapshot at challenge time. No Firestore rule change was needed.
 - **Next steps** (discussed, not built): server-side resolution + attribute calculation (Cloud Functions, needed for Strava anyway); weekly public snapshot of the arena profile; settings "Arena & privacy" (opt-in to compete, separate opt-in for Strava data); duel narration texts; then optional Strava import (only after Strava confirms the concept; plan B: Strava activities count privately only).
 
+## Missions, Kleos and weekly quests
+
+Missions and quests make a character stronger for the arena; the leaderboard stays arena-only.
+
+- **Missions** (`MISSIONS`, 6 so far: Courier to Corinth 2 h → Nemean Games 4 d, level gates 1–10). One mission per athlete at a time; away athletes can't fight or start another mission; an open arena challenge must be withdrawn first.
+- **Outcome** is decided when the athlete leaves (`startMission`, stored in `entry.mission.outcome`) and revealed with "Reveal result" after `endsAt` (`claimMission`). Odds (`missionOdds`): r = weighted score (attributes incl. gear, injury and Kleos) / difficulty; success = 1/(1+e^(−8(r−0.9))); brilliant = 1–4 % (higher when strong), injury = 1–4 % (higher when weak).
+- **Results**: brilliant = mission item + Golden Laurel (if not owned) + 2× Kleos; success = one unowned mission item (or 1.5× Kleos if all owned) + Kleos; failure = 25 % Kleos; injury = −10 % arena/mission attributes for 3 days and unavailable for 1 day (2 days after missions ≥ 48 h).
+- **Kleos** (`computeKleos`): replayed from `entry.missionLog` (missions + quests, last 100 entries): gain × (1 − k/50), −1 % at each 00:00 UTC. Adds 0.2 × Kleos to every discipline/mission score. Public as 0–5 stars (`kleosStars`, KLE column in the arena profile).
+- **Items with bonuses**: reward items in `ITEM_CATALOG` have `bonus` (e.g. Messenger Sandals +2 Pace); equipped bonuses count in arena and missions and show as striped "Gear" segment on the attribute bars; capped at +6 per attribute (`ITEM_BONUS_CAP`). Only `STARTER_ITEMS` are given to everyone; reward items must be earned.
+- **Weekly quests** (`QUESTS`, 3 of 7 per week and athlete, deterministic from week + athlete id; weeks start Monday 00:00 UTC): goals from the athlete's own activities (e.g. run 15 km, 300 push-ups, train on 5 days). Progress is private; claim gives Kleos (+ item for some). Claims stored in `entry.questClaims[weekKey]`.
+- Data lives in the athlete entry (`mission`, `missionLog`, `questClaims`); no Firestore rule change needed. Simulation stage: outcomes are decided in the browser (not cheat-proof), like the arena.
+- Ideas for later: festival games series (Isthmian, Nemean, Pythian, Olympic → title "Periodonikes"), Labours of Heracles for high levels, relay missions with several athletes, more items/real item images, rarer outcome details.
+
 ## Development workflow
 
 1. Edit `index.html` (and assets).

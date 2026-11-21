@@ -325,6 +325,39 @@
   .duel-actions .sub b{ color:var(--gold-light); }
   .duel-side .arena-portrait{ margin-bottom:2px; }
 
+  .a-kleos{ --c:#E8C26B; }
+  .split .seg-gear{ height:100%; background:repeating-linear-gradient(45deg, var(--c), var(--c) 3px, color-mix(in srgb, var(--c) 45%, transparent) 3px, color-mix(in srgb, var(--c) 45%, transparent) 6px); border-radius:0 999px 999px 0; }
+  .split .seg-train + .seg-gear{ margin-left:1px; }
+  .attr-split .gear{ color:var(--text); font-weight:700; }
+  .attr-legend .lg.gear{ background:repeating-linear-gradient(45deg, var(--gold), var(--gold) 2px, #6b5520 2px, #6b5520 4px); }
+  .kleos-sub{ font-size:11px; color:var(--muted); font-weight:500; }
+  .kleos-stars{ color:var(--c); letter-spacing:1px; font-size:13px; }
+  .attr-track.a-kleos > div{ background:linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), var(--c)); }
+  .item-pick-btn .bonus, .inv-item-slot .item-bonus{ display:block; font-size:10.5px; color:var(--gold-light); font-weight:600; }
+  .inv-item-slot .item-bonus{ font-size:8.5px; text-align:center; line-height:1.15; }
+  .busy-note{ font-size:12px; color:var(--gold-light); background:rgba(242,179,61,.1); border-radius:10px; padding:8px 10px; }
+  .title-note{ font-family:'Inter',sans-serif; font-size:11px; color:var(--muted); font-weight:500; }
+  .ms-head{ display:flex; align-items:center; gap:12px; }
+  .ms-ic{ width:40px; height:40px; border-radius:12px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .ms-txt{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .ms-txt b{ font-family:var(--font-display); font-size:15px; }
+  .ms-txt small{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .mission-status{ display:flex; flex-direction:column; gap:12px; }
+  .mission-status.ready{ border-color:rgba(242,179,61,.55); background:radial-gradient(80% 100% at 0% 0%, rgba(242,179,61,.14), transparent 70%), var(--surface); }
+  .mission-status.injured{ border-color:rgba(240,84,79,.4); background:radial-gradient(80% 100% at 0% 0%, rgba(240,84,79,.12), transparent 70%), var(--surface); }
+  .quest, .mission{ display:flex; flex-direction:column; gap:12px; }
+  .quest.claimed{ opacity:.65; }
+  .quest .reward{ font-size:11.5px; color:var(--gold-light); font-weight:600; white-space:nowrap; }
+  .quest-bar{ display:flex; align-items:center; gap:10px; }
+  .quest-bar .xp-track{ flex:1; height:8px; }
+  .quest-bar span{ font-size:11.5px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .mission.locked{ opacity:.55; }
+  .mission-meta{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+  .mission-meta .focus{ display:inline-block; font-size:10px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent); border-radius:6px; padding:2px 6px; margin-right:4px; }
+  .m-rewards{ margin-left:auto; color:var(--gold-light); font-weight:600; }
+  .m-rewards .owned{ opacity:.35; }
+  .btn-primary:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
+
   /* ===== Leaderboard ===== */
   .lb-row{ display:flex; align-items:center; gap:14px; padding:12px 14px; }
   .lb-rank{ width:34px; height:34px; border-radius:11px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--muted); flex-shrink:0; }
@@ -488,6 +521,7 @@
       <path d="M9.4 40.2h36.8c.5 0 .8.5.6 1-.6 1.4-2 2.2-3.6 2.2H11.6c-1.5 0-2.7-1.1-2.7-2.6 0-.3.2-.6.5-.6z"/>
     </g>
   </symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 3 3 5.5v15.5L9 18.5l6 2.5 6-2.5V3l-6 2.5z"/><path d="M9 3v15.5"/><path d="M15 5.5V21"/></symbol>
     <symbol id="i-laurel" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10.5 20.5C5.5 19 3.2 14 4.6 7.5"/><path d="M13.5 20.5C18.5 19 20.8 14 19.4 7.5"/></g>
       <g fill="currentColor" stroke="none">
@@ -566,6 +600,7 @@
     <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><svg class="i"><use href="#i-bag"/></svg>Inventory</button>
     <button class="drawer-item" data-tab="gymnasium" onclick="showScreen('gymnasium')"><svg class="i"><use href="#i-temple"/></svg>Gymnasium</button>
     <button class="drawer-item" data-tab="stadium" onclick="showScreen('stadium')"><svg class="i"><use href="#i-swords"/></svg>Stadium</button>
+    <button class="drawer-item" data-tab="missions" onclick="showScreen('missions')"><svg class="i"><use href="#i-map"/></svg>Missions</button>
     <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><svg class="i"><use href="#i-trophy"/></svg>Leaderboard</button>
     <div class="drawer-spacer"></div>
     <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><svg class="i"><use href="#i-settings"/></svg>Account</button>
@@ -701,8 +736,11 @@
         </div>
       </div>
 
+      <div id="missionStatusCard"></div>
+
       <p class="section-title">Attributes</p>
       <div class="card attr-card" id="attrCard"></div>
+      <div class="card" id="kleosCard"></div>
 
       <button class="btn-primary" onclick="openActivityModal('run')"><svg class="i"><use href="#i-plus"/></svg>Log Activity</button>
 
@@ -781,6 +819,25 @@
       <div id="stadiumChallengeList" class="list">
         <p class="hint">Loading…</p>
       </div>
+    </section>
+
+    <!-- MISSIONS -->
+    <section class="screen" id="screen-missions">
+      <div class="screen-head">
+        <div>
+          <p class="label">Beyond the arena</p>
+          <h1 class="title">Missions</h1>
+        </div>
+      </div>
+      <div id="missionsScreenStatus"></div>
+
+      <p class="section-title">Weekly quests <small id="questWeekLeft" class="title-note"></small></p>
+      <p class="hint" style="text-align:left;margin-top:-6px;">Goals from your own training this week. Only you see your progress.</p>
+      <div id="questList" class="list"></div>
+
+      <p class="section-title">Missions</p>
+      <p class="hint" style="text-align:left;margin-top:-6px;">Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
+      <div id="missionList" class="list"></div>
     </section>
 
     <!-- ACCOUNT -->
@@ -1149,8 +1206,38 @@ const ITEM_CATALOG = {
   dried_figs: { name: 'Dried Figs', icon: '🍇', slot: 'supplies' },
   laurel_charm: { name: 'Laurel Charm', icon: '🌿', slot: 'slot4' },
   lucky_coin: { name: 'Lucky Coin', icon: '🪙', slot: 'slot4' },
+  // Rewards from missions and weekly quests. `bonus` adds to attributes in the arena and on missions.
+  messenger_sandals: { name: 'Messenger Sandals', icon: '🩴', slot: 'equipment', bonus: { pace: 2 } },
+  rowing_gloves: { name: 'Rowing Gloves', icon: '🧤', slot: 'equipment', bonus: { strength: 1, endurance: 1 } },
+  spartan_wraps: { name: 'Spartan Hand Wraps', icon: '🥊', slot: 'equipment', bonus: { strength: 2, discipline: 1 } },
+  delphic_amulet: { name: 'Delphic Amulet', icon: '🧿', slot: 'slot4', bonus: { mental: 2 } },
+  pine_wreath: { name: 'Isthmian Pine Wreath', icon: '🌲', slot: 'slot4', bonus: { discipline: 2, mental: 1 } },
+  celery_wreath: { name: 'Nemean Celery Crown', icon: '🌿', slot: 'slot4', bonus: { endurance: 2, mental: 1 } },
+  golden_laurel: { name: 'Golden Laurel', icon: '👑', slot: 'clothing', bonus: { endurance: 1, pace: 1, strength: 1, mental: 1, discipline: 1 } },
+  honey_water: { name: 'Honey Water', icon: '🍯', slot: 'supplies', bonus: { endurance: 1 } },
+  olive_oil: { name: 'Olive Oil Flask', icon: '🫒', slot: 'supplies', bonus: { strength: 1 } },
+  sun_hat: { name: 'Petasos Sun Hat', icon: '👒', slot: 'clothing', bonus: { mental: 1, endurance: 1 } },
 };
-const STARTER_ITEMS = Object.keys(ITEM_CATALOG);
+// Everyone starts with these; all other items must be earned (missions, weekly quests)
+const STARTER_ITEMS = ['tunic_white', 'tunic_red', 'lion_sandals', 'sandals', 'headband', 'water_flask', 'dried_figs', 'laurel_charm', 'lucky_coin'];
+const ITEM_BONUS_CAP = 6; // max. bonus per attribute from all equipped items together
+
+function itemBonusText(item) {
+  if (!item || !item.bonus) return '';
+  return Object.entries(item.bonus).map(([k, v]) => `+${v} ${ATTR_ABBR[k] || k}`).join(' · ');
+}
+
+// Sum of the bonuses of all items the athlete wears, capped per attribute
+function equippedBonus(entry) {
+  const b = {};
+  if (!entry || !entry.equipped) return b;
+  Object.values(entry.equipped).forEach((id) => {
+    const item = id && ITEM_CATALOG[id];
+    if (!item || !item.bonus) return;
+    Object.entries(item.bonus).forEach(([k, v]) => { b[k] = Math.min(ITEM_BONUS_CAP, (b[k] || 0) + v); });
+  });
+  return b;
+}
 const SLOT_LABELS = { clothing: 'Clothing', equipment: 'Equipment', supplies: 'Supplies', slot4: 'Slot 4' };
 // Slot placeholders: emoji or inline SVG markup (clothing uses the tunic silhouette from the icon sprite)
 const SLOT_ICONS = { clothing: '<svg class="slot-svg"><use href="#i-tunic"/></svg>', equipment: '<svg class="slot-svg"><use href="#i-winged-sandal"/></svg>', supplies: '🍖', slot4: '❓' };
@@ -1238,6 +1325,7 @@ function renderInventory() {
         ${wornBy ? `<span class="worn">${wornBy.name}</span>` : ''}
         ${itemIconHtml(item, 34)}
         <span class="item-name">${item.name}</span>
+        ${item.bonus ? `<span class="item-bonus">${itemBonusText(item)}</span>` : ''}
       </div>`;
     });
     while (tiles.length < 4) tiles.push('<div class="inv-item-slot">?</div>');
@@ -1276,7 +1364,7 @@ function openItemPicker(slot) {
       return `
       <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
         ${itemIconHtml(item, 32)}
-        <span class="nm">${item.name}</span>
+        <span class="nm">${item.name}${item.bonus ? `<small class="bonus">${itemBonusText(item)}</small>` : ''}</span>
         ${isEquipped ? '<span class="tag">Equipped</span>' : ''}
       </button>`;
     }).join('')
@@ -1295,9 +1383,8 @@ function equipItem(itemId) {
   if (!entry || !pickerSlot) return;
   entry.equipped[pickerSlot] = itemId;
   persist();
-  renderEquipSlots();
-  renderInventory();
   closeItemPicker();
+  renderAthleteAndHero(); // gear bonuses change the attributes
 }
 
 function makeAthleteId() {
@@ -2264,12 +2351,14 @@ function computeAttrs(entry) {
   if (!entry) return [];
   ensureBaseAttrs(entry);
   const tp = computeTrainingPoints(entry.baseAttrs, entry.activities);
+  const gearB = equippedBonus(entry);
   return ATTRIBUTES.map((at) => {
     const base = entry.baseAttrs[at.key];
     // One decimal: a single session often adds less than 1 point and would otherwise show as 0
     const training = Math.round(tp[at.key] * 10) / 10;
     const maxTraining = Math.round(base * TRAINING.MAX_FACTOR);
-    return { key: at.key, name: at.name, base, training, maxTraining, value: Math.round(base + tp[at.key]), max: base + maxTraining };
+    const gear = gearB[at.key] || 0;
+    return { key: at.key, name: at.name, base, training, gear, maxTraining, value: Math.round(base + tp[at.key] + gear), max: base + maxTraining };
   });
 }
 
@@ -2280,7 +2369,7 @@ function attrClass(name) {
 
 function attrBarHtml(a, mini) {
   return `<div class="${mini ? 'attr-track-mini' : 'attr-track'} split">
-      <div class="seg-base" style="width:${a.base}%"></div><div class="seg-train" style="width:${a.training}%"></div>
+      <div class="seg-base" style="width:${a.base}%"></div><div class="seg-train" style="width:${a.training}%"></div>${a.gear ? `<div class="seg-gear" style="width:${a.gear}%"></div>` : ''}
       <span class="seg-max" style="left:${a.max}%"></span>
     </div>`;
 }
@@ -2290,11 +2379,11 @@ function renderAttrs(entry) {
     <div class="attr-row-wrap ${attrClass(a.name)}">
       <div class="attr-row">
         <span class="attr-name"><span class="attr-dot"></span>${a.name}</span>
-        <span class="attr-vals"><span class="val">${a.value}</span><span class="attr-split">${a.base} + <b>${a.training.toFixed(1)}</b></span></span>
+        <span class="attr-vals"><span class="val">${a.value}</span><span class="attr-split">${a.base} + <b>${a.training.toFixed(1)}</b>${a.gear ? ` + <span class="gear">${a.gear}</span>` : ''}</span></span>
       </div>
       ${attrBarHtml(a, false)}
     </div>`).join('')
-    + `<div class="attr-legend"><span><span class="lg base"></span>Base</span><span><span class="lg train"></span>Training</span><span><span class="lg max"></span>Max</span><span class="note">Training −1% daily at 00:00 UTC</span></div>`;
+    + `<div class="attr-legend"><span><span class="lg base"></span>Base</span><span><span class="lg train"></span>Training</span><span><span class="lg gear"></span>Gear</span><span><span class="lg max"></span>Max</span><span class="note">Training −1% daily at 00:00 UTC</span></div>`;
 }
 
 const AVATAR_VERSION = 19; // increment whenever a portrait/item image changes, forces a fresh load
@@ -2357,6 +2446,8 @@ function renderAthleteAndHero() {
 
   syncActiveAthleteIntoRoster();
   renderAttrs(active);
+  renderKleosCard(active);
+  renderMissionStatus();
   renderAthleteSelector();
   renderGymnasiumList();
   renderEquipSlots();
@@ -2387,17 +2478,25 @@ let arenaLoaded = false;      // ratings are only published once the duel histor
 function arenaKey(uid, athleteId) { return `${uid}_${athleteId}`; }
 
 // Current attribute values (base + training, unrounded) of an athlete
+// Values used in the arena and on missions: base + training + gear, reduced while injured, plus Kleos
 function arenaAttrValues(entry) {
   ensureBaseAttrs(entry);
   const tp = computeTrainingPoints(entry.baseAttrs, entry.activities);
+  const gear = equippedBonus(entry);
+  const injuryFactor = activeInjury(entry).injured ? 1 - MISSION_RULES.INJURY_PENALTY : 1;
   const v = {};
-  ATTRIBUTES.forEach((at) => { v[at.key] = entry.baseAttrs[at.key] + tp[at.key]; });
+  ATTRIBUTES.forEach((at) => { v[at.key] = (entry.baseAttrs[at.key] + tp[at.key] + (gear[at.key] || 0)) * injuryFactor; });
+  v.kleos = computeKleos(entry);
   return v;
 }
 
+// Kleos (glory from missions) adds experience to every discipline
+const KLEOS_WEIGHT = 0.2;
+function weightedScore(values, w) {
+  return Object.entries(w).reduce((s, [k, wt]) => s + wt * (values[k] || 0), 0) + KLEOS_WEIGHT * (values.kleos || 0);
+}
 function disciplineScore(values, discKey) {
-  const w = DISCIPLINES[discKey].w;
-  return Object.entries(w).reduce((s, [k, wt]) => s + wt * (values[k] || 0), 0);
+  return weightedScore(values, DISCIPLINES[discKey].w);
 }
 
 // Coarse public profile: 1-5 stars per attribute (no exact values are published)
@@ -2406,6 +2505,7 @@ function publicProfile(entry) {
   const v = arenaAttrValues(entry);
   const stars = {};
   ATTRIBUTES.forEach((at) => { stars[at.key] = starsFor(v[at.key]); });
+  stars.kleos = kleosStars(v.kleos);
   return { stars, portrait: portraitUrl(entry) };
 }
 
@@ -2468,6 +2568,8 @@ async function createChallenge() {
   syncActiveAthleteIntoRoster();
   const entry = activeAthleteEntry();
   if (!entry) return;
+  const busy = athleteBusyReason(entry);
+  if (busy) { alert(busy); return; }
   if (challengesCache.some((ch) => ch.status === 'open' && ch.creatorUid === currentUid && ch.creatorAthleteId === entry.id)) {
     alert(`${entry.name} already has an open challenge.`);
     return;
@@ -2503,6 +2605,8 @@ async function joinChallenge(challengeId) {
   if (!entry) return;
   const ch = challengesCache.find((x) => x.id === challengeId);
   if (!ch || ch.status !== 'open' || ch.creatorUid === currentUid) return;
+  const busy = athleteBusyReason(entry);
+  if (busy) { alert(busy); return; }
   if (duelsToday(entry.id) >= ARENA.DAILY_DUELS) {
     alert(`${entry.name} has fought ${ARENA.DAILY_DUELS} duels today. Come back tomorrow (00:00 UTC).`);
     return;
@@ -2573,10 +2677,11 @@ async function loadChallenges() {
 }
 
 function starsHtml(stars) {
-  return `<div class="star-grid">${ATTRIBUTES.map((at) => {
-    const n = (stars && stars[at.key]) || 1;
-    return `<div class="sg ${attrClass(at.name)}"><span class="ab">${ATTR_ABBR[at.key]}</span><span class="dots">${'<i class="on"></i>'.repeat(n)}${'<i></i>'.repeat(5 - n)}</span></div>`;
-  }).join('')}</div>`;
+  const cols = ATTRIBUTES.map((at) => ({ cls: attrClass(at.name), ab: ATTR_ABBR[at.key], n: (stars && stars[at.key]) || 1 }));
+  if (stars && stars.kleos != null) cols.push({ cls: 'a-kleos', ab: 'KLE', n: stars.kleos });
+  return `<div class="star-grid" style="grid-template-columns:repeat(${cols.length},1fr)">${cols.map((col) =>
+    `<div class="sg ${col.cls}"><span class="ab">${col.ab}</span><span class="dots">${'<i class="on"></i>'.repeat(col.n)}${'<i></i>'.repeat(5 - col.n)}</span></div>`
+  ).join('')}</div>`;
 }
 
 function arenaRecord(r) {
@@ -2600,6 +2705,7 @@ function renderArenaMe() {
       </div>
       <div class="arena-rating"><span class="num">${Math.round(r.rating)}</span><small>Rating</small></div>
     </div>
+    ${athleteBusyReason(entry) ? `<div class="busy-note">${athleteBusyReason(entry)}</div>` : ''}
     <div class="arena-me-foot"><span>Duels left today</span><span class="pips">${'<i class="on"></i>'.repeat(left)}${'<i></i>'.repeat(ARENA.DAILY_DUELS - left)}</span></div>`;
 }
 
@@ -2677,6 +2783,309 @@ function renderChallengeList() {
     (doneHtml || '<p class="hint">No duels fought yet.</p>');
 }
 
+// ---------- Missions, Kleos and weekly quests ----------
+// Missions: send an athlete away for hours or days; the outcome depends on level and attributes.
+// Rewards are items and Kleos (glory). Kleos counts in every duel, fades 1% per day.
+// Weekly quests: private goals from your own real activities, rewarded with Kleos and items.
+const MISSION_RULES = { INJURY_PENALTY: 0.10, INJURY_DAYS: 3 };
+const KLEOS = { MAX: 50, DAILY_DECAY: 0.01 };
+const HOUR_MS = 3600000;
+
+const MISSIONS = {
+  courier:  { name: 'Courier to Corinth', icon: '📜', desc: 'Carry an urgent message across the Isthmus.', hours: 2, minLevel: 1, w: { endurance: 0.5, pace: 0.5 }, difficulty: 30, kleos: 3, items: ['messenger_sandals'] },
+  regatta:  { name: 'Regatta at Piraeus', icon: '🚣', desc: 'Row for the honour of your polis in the harbour race.', hours: 6, minLevel: 2, w: { endurance: 0.5, strength: 0.5 }, difficulty: 34, kleos: 5, items: ['rowing_gloves'] },
+  delphi:   { name: 'Pilgrimage to Delphi', icon: '🏔️', desc: 'Run the mountain paths to consult the Oracle.', hours: 24, minLevel: 3, w: { endurance: 0.6, mental: 0.4 }, difficulty: 38, kleos: 8, items: ['delphic_amulet', 'sun_hat'] },
+  agoge:    { name: 'Spartan Agoge', icon: '🛡️', desc: 'Survive two days of Spartan drill.', hours: 48, minLevel: 5, w: { discipline: 0.5, mental: 0.3, strength: 0.2 }, difficulty: 44, kleos: 12, items: ['spartan_wraps'] },
+  isthmian: { name: 'Isthmian Games', icon: '🌲', desc: 'Compete for the pine wreath at Corinth.', hours: 72, minLevel: 7, w: { endurance: 0.2, pace: 0.2, strength: 0.2, mental: 0.2, discipline: 0.2 }, difficulty: 50, kleos: 18, items: ['pine_wreath'] },
+  nemean:   { name: 'Nemean Games', icon: '🦁', desc: 'Win the celery crown in the valley of Nemea.', hours: 96, minLevel: 10, w: { strength: 0.3, endurance: 0.3, pace: 0.2, mental: 0.2 }, difficulty: 56, kleos: 22, items: ['celery_wreath'] },
+};
+const MISSION_ORDER = Object.keys(MISSIONS);
+
+// Probabilities: success depends on score/difficulty; brilliant results and injuries are rare (1-4% each)
+function missionOdds(entry, missionId) {
+  const m = MISSIONS[missionId];
+  const r = weightedScore(arenaAttrValues(entry), m.w) / m.difficulty;
+  const success = 1 / (1 + Math.exp(-8 * (r - 0.9)));
+  return { success, brilliant: 0.01 + 0.03 * success, injury: 0.01 + 0.03 * (1 - success) };
+}
+
+function ownsItem(id) { return accountInventory.includes(id); }
+
+// Kleos replayed from the mission/quest log: asymptotic towards KLEOS.MAX, -1% at each 00:00 UTC
+function computeKleos(entry, now) {
+  now = now || Date.now();
+  const events = (entry.missionLog || [])
+    .map((e) => ({ t: Date.parse(e.at), k: e.kleos || 0 }))
+    .filter((e) => e.t && e.t <= now)
+    .sort((a, b) => a.t - b.t);
+  let k = 0, last = null;
+  const decayTo = (to) => {
+    if (last == null) return;
+    const n = Math.floor(to / DAY_MS) - Math.floor(last / DAY_MS);
+    if (n > 0) k *= Math.pow(1 - KLEOS.DAILY_DECAY, n);
+  };
+  events.forEach((e) => { decayTo(e.t); last = e.t; k += e.k * Math.max(0, 1 - k / KLEOS.MAX); });
+  decayTo(now);
+  return k;
+}
+function kleosStars(k) { return Math.max(0, Math.min(5, Math.round((k || 0) / 10))); }
+
+// Active injury from the log (attribute penalty / not available)
+function activeInjury(entry, now) {
+  now = now || Date.now();
+  let injuredUntil = 0, unavailableUntil = 0;
+  (entry.missionLog || []).forEach((e) => {
+    if (e.result !== 'injury') return;
+    injuredUntil = Math.max(injuredUntil, Date.parse(e.injuredUntil) || 0);
+    unavailableUntil = Math.max(unavailableUntil, Date.parse(e.unavailableUntil) || 0);
+  });
+  return { injured: injuredUntil > now, unavailable: unavailableUntil > now, injuredUntil, unavailableUntil };
+}
+
+function fmtDuration(ms) {
+  if (ms <= 0) return 'now';
+  const mins = Math.ceil(ms / 60000);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60), d = Math.floor(h / 24);
+  if (d > 0) return h % 24 ? `${d} d ${h % 24} h` : `${d} d`;
+  return `${h} h ${mins % 60 ? (mins % 60) + ' min' : ''}`.trim();
+}
+
+// Why an athlete can't fight or start a mission right now (or null)
+function athleteBusyReason(entry) {
+  if (!entry) return null;
+  if (entry.mission) {
+    const left = Date.parse(entry.mission.endsAt) - Date.now();
+    const m = MISSIONS[entry.mission.id];
+    return left > 0 ? `${entry.name} is away on "${m ? m.name : 'a mission'}" (back in ${fmtDuration(left)}).`
+                    : `${entry.name} is back from a mission – claim the result first.`;
+  }
+  const inj = activeInjury(entry);
+  if (inj.unavailable) return `${entry.name} is injured and resting (${fmtDuration(inj.unavailableUntil - Date.now())}).`;
+  return null;
+}
+
+function startMission(missionId) {
+  syncActiveAthleteIntoRoster();
+  const entry = activeAthleteEntry();
+  const m = MISSIONS[missionId];
+  if (!entry || !m) return;
+  const busy = athleteBusyReason(entry);
+  if (busy) { alert(busy); return; }
+  if (challengesCache.some((ch) => ch.status === 'open' && ch.creatorUid === currentUid && ch.creatorAthleteId === entry.id)) {
+    alert(`${entry.name} has an open arena challenge. Withdraw it before leaving on a mission.`);
+    return;
+  }
+  if (athleteLevel(entry) < m.minLevel) { alert(`Requires level ${m.minLevel}.`); return; }
+
+  // The outcome is decided when the athlete leaves and revealed on return
+  const odds = missionOdds(entry, missionId);
+  const start = Date.now(), end = start + m.hours * HOUR_MS;
+  const roll = Math.random();
+  let result;
+  if (roll < odds.injury) result = 'injury';
+  else if (roll < odds.injury + odds.brilliant) result = 'brilliant';
+  else if (roll < odds.injury + odds.brilliant + odds.success * (1 - odds.injury - odds.brilliant)) result = 'success';
+  else result = 'failure';
+
+  const outcome = { result, kleos: 0, items: [] };
+  const unowned = m.items.filter((id) => !ownsItem(id));
+  if (result === 'success' || result === 'brilliant') {
+    outcome.kleos = m.kleos * (result === 'brilliant' ? 2 : 1);
+    if (unowned.length) outcome.items.push(unowned[Math.floor(Math.random() * unowned.length)]);
+    else outcome.kleos *= 1.5; // already own the mission items: more glory instead
+    if (result === 'brilliant' && !ownsItem('golden_laurel')) outcome.items.push('golden_laurel');
+  } else if (result === 'failure') {
+    outcome.kleos = m.kleos * 0.25;
+  } else {
+    outcome.injuredUntil = new Date(end + MISSION_RULES.INJURY_DAYS * DAY_MS).toISOString();
+    outcome.unavailableUntil = new Date(end + (m.hours >= 48 ? 2 : 1) * DAY_MS).toISOString();
+  }
+  entry.mission = { id: missionId, startedAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString(), outcome };
+  persist();
+  showToast(`${m.icon} <b>${entry.name}</b> left for ${m.name} · back in ${fmtDuration(end - start)}`);
+  renderMissions();
+  renderMissionStatus();
+}
+
+function claimMission() {
+  syncActiveAthleteIntoRoster();
+  const entry = activeAthleteEntry();
+  if (!entry || !entry.mission) return;
+  if (Date.parse(entry.mission.endsAt) > Date.now()) return;
+  const { id, endsAt, outcome } = entry.mission;
+  const m = MISSIONS[id] || { name: 'Mission', icon: '📜' };
+  const items = (outcome.items || []).filter((it) => !ownsItem(it));
+  items.forEach((it) => accountInventory.push(it));
+  entry.missionLog = (entry.missionLog || []).concat([{
+    type: 'mission', id, at: endsAt, result: outcome.result, kleos: outcome.kleos || 0, items,
+    injuredUntil: outcome.injuredUntil || null, unavailableUntil: outcome.unavailableUntil || null,
+  }]).slice(-100);
+  entry.mission = null;
+  persist();
+  const itemTxt = items.map((it) => `${ITEM_CATALOG[it].icon} ${ITEM_CATALOG[it].name}`).join(', ');
+  const msg = {
+    brilliant: `🌟 <b>Glorious!</b> ${m.name}: +${Math.round(outcome.kleos)} Kleos${itemTxt ? ' · ' + itemTxt : ''}`,
+    success: `✅ <b>Success</b> ${m.name}: +${Math.round(outcome.kleos)} Kleos${itemTxt ? ' · ' + itemTxt : ''}`,
+    failure: `<b>Failed</b> ${m.name}: +${Math.round(outcome.kleos * 10) / 10} Kleos for the effort`,
+    injury: `🩹 <b>Injured</b> during ${m.name}: −${MISSION_RULES.INJURY_PENALTY * 100}% attributes for ${MISSION_RULES.INJURY_DAYS} days`,
+  }[outcome.result];
+  showToast(msg);
+  renderAthleteAndHero();
+  renderMissions();
+}
+
+// ----- Weekly quests (private, from your own activities) -----
+const QUESTS = {
+  pheidippides: { name: "Pheidippides' Run", icon: '🏃', desc: 'Run 15 km this week', target: 15, unit: 'km', kleos: 6, item: 'honey_water',
+    measure: (acts) => acts.filter((a) => a.type === 'run').reduce((s, a) => s + (a.km || 0), 0) },
+  milon: { name: "Milo's Strength", icon: '💪', desc: 'Do 300 push-ups this week', target: 300, unit: 'reps', kleos: 6, item: 'olive_oil',
+    measure: (acts) => acts.reduce((s, a) => s + (a.exercises || []).filter((ex) => ex.id === 'pushups').reduce((t, ex) => t + ex.reps, 0), 0) },
+  odysseus: { name: "Odysseus' Perseverance", icon: '⛵', desc: 'Train on 5 different days', target: 5, unit: 'days', kleos: 8,
+    measure: (acts) => new Set(acts.filter((a) => a.type !== 'sleep').map((a) => new Date(activitySortTime(a)).toISOString().slice(0, 10))).size },
+  hermes: { name: "Hermes' Journey", icon: '🚴', desc: 'Ride 50 km this week', target: 50, unit: 'km', kleos: 6,
+    measure: (acts) => acts.filter((a) => a.type === 'ride').reduce((s, a) => s + (a.km || 0), 0) },
+  endymion: { name: "Endymion's Rest", icon: '🌙', desc: 'Sleep 7 h or more on 5 nights', target: 5, unit: 'nights', kleos: 5,
+    measure: (acts) => acts.filter((a) => a.type === 'sleep' && (a.mins || 0) >= 420).length },
+  heracles: { name: 'Labour of Heracles', icon: '🦁', desc: 'Earn 600 FP this week', target: 600, unit: 'FP', kleos: 8,
+    measure: (acts) => acts.reduce((s, a) => s + computeActivityScore(a), 0) },
+  atalanta: { name: "Atalanta's Stride", icon: '🏹', desc: 'Log 3 runs or walks of 5 km or more', target: 3, unit: 'times', kleos: 6,
+    measure: (acts) => acts.filter((a) => (a.type === 'run' || a.type === 'walk') && (a.km || 0) >= 5).length },
+};
+const QUESTS_PER_WEEK = 3;
+
+// Weeks start Monday 00:00 UTC
+function weekStartUTC(now) {
+  const d = new Date(now || Date.now());
+  const day = (d.getUTCDay() + 6) % 7;
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - day * DAY_MS;
+}
+function weekKey(now) { return new Date(weekStartUTC(now)).toISOString().slice(0, 10); }
+
+function weeklyQuestIds(entry, now) {
+  const rand = seededRandom(weekKey(now) + (entry.id || ''));
+  const ids = Object.keys(QUESTS);
+  for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  return ids.slice(0, QUESTS_PER_WEEK);
+}
+
+function questProgress(entry, questId, now) {
+  const start = weekStartUTC(now), end = start + 7 * DAY_MS;
+  const acts = (entry.activities || []).filter((a) => { const t = activitySortTime(a); return t >= start && t < end; });
+  const q = QUESTS[questId];
+  const value = q.measure(acts);
+  const claimed = ((entry.questClaims || {})[weekKey(now)] || []).includes(questId);
+  return { value, done: value >= q.target, claimed };
+}
+
+function claimQuest(questId) {
+  syncActiveAthleteIntoRoster();
+  const entry = activeAthleteEntry();
+  const q = QUESTS[questId];
+  if (!entry || !q) return;
+  const p = questProgress(entry, questId);
+  if (!p.done || p.claimed) return;
+  const wk = weekKey();
+  entry.questClaims = entry.questClaims || {};
+  entry.questClaims[wk] = (entry.questClaims[wk] || []).concat([questId]);
+  const items = q.item && !ownsItem(q.item) ? [q.item] : [];
+  items.forEach((it) => accountInventory.push(it));
+  entry.missionLog = (entry.missionLog || []).concat([{ type: 'quest', id: questId, at: new Date().toISOString(), result: 'success', kleos: q.kleos, items }]).slice(-100);
+  persist();
+  showToast(`${q.icon} <b>${q.name}</b> complete: +${q.kleos} Kleos${items.length ? ' · ' + ITEM_CATALOG[items[0]].icon + ' ' + ITEM_CATALOG[items[0]].name : ''}`);
+  renderAthleteAndHero();
+  renderMissions();
+}
+
+// ----- Rendering -----
+function renderMissionStatus() {
+  const entry = activeAthleteEntry();
+  const html = (() => {
+    if (!entry) return '';
+    if (entry.mission) {
+      const m = MISSIONS[entry.mission.id] || { name: 'Mission', icon: '📜', hours: 1 };
+      const start = Date.parse(entry.mission.startedAt), end = Date.parse(entry.mission.endsAt), now = Date.now();
+      const pct = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+      if (now >= end) {
+        return `<div class="card mission-status ready"><div class="ms-head"><span class="ms-ic">${m.icon}</span><div class="ms-txt"><b>${entry.name} is back!</b><small>${m.name}</small></div>
+          <button class="btn-primary btn-sm" onclick="claimMission()">Reveal result</button></div></div>`;
+      }
+      return `<div class="card mission-status"><div class="ms-head"><span class="ms-ic">${m.icon}</span><div class="ms-txt"><b>${m.name}</b><small>${entry.name} returns in ${fmtDuration(end - now)}</small></div></div>
+        <div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div></div>`;
+    }
+    const inj = activeInjury(entry);
+    if (inj.injured) {
+      return `<div class="card mission-status injured"><div class="ms-head"><span class="ms-ic">🩹</span><div class="ms-txt"><b>${entry.name} is injured</b>
+        <small>${inj.unavailable ? `Resting for ${fmtDuration(inj.unavailableUntil - Date.now())}, ` : ''}−${MISSION_RULES.INJURY_PENALTY * 100}% attributes for ${fmtDuration(inj.injuredUntil - Date.now())}</small></div></div></div>`;
+    }
+    return `<button class="list-btn" onclick="showScreen('missions')"><span class="list-btn-ic">🗺️</span><span class="list-btn-text"><span class="t">${entry.name} is ready for a mission</span>
+      <span class="s">Earn items and Kleos · weekly quests</span></span><span class="chevron"><svg class="i"><use href="#i-right"/></svg></span></button>`;
+  })();
+  ['missionStatusCard', 'missionsScreenStatus'].forEach((id) => { const el = document.getElementById(id); if (el) el.innerHTML = html; });
+}
+
+function renderKleosCard(entry) {
+  const el = document.getElementById('kleosCard');
+  if (!el || !entry) return;
+  const k = computeKleos(entry);
+  const n = kleosStars(k);
+  el.innerHTML = `
+    <div class="attr-row a-kleos"><span class="attr-name"><span class="attr-dot"></span>Kleos <small class="kleos-sub">glory</small></span>
+      <span class="attr-vals"><span class="val">${k.toFixed(1)}</span><span class="kleos-stars">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span></span></div>
+    <div class="attr-track a-kleos"><div style="width:${(k / KLEOS.MAX) * 100}%"></div></div>
+    <p class="hint" style="text-align:left;margin:8px 0 0;">From missions and weekly quests. Counts in every duel and is public (as stars). Fades 1% daily.</p>`;
+}
+
+function renderMissions() {
+  renderMissionStatus();
+  const entry = activeAthleteEntry();
+  const qEl = document.getElementById('questList'), mEl = document.getElementById('missionList');
+  if (!entry || !qEl || !mEl) return;
+  syncActiveAthleteIntoRoster();
+  const wkEnd = weekStartUTC() + 7 * DAY_MS;
+  document.getElementById('questWeekLeft').textContent = `resets in ${fmtDuration(wkEnd - Date.now())}`;
+  qEl.innerHTML = weeklyQuestIds(entry).map((id) => {
+    const q = QUESTS[id], p = questProgress(entry, id);
+    const pct = Math.min(100, (p.value / q.target) * 100);
+    const val = Number.isInteger(p.value) ? p.value : p.value.toFixed(1);
+    const reward = `+${q.kleos} Kleos${q.item && !ownsItem(q.item) ? ' · ' + ITEM_CATALOG[q.item].icon : ''}`;
+    return `
+    <div class="card quest ${p.claimed ? 'claimed' : ''}">
+      <div class="ms-head"><span class="ms-ic">${q.icon}</span><div class="ms-txt"><b>${q.name}</b><small>${q.desc}</small></div>
+        ${p.claimed ? '<span class="badge gold">Done</span>' : p.done ? `<button class="btn-primary btn-sm" onclick="claimQuest('${id}')">Claim</button>` : `<span class="reward">${reward}</span>`}</div>
+      <div class="quest-bar"><div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div><span>${val} / ${q.target} ${q.unit}</span></div>
+    </div>`;
+  }).join('');
+
+  const busy = athleteBusyReason(entry);
+  const lvl = athleteLevel(entry);
+  mEl.innerHTML = MISSION_ORDER.map((id) => {
+    const m = MISSIONS[id];
+    const locked = lvl < m.minLevel;
+    const odds = missionOdds(entry, id);
+    const pct = Math.round(odds.success * 100);
+    const focus = Object.keys(m.w).filter((k) => m.w[k] >= 0.3 || Object.keys(m.w).length <= 2).map((k) => `<span class="focus ${attrClass(ATTRIBUTES.find((a) => a.key === k).name)}">${ATTR_ABBR[k]}</span>`).join('');
+    const items = m.items.map((it) => `<span class="${ownsItem(it) ? 'owned' : ''}" title="${ITEM_CATALOG[it].name}${ownsItem(it) ? ' (owned)' : ''}">${ITEM_CATALOG[it].icon}</span>`).join('');
+    return `
+    <div class="card mission ${locked ? 'locked' : ''}">
+      <div class="ms-head"><span class="ms-ic">${m.icon}</span><div class="ms-txt"><b>${m.name}</b><small>${m.desc}</small></div></div>
+      <div class="mission-meta">
+        <span>⏱ ${fmtDuration(m.hours * HOUR_MS)}</span><span>${focus}</span><span class="m-rewards">${items} +${m.kleos} Kleos</span>
+      </div>
+      <div class="duel-actions">
+        <span class="sub">${locked ? `🔒 Requires level ${m.minLevel}` : `Success chance: <b>${pct}%</b>`}</span>
+        <button class="btn-primary btn-sm" ${locked || busy ? 'disabled' : ''} onclick="startMission('${id}')">Send ${entry.name}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+setInterval(() => {
+  const s = document.body.dataset.screen;
+  if (s === 'missions') renderMissions();
+  else if (s === 'athlete') renderMissionStatus();
+}, 30000);
+
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -2694,6 +3103,7 @@ function showScreen(name) {
   if (name === 'inventory') renderInventory();
   if (name === 'stadium') loadChallenges();
   if (name === 'account') loadAccountScreen();
+  if (name === 'missions') { renderMissions(); if (!arenaLoaded && window.fb && window.fb.fetchChallenges) refreshArenaData().then(renderMissions).catch(() => {}); }
 }
 
 function openDrawer() {
