@@ -356,6 +356,14 @@
   .mission-meta .focus{ display:inline-block; font-size:10px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent); border-radius:6px; padding:2px 6px; margin-right:4px; }
   .m-rewards{ margin-left:auto; color:var(--gold-light); font-weight:600; }
   .m-rewards .owned{ opacity:.35; }
+  .tier-1{ --tier:#D08A4E; } .tier-2{ --tier:#C4CCD6; } .tier-3{ --tier:#F2C14E; } .tier-4{ --tier:#B48CFF; }
+  .tier-tag{ display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.03em; color:var(--tier); background:color-mix(in srgb, var(--tier) 15%, transparent);
+    border-radius:6px; padding:1px 6px; vertical-align:middle; white-space:nowrap; }
+  .tier-badge{ font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--tier); border:1px solid color-mix(in srgb, var(--tier) 50%, transparent);
+    border-radius:999px; padding:4px 9px; flex-shrink:0; }
+  .loot-row{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .loot-label{ font-size:11px; color:var(--muted); margin-right:2px; }
+  .inv-item-slot.filled.tier-1, .inv-item-slot.filled.tier-2, .inv-item-slot.filled.tier-3, .inv-item-slot.filled.tier-4{ box-shadow:inset 0 -3px 0 var(--tier); }
   .btn-primary:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
 
   /* ===== Leaderboard ===== */
@@ -1206,21 +1214,47 @@ const ITEM_CATALOG = {
   dried_figs: { name: 'Dried Figs', icon: '🍇', slot: 'supplies' },
   laurel_charm: { name: 'Laurel Charm', icon: '🌿', slot: 'slot4' },
   lucky_coin: { name: 'Lucky Coin', icon: '🪙', slot: 'slot4' },
-  // Rewards from missions and weekly quests. `bonus` adds to attributes in the arena and on missions.
-  messenger_sandals: { name: 'Messenger Sandals', icon: '🩴', slot: 'equipment', bonus: { pace: 2 } },
-  rowing_gloves: { name: 'Rowing Gloves', icon: '🧤', slot: 'equipment', bonus: { strength: 1, endurance: 1 } },
-  spartan_wraps: { name: 'Spartan Hand Wraps', icon: '🥊', slot: 'equipment', bonus: { strength: 2, discipline: 1 } },
-  delphic_amulet: { name: 'Delphic Amulet', icon: '🧿', slot: 'slot4', bonus: { mental: 2 } },
-  pine_wreath: { name: 'Isthmian Pine Wreath', icon: '🌲', slot: 'slot4', bonus: { discipline: 2, mental: 1 } },
-  celery_wreath: { name: 'Nemean Celery Crown', icon: '🌿', slot: 'slot4', bonus: { endurance: 2, mental: 1 } },
-  golden_laurel: { name: 'Golden Laurel', icon: '👑', slot: 'clothing', bonus: { endurance: 1, pace: 1, strength: 1, mental: 1, discipline: 1 } },
-  honey_water: { name: 'Honey Water', icon: '🍯', slot: 'supplies', bonus: { endurance: 1 } },
-  olive_oil: { name: 'Olive Oil Flask', icon: '🫒', slot: 'supplies', bonus: { strength: 1 } },
-  sun_hat: { name: 'Petasos Sun Hat', icon: '👒', slot: 'clothing', bonus: { mental: 1, endurance: 1 } },
+  // Reward items: `tier` 1 Bronze, 2 Silver, 3 Gold, 4 Olympian (elite). Missions/quests drop a random
+  // item of a rolled tier, so new items only need to be added here. `bonus` counts in arena and missions.
+  // Bronze (≈ +2 in total)
+  messenger_sandals: { name: 'Messenger Sandals', icon: '🩴', slot: 'equipment', tier: 1, bonus: { pace: 2 } },
+  rowing_gloves: { name: 'Rowing Gloves', icon: '🧤', slot: 'equipment', tier: 1, bonus: { strength: 1, endurance: 1 } },
+  honey_water: { name: 'Honey Water', icon: '🍯', slot: 'supplies', tier: 1, bonus: { endurance: 2 } },
+  olive_oil: { name: 'Olive Oil Flask', icon: '🫒', slot: 'supplies', tier: 1, bonus: { strength: 1, discipline: 1 } },
+  sun_hat: { name: 'Petasos Sun Hat', icon: '👒', slot: 'clothing', tier: 1, bonus: { mental: 1, endurance: 1 } },
+  // Silver (≈ +3)
+  delphic_amulet: { name: 'Delphic Amulet', icon: '🧿', slot: 'slot4', tier: 2, bonus: { mental: 2, discipline: 1 } },
+  spartan_wraps: { name: 'Spartan Hand Wraps', icon: '🥊', slot: 'equipment', tier: 2, bonus: { strength: 2, discipline: 1 } },
+  linen_chiton: { name: 'Fine Linen Chiton', icon: '👘', slot: 'clothing', tier: 2, bonus: { endurance: 2, pace: 1 } },
+  black_broth: { name: 'Spartan Black Broth', icon: '🥣', slot: 'supplies', tier: 2, bonus: { strength: 2, mental: 1 } },
+  // Gold (≈ +5)
+  pine_wreath: { name: 'Isthmian Pine Wreath', icon: '🌲', slot: 'slot4', tier: 3, bonus: { discipline: 2, mental: 2, endurance: 1 } },
+  celery_wreath: { name: 'Nemean Celery Crown', icon: '🌿', slot: 'slot4', tier: 3, bonus: { endurance: 2, mental: 2, pace: 1 } },
+  thessalian_javelin: { name: 'Thessalian Javelin', icon: '🔱', slot: 'equipment', tier: 3, bonus: { pace: 2, strength: 2, endurance: 1 } },
+  // Olympian (≈ +8, very rare)
+  golden_laurel: { name: 'Golden Laurel', icon: '👑', slot: 'clothing', tier: 4, bonus: { endurance: 2, pace: 2, strength: 2, mental: 1, discipline: 1 } },
+  talaria: { name: 'Talaria of Hermes', icon: '🕊️', slot: 'equipment', tier: 4, bonus: { pace: 3, endurance: 3, discipline: 2 } },
+  olympic_crown: { name: 'Olympic Olive Crown', icon: '🏵️', slot: 'slot4', tier: 4, bonus: { mental: 3, discipline: 3, strength: 2 } },
 };
 // Everyone starts with these; all other items must be earned (missions, weekly quests)
 const STARTER_ITEMS = ['tunic_white', 'tunic_red', 'lion_sandals', 'sandals', 'headband', 'water_flask', 'dried_figs', 'laurel_charm', 'lucky_coin'];
 const ITEM_BONUS_CAP = 6; // max. bonus per attribute from all equipped items together
+const ITEM_TIERS = { 1: 'Bronze', 2: 'Silver', 3: 'Gold', 4: 'Olympian' };
+
+function itemsOfTier(tier) { return Object.keys(ITEM_CATALOG).filter((id) => ITEM_CATALOG[id].tier === tier); }
+
+// Random item of a tier the account doesn't own yet; falls back to the next lower tiers, else null
+function pickRewardItem(tier) {
+  for (let t = tier; t >= 1; t--) {
+    const pool = itemsOfTier(t).filter((id) => !accountInventory.includes(id));
+    if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+  }
+  return null;
+}
+
+function tierTag(item) {
+  return item && item.tier ? `<span class="tier-tag tier-${item.tier}">${ITEM_TIERS[item.tier]}</span>` : '';
+}
 
 function itemBonusText(item) {
   if (!item || !item.bonus) return '';
@@ -1321,7 +1355,7 @@ function renderInventory() {
     const tiles = owned.map((id) => {
       const item = ITEM_CATALOG[id];
       const wornBy = findEquippedByAthlete(id);
-      return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''}" title="${item.name}${wornBy ? ' – worn by ' + wornBy.name : ''}">
+      return `<div class="inv-item-slot filled ${wornBy ? 'equipped' : ''} ${item.tier ? 'tier-' + item.tier : ''}" title="${item.name}${wornBy ? ' – worn by ' + wornBy.name : ''}">
         ${wornBy ? `<span class="worn">${wornBy.name}</span>` : ''}
         ${itemIconHtml(item, 34)}
         <span class="item-name">${item.name}</span>
@@ -1364,7 +1398,7 @@ function openItemPicker(slot) {
       return `
       <button class="item-pick-btn ${isEquipped ? 'equipped' : ''}" onclick="equipItem('${id}')">
         ${itemIconHtml(item, 32)}
-        <span class="nm">${item.name}${item.bonus ? `<small class="bonus">${itemBonusText(item)}</small>` : ''}</span>
+        <span class="nm">${item.name} ${tierTag(item)}${item.bonus ? `<small class="bonus">${itemBonusText(item)}</small>` : ''}</span>
         ${isEquipped ? '<span class="tag">Equipped</span>' : ''}
       </button>`;
     }).join('')
@@ -2792,14 +2826,35 @@ const KLEOS = { MAX: 50, DAILY_DECAY: 0.01 };
 const HOUR_MS = 3600000;
 
 const MISSIONS = {
-  courier:  { name: 'Courier to Corinth', icon: '📜', desc: 'Carry an urgent message across the Isthmus.', hours: 2, minLevel: 1, w: { endurance: 0.5, pace: 0.5 }, difficulty: 30, kleos: 3, items: ['messenger_sandals'] },
-  regatta:  { name: 'Regatta at Piraeus', icon: '🚣', desc: 'Row for the honour of your polis in the harbour race.', hours: 6, minLevel: 2, w: { endurance: 0.5, strength: 0.5 }, difficulty: 34, kleos: 5, items: ['rowing_gloves'] },
-  delphi:   { name: 'Pilgrimage to Delphi', icon: '🏔️', desc: 'Run the mountain paths to consult the Oracle.', hours: 24, minLevel: 3, w: { endurance: 0.6, mental: 0.4 }, difficulty: 38, kleos: 8, items: ['delphic_amulet', 'sun_hat'] },
-  agoge:    { name: 'Spartan Agoge', icon: '🛡️', desc: 'Survive two days of Spartan drill.', hours: 48, minLevel: 5, w: { discipline: 0.5, mental: 0.3, strength: 0.2 }, difficulty: 44, kleos: 12, items: ['spartan_wraps'] },
-  isthmian: { name: 'Isthmian Games', icon: '🌲', desc: 'Compete for the pine wreath at Corinth.', hours: 72, minLevel: 7, w: { endurance: 0.2, pace: 0.2, strength: 0.2, mental: 0.2, discipline: 0.2 }, difficulty: 50, kleos: 18, items: ['pine_wreath'] },
-  nemean:   { name: 'Nemean Games', icon: '🦁', desc: 'Win the celery crown in the valley of Nemea.', hours: 96, minLevel: 10, w: { strength: 0.3, endurance: 0.3, pace: 0.2, mental: 0.2 }, difficulty: 56, kleos: 22, items: ['celery_wreath'] },
+  courier:  { name: 'Courier to Corinth', icon: '📜', desc: 'Carry an urgent message across the Isthmus.', hours: 2, minLevel: 1, w: { endurance: 0.5, pace: 0.5 }, difficulty: 30, kleos: 3 },
+  regatta:  { name: 'Regatta at Piraeus', icon: '🚣', desc: 'Row for the honour of your polis in the harbour race.', hours: 6, minLevel: 2, w: { endurance: 0.5, strength: 0.5 }, difficulty: 34, kleos: 5 },
+  delphi:   { name: 'Pilgrimage to Delphi', icon: '🏔️', desc: 'Run the mountain paths to consult the Oracle.', hours: 24, minLevel: 3, w: { endurance: 0.6, mental: 0.4 }, difficulty: 38, kleos: 8 },
+  agoge:    { name: 'Spartan Agoge', icon: '🛡️', desc: 'Survive two days of Spartan drill.', hours: 48, minLevel: 5, w: { discipline: 0.5, mental: 0.3, strength: 0.2 }, difficulty: 44, kleos: 12 },
+  isthmian: { name: 'Isthmian Games', icon: '🌲', desc: 'Compete for the pine wreath at Corinth.', hours: 72, minLevel: 7, w: { endurance: 0.2, pace: 0.2, strength: 0.2, mental: 0.2, discipline: 0.2 }, difficulty: 50, kleos: 18 },
+  nemean:   { name: 'Nemean Games', icon: '🦁', desc: 'Win the celery crown in the valley of Nemea.', hours: 96, minLevel: 10, w: { strength: 0.3, endurance: 0.3, pace: 0.2, mental: 0.2 }, difficulty: 56, kleos: 22 },
 };
 const MISSION_ORDER = Object.keys(MISSIONS);
+
+// Mission tier from how demanding it is: difficulty + 4 · log2(hours)
+// (Courier 34 → Bronze, Regatta 44 → Bronze, Delphi 56 → Silver, Agoge 66 → Gold, Isthmian 75 → Gold, Nemean 82 → Olympian)
+function missionDemand(m) { return m.difficulty + 4 * Math.log2(m.hours); }
+function missionTier(m) {
+  const d = missionDemand(m);
+  return d < 45 ? 1 : d < 60 ? 2 : d < 78 ? 3 : 4;
+}
+// Chance of each item tier [Bronze, Silver, Gold, Olympian] per mission tier
+const LOOT_TABLES = {
+  1: [0.85, 0.13, 0.02, 0.00],
+  2: [0.20, 0.66, 0.13, 0.01],
+  3: [0.05, 0.25, 0.62, 0.08],
+  4: [0.00, 0.15, 0.60, 0.25],
+};
+function rollItemTier(missionTierNum) {
+  const table = LOOT_TABLES[missionTierNum];
+  let r = Math.random(), acc = 0;
+  for (let i = 0; i < table.length; i++) { acc += table[i]; if (r < acc) return i + 1; }
+  return missionTierNum;
+}
 
 // Probabilities: success depends on score/difficulty; brilliant results and injuries are rare (1-4% each)
 function missionOdds(entry, missionId) {
@@ -2888,13 +2943,12 @@ function startMission(missionId) {
   else if (roll < odds.injury + odds.brilliant + odds.success * (1 - odds.injury - odds.brilliant)) result = 'success';
   else result = 'failure';
 
-  const outcome = { result, kleos: 0, items: [] };
-  const unowned = m.items.filter((id) => !ownsItem(id));
+  // Item tier is rolled now; the concrete item is picked on return (from what is still unowned then)
+  const outcome = { result, kleos: 0, itemTier: null };
   if (result === 'success' || result === 'brilliant') {
     outcome.kleos = m.kleos * (result === 'brilliant' ? 2 : 1);
-    if (unowned.length) outcome.items.push(unowned[Math.floor(Math.random() * unowned.length)]);
-    else outcome.kleos *= 1.5; // already own the mission items: more glory instead
-    if (result === 'brilliant' && !ownsItem('golden_laurel')) outcome.items.push('golden_laurel');
+    const tier = rollItemTier(missionTier(m));
+    outcome.itemTier = result === 'brilliant' ? Math.min(4, tier + 1) : tier; // glorious: one tier better
   } else if (result === 'failure') {
     outcome.kleos = m.kleos * 0.25;
   } else {
@@ -2915,15 +2969,22 @@ function claimMission() {
   if (Date.parse(entry.mission.endsAt) > Date.now()) return;
   const { id, endsAt, outcome } = entry.mission;
   const m = MISSIONS[id] || { name: 'Mission', icon: '📜' };
-  const items = (outcome.items || []).filter((it) => !ownsItem(it));
+  const items = [];
+  let kleosGain = outcome.kleos || 0;
+  if (outcome.itemTier) {
+    const it = pickRewardItem(outcome.itemTier);
+    if (it) items.push(it); else kleosGain *= 1.5; // everything of that tier owned: more glory instead
+  }
+  (outcome.items || []).forEach((it) => { if (!items.includes(it) && !ownsItem(it)) items.push(it); }); // legacy outcomes
   items.forEach((it) => accountInventory.push(it));
+  outcome.kleos = kleosGain;
   entry.missionLog = (entry.missionLog || []).concat([{
     type: 'mission', id, at: endsAt, result: outcome.result, kleos: outcome.kleos || 0, items,
     injuredUntil: outcome.injuredUntil || null, unavailableUntil: outcome.unavailableUntil || null,
   }]).slice(-100);
   entry.mission = null;
   persist();
-  const itemTxt = items.map((it) => `${ITEM_CATALOG[it].icon} ${ITEM_CATALOG[it].name}`).join(', ');
+  const itemTxt = items.map((it) => `${ITEM_CATALOG[it].icon} ${ITEM_CATALOG[it].name}${ITEM_CATALOG[it].tier ? ' (' + ITEM_TIERS[ITEM_CATALOG[it].tier] + ')' : ''}`).join(', ');
   const msg = {
     brilliant: `🌟 <b>Glorious!</b> ${m.name}: +${Math.round(outcome.kleos)} Kleos${itemTxt ? ' · ' + itemTxt : ''}`,
     success: `✅ <b>Success</b> ${m.name}: +${Math.round(outcome.kleos)} Kleos${itemTxt ? ' · ' + itemTxt : ''}`,
@@ -2937,9 +2998,9 @@ function claimMission() {
 
 // ----- Weekly quests (private, from your own activities) -----
 const QUESTS = {
-  pheidippides: { name: "Pheidippides' Run", icon: '🏃', desc: 'Run 15 km this week', target: 15, unit: 'km', kleos: 6, item: 'honey_water',
+  pheidippides: { name: "Pheidippides' Run", icon: '🏃', desc: 'Run 15 km this week', target: 15, unit: 'km', kleos: 6, itemTier: 1,
     measure: (acts) => acts.filter((a) => a.type === 'run').reduce((s, a) => s + (a.km || 0), 0) },
-  milon: { name: "Milo's Strength", icon: '💪', desc: 'Do 300 push-ups this week', target: 300, unit: 'reps', kleos: 6, item: 'olive_oil',
+  milon: { name: "Milo's Strength", icon: '💪', desc: 'Do 300 push-ups this week', target: 300, unit: 'reps', kleos: 6, itemTier: 1,
     measure: (acts) => acts.reduce((s, a) => s + (a.exercises || []).filter((ex) => ex.id === 'pushups').reduce((t, ex) => t + ex.reps, 0), 0) },
   odysseus: { name: "Odysseus' Perseverance", icon: '⛵', desc: 'Train on 5 different days', target: 5, unit: 'days', kleos: 8,
     measure: (acts) => new Set(acts.filter((a) => a.type !== 'sleep').map((a) => new Date(activitySortTime(a)).toISOString().slice(0, 10))).size },
@@ -2988,7 +3049,8 @@ function claimQuest(questId) {
   const wk = weekKey();
   entry.questClaims = entry.questClaims || {};
   entry.questClaims[wk] = (entry.questClaims[wk] || []).concat([questId]);
-  const items = q.item && !ownsItem(q.item) ? [q.item] : [];
+  const reward = q.itemTier ? pickRewardItem(q.itemTier) : null;
+  const items = reward ? [reward] : [];
   items.forEach((it) => accountInventory.push(it));
   entry.missionLog = (entry.missionLog || []).concat([{ type: 'quest', id: questId, at: new Date().toISOString(), result: 'success', kleos: q.kleos, items }]).slice(-100);
   persist();
@@ -3048,7 +3110,7 @@ function renderMissions() {
     const q = QUESTS[id], p = questProgress(entry, id);
     const pct = Math.min(100, (p.value / q.target) * 100);
     const val = Number.isInteger(p.value) ? p.value : p.value.toFixed(1);
-    const reward = `+${q.kleos} Kleos${q.item && !ownsItem(q.item) ? ' · ' + ITEM_CATALOG[q.item].icon : ''}`;
+    const reward = `+${q.kleos} Kleos${q.itemTier ? ` · <span class="tier-tag tier-${q.itemTier}">${ITEM_TIERS[q.itemTier]}</span>` : ''}`;
     return `
     <div class="card quest ${p.claimed ? 'claimed' : ''}">
       <div class="ms-head"><span class="ms-ic">${q.icon}</span><div class="ms-txt"><b>${q.name}</b><small>${q.desc}</small></div>
@@ -3065,13 +3127,15 @@ function renderMissions() {
     const odds = missionOdds(entry, id);
     const pct = Math.round(odds.success * 100);
     const focus = Object.keys(m.w).filter((k) => m.w[k] >= 0.3 || Object.keys(m.w).length <= 2).map((k) => `<span class="focus ${attrClass(ATTRIBUTES.find((a) => a.key === k).name)}">${ATTR_ABBR[k]}</span>`).join('');
-    const items = m.items.map((it) => `<span class="${ownsItem(it) ? 'owned' : ''}" title="${ITEM_CATALOG[it].name}${ownsItem(it) ? ' (owned)' : ''}">${ITEM_CATALOG[it].icon}</span>`).join('');
+    const mt = missionTier(m);
+    const loot = LOOT_TABLES[mt].map((p, i) => p > 0 ? `<span class="tier-tag tier-${i + 1}">${ITEM_TIERS[i + 1]} ${Math.round(p * 100)}%</span>` : '').join('');
     return `
     <div class="card mission ${locked ? 'locked' : ''}">
-      <div class="ms-head"><span class="ms-ic">${m.icon}</span><div class="ms-txt"><b>${m.name}</b><small>${m.desc}</small></div></div>
+      <div class="ms-head"><span class="ms-ic">${m.icon}</span><div class="ms-txt"><b>${m.name}</b><small>${m.desc}</small></div><span class="tier-badge tier-${mt}">${ITEM_TIERS[mt]}</span></div>
       <div class="mission-meta">
-        <span>⏱ ${fmtDuration(m.hours * HOUR_MS)}</span><span>${focus}</span><span class="m-rewards">${items} +${m.kleos} Kleos</span>
+        <span>⏱ ${fmtDuration(m.hours * HOUR_MS)}</span><span>${focus}</span><span class="m-rewards">+${m.kleos} Kleos</span>
       </div>
+      <div class="loot-row"><span class="loot-label">Item on success</span>${loot}</div>
       <div class="duel-actions">
         <span class="sub">${locked ? `🔒 Requires level ${m.minLevel}` : `Success chance: <b>${pct}%</b>`}</span>
         <button class="btn-primary btn-sm" ${locked || busy ? 'disabled' : ''} onclick="startMission('${id}')">Send ${entry.name}</button>
