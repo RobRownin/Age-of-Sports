@@ -850,7 +850,7 @@
       <div id="missionsScreenStatus"></div>
 
       <p class="section-title">Missions</p>
-      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them – only sessions started after the mission began count. Reach the mission's training goal and the mission ends up to 30% sooner with better chances (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
+      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them – only sessions started after the mission began and finished before your athlete returns count. Reach the mission's training goal and the mission ends up to 30% sooner with better chances (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
       <div id="missionList" class="list"></div>
     </section>
 
@@ -2910,24 +2910,33 @@ function missionOdds(entry, missionId, support) {
 function ownsItem(id) { return accountInventory.includes(id); }
 
 // ----- Training support during a mission -----
-// Only activities that START after the mission started (and before its planned end) count:
-// start the mission first, then train for it. Compared at minute precision, because the
-// activity form only has minutes (a session logged in the same minute still counts).
+// Only activities that START after the mission started and END before the athlete is back count:
+// start the mission first, then train for it. The return time itself moves forward with support,
+// so activities are checked in order of their end time against the end reached so far.
+// The start is compared at minute precision (the activity form only has minutes).
 function missionGoalProgress(entry, now) {
   const mission = entry && entry.mission;
   const m = mission && MISSIONS[mission.id];
   if (!m || !m.goals) return { goals: [], support: 0 };
-  const start = Math.floor(Date.parse(mission.startedAt) / 60000) * 60000, end = Date.parse(mission.endsAt);
-  const acts = (entry.activities || []).filter((a) => {
-    const t = activitySortTime(a);
-    return t >= start && t <= end;
+  const startRaw = Date.parse(mission.startedAt), end = Date.parse(mission.endsAt);
+  const startMin = Math.floor(startRaw / 60000) * 60000;
+  const actEnd = (a) => activitySortTime(a) + (a.mins || 0) * 60000;
+  const candidates = (entry.activities || [])
+    .filter((a) => a.type !== 'sleep' && activitySortTime(a) >= startMin && actEnd(a) <= end)
+    .sort((x, y) => actEnd(x) - actEnd(y));
+  const evaluate = (acts) => {
+    const goals = m.goals.map((g) => {
+      const value = g.measure(acts);
+      return { label: g.label, unit: g.unit, target: g.target, value, pct: Math.min(1, value / g.target) };
+    });
+    return { goals, support: goals.length ? goals.reduce((s, g) => s + g.pct, 0) / goals.length : 0 };
+  };
+  let counted = [], result = evaluate(counted);
+  candidates.forEach((a) => {
+    const effectiveEnd = startRaw + (end - startRaw) * (1 - MISSION_RULES.SUPPORT_TIME * result.support);
+    if (actEnd(a) <= effectiveEnd) { counted = counted.concat([a]); result = evaluate(counted); }
   });
-  const goals = m.goals.map((g) => {
-    const value = g.measure(acts);
-    return { label: g.label, unit: g.unit, target: g.target, value, pct: Math.min(1, value / g.target) };
-  });
-  const support = goals.length ? goals.reduce((s, g) => s + g.pct, 0) / goals.length : 0;
-  return { goals, support };
+  return result;
 }
 
 // Planned end shortened by the support level (support only grows, so this end only moves forward)
