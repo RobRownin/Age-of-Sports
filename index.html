@@ -850,7 +850,7 @@
       <div id="missionsScreenStatus"></div>
 
       <p class="section-title">Missions</p>
-      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them – only sessions started after the mission began and finished before your athlete returns count. Reach the mission's training goal and the mission ends up to 30% sooner with better chances (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
+      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them – only sessions started after the mission began and finished before it ends count. Reaching the mission's training goal raises the success chance by up to 25 points, halves the injury risk and adds Kleos (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
       <div id="missionList" class="list"></div>
     </section>
 
@@ -2827,14 +2827,13 @@ function renderChallengeList() {
 
 // ---------- Missions and Kleos ----------
 // Missions: send an athlete away for hours or days; the outcome depends on level and attributes.
-// Your own real training during the mission supports the athlete (training goals): the mission
-// ends sooner and the chances improve. Rewards are items (rolled by tier) and Kleos (glory).
+// Your own real training during the mission supports the athlete (training goals): the chances
+// improve (the duration stays the same). Rewards are items (rolled by tier) and Kleos (glory).
 // Kleos counts in every duel and fades 1% per day.
 const MISSION_RULES = {
   INJURY_PENALTY: 0.10, INJURY_DAYS: 3,
   // effects at 100% support (scaled linearly by the support level)
-  SUPPORT_TIME: 0.30,       // mission up to 30% shorter
-  SUPPORT_SUCCESS: 0.15,    // +15 percentage points success chance
+  SUPPORT_SUCCESS: 0.25,    // +25 percentage points success chance
   SUPPORT_INJURY: 0.50,     // injury risk halved
   SUPPORT_BRILLIANT: 0.03,  // +3 percentage points for a glorious result
   SUPPORT_KLEOS: 0.25,      // +25% Kleos
@@ -2910,41 +2909,29 @@ function missionOdds(entry, missionId, support) {
 function ownsItem(id) { return accountInventory.includes(id); }
 
 // ----- Training support during a mission -----
-// Only activities that START after the mission started and END before the athlete is back count:
-// start the mission first, then train for it. The return time itself moves forward with support,
-// so activities are checked in order of their end time against the end reached so far.
-// The start is compared at minute precision (the activity form only has minutes).
+// Only activities that START after the mission started and END before it is over count:
+// start the mission first, then train for it. The start is compared at minute precision
+// (the activity form only has minutes). Sleep never counts.
 function missionGoalProgress(entry, now) {
   const mission = entry && entry.mission;
   const m = mission && MISSIONS[mission.id];
   if (!m || !m.goals) return { goals: [], support: 0 };
-  const startRaw = Date.parse(mission.startedAt), end = Date.parse(mission.endsAt);
-  const startMin = Math.floor(startRaw / 60000) * 60000;
-  const actEnd = (a) => activitySortTime(a) + (a.mins || 0) * 60000;
-  const candidates = (entry.activities || [])
-    .filter((a) => a.type !== 'sleep' && activitySortTime(a) >= startMin && actEnd(a) <= end)
-    .sort((x, y) => actEnd(x) - actEnd(y));
-  const evaluate = (acts) => {
-    const goals = m.goals.map((g) => {
-      const value = g.measure(acts);
-      return { label: g.label, unit: g.unit, target: g.target, value, pct: Math.min(1, value / g.target) };
-    });
-    return { goals, support: goals.length ? goals.reduce((s, g) => s + g.pct, 0) / goals.length : 0 };
-  };
-  let counted = [], result = evaluate(counted);
-  candidates.forEach((a) => {
-    const effectiveEnd = startRaw + (end - startRaw) * (1 - MISSION_RULES.SUPPORT_TIME * result.support);
-    if (actEnd(a) <= effectiveEnd) { counted = counted.concat([a]); result = evaluate(counted); }
+  const startMin = Math.floor(Date.parse(mission.startedAt) / 60000) * 60000, end = Date.parse(mission.endsAt);
+  const acts = (entry.activities || []).filter((a) => {
+    const t = activitySortTime(a);
+    return a.type !== 'sleep' && t >= startMin && t + (a.mins || 0) * 60000 <= end;
   });
-  return result;
+  const goals = m.goals.map((g) => {
+    const value = g.measure(acts);
+    return { label: g.label, unit: g.unit, target: g.target, value, pct: Math.min(1, value / g.target) };
+  });
+  const support = goals.length ? goals.reduce((s, g) => s + g.pct, 0) / goals.length : 0;
+  return { goals, support };
 }
 
-// Planned end shortened by the support level (support only grows, so this end only moves forward)
-function missionEffectiveEnd(entry, now) {
-  const mission = entry.mission;
-  const start = Date.parse(mission.startedAt), end = Date.parse(mission.endsAt);
-  const { support } = missionGoalProgress(entry, now);
-  return start + (end - start) * (1 - MISSION_RULES.SUPPORT_TIME * support);
+// Return time of the mission (support does not change the duration)
+function missionEffectiveEnd(entry) {
+  return Date.parse(entry.mission.endsAt);
 }
 
 // Kleos replayed from the mission log: asymptotic towards KLEOS.MAX, -1% at each 00:00 UTC
@@ -3127,7 +3114,7 @@ function renderMissionStatus() {
         ${goals.length ? `<div class="support-box">
           <div class="support-head"><span>Support your athlete – train now</span><b>${Math.round(support * 100)}%</b></div>
           ${goalRowsHtml(goals)}
-          <div class="support-effects">−${Math.round(MISSION_RULES.SUPPORT_TIME * support * 100)}% time · success ${Math.round(odds.success * 100)}% · injury risk ${(odds.injury * 100).toFixed(1)}%</div>
+          <div class="support-effects">Success ${Math.round(odds.success * 100)}% · injury risk ${(odds.injury * 100).toFixed(1)}% · +${Math.round(MISSION_RULES.SUPPORT_KLEOS * support * 100)}% Kleos</div>
         </div>` : ''}</div>`;
     }
     const inj = activeInjury(entry);
