@@ -39,7 +39,7 @@ Login is username + password. `usernames/{name}` maps a username to the real ema
 | --- | --- | --- |
 | `users` | uid | profile, `athletes[]`, `activeAthleteId`, `inventory[]` |
 | `usernames` | normalized username | uid + email (login lookup, `get` only) |
-| `leaderboard` | `{uid}_{athleteId}` | name, level, score per athlete |
+| `leaderboard` | `{uid}_{athleteId}` | public athlete card: name, username, portrait, `score` = arena rating (level is set to null, FP are never published) |
 | `challenges` | auto id | Stadium dice duels |
 
 Rules are maintained manually in the Firebase Console (not in the repo), in **both** projects. **Every new collection or changed doc ID needs a rules update, otherwise access fails silently.** Current rules (verified identical in production and staging, 2026-11):
@@ -95,12 +95,12 @@ Activity: type, km, reps, `exercises` (Strength only: `[{id, reps}]`, ids `pushu
 **Level** (`levelFromFP`): each level needs 100 FP more than the previous one (step = 300 + 100·(L−1); Level 2 at 300 FP, 5 at 1,500, 10 at 6,300). Athleticus keeps its manual level.
 
 **Attributes** = base + training (`computeAttrs(entry)`), keys `endurance, pace, strength, mental, discipline` (`ATTRIBUTES`):
-- Base points: assigned once per athlete in `ensureBaseAttrs` (22–38 each), deterministic from the athlete id (seeded PRNG) so all devices agree; stored as `baseAttrs`, migrated on load.
+- Base points: assigned once per athlete in `ensureBaseAttrs`, deterministic from the athlete id (seeded PRNG) so all devices agree; stored as `baseAttrs` + `baseAttrsVersion`. Version 2: every athlete gets the same total (`BASE_TOTAL` = 150, each 22–38) in a different distribution, for a fair arena; older versions are regenerated on load.
 - Training points: not stored, replayed from the activity history in `computeTrainingPoints` (consistent across devices, editing old activities recalculates). Each activity gives a stimulus per attribute = FP parts × weights (`TYPE_TRAINING` per activity type, `EXERCISES[].train` per exercise). Gain = (max − current) · (1 − e^(−stimulus/2000)), max = 1.5 × base, i.e. fast at first and asymptotically slower. Decay: 1 % of the training points present at each midnight 00:00 UTC (step-wise; counted as UTC day boundaries between activities and up to now), i.e. values stay constant during the day. Constants in `TRAINING`.
 - Reference: daily 50 push-ups + three 5 km runs per week, base 30 (max 45): strength training ≈ 6 after 1 week, 16 after 4, 22 after 8 weeks; after a 4-week break ≈ 17, after 8 weeks ≈ 13.
 - UI: bar shows base (muted) + training (colour) and a tick at the maximum; training points are shown with one decimal (a single session often adds < 1); after saving a new activity a toast shows the FP and training gains (`showToast`); the activity view shows the training points the activity added per attribute at the time it was done (`activityTrainingGain`: history replayed up to that moment without/with the activity).
 
-Challenge: `creatorUid/AthleteId/AthleteName/Username/Roll`, `status` (`open|completed`), then `opponent*` fields and `winner` (`creator|opponent|tie`).
+Challenge: `creatorUid/AthleteId/AthleteName/Username`, `discipline`, `creatorScore` (discipline score at creation), `creatorProfile` (`{portrait, stars}`; coarse 1–5 stars per attribute, no exact values), `status` (`open|completed`), `createdAt`; on join: `opponent*` (incl. `opponentScore`, `opponentProfile`), `creatorRoll`/`opponentRoll` (performances), `winner` (`creator|opponent|tie`), `completedAt`. Legacy dice duels have no `discipline` and are ignored for ratings.
 
 Migrations run on load: single-athlete -> `athletes[]`; per-athlete inventory -> account inventory; new catalog items backfilled (`backfillNewCatalogItems`); Athleticus added once (`ensureAthleticus`); old leaderboard docs keyed by uid removed.
 
@@ -112,11 +112,23 @@ Migrations run on load: single-athlete -> `athletes[]`; per-athlete inventory ->
 - **Garmin import:** GPX and/or TCX, selectable together. TCX only knows `Running/Biking/Other` as sport, GPX has `<type>` (e.g. `rowing_v2`) but no trackpoints for indoor activities, so `mergeGarminResults` takes type from GPX and distance/duration/HR from TCX.
 - **Stats:** type filter x period filter (Week/Month/Year/All-time), prev/next via buttons and swipe, Monday-Sunday week buckets in month view (month total counts calendar-month days only), current bucket highlighted.
 - **Gymnasium:** roster with attribute bars; dialog to rename and pick portrait; create new athlete.
-- **Stadium:** create a challenge (rolls 1-100 immediately), another account joins and rolls, higher roll wins, tie possible.
-- **Leaderboard:** one entry per athlete of all accounts; own marked "(You)".
+- **Stadium / Arena:** see "Arena" below.
+- **Leaderboard:** one entry per athlete of all accounts, ranked by arena rating (replayed from the duel history in the browser), shows portrait, title, W/L record; own marked "You". No level, no FP.
 - **Athleticus:** fixed test athlete, name/portrait locked, portrait follows level 1-5 (`athlete-level-N.png`), level set manually in the Gymnasium dialog for now.
 - **Items:** `ITEM_CATALOG` (clothing, equipment, supplies, slot4); items may have a real image (`image`), otherwise an emoji. Only `lion_sandals` has an image so far.
 - **Gestures:** swipe right opens the drawer, left closes it; disabled on Stats and in open dialogs to avoid conflicts.
+
+## Arena (simulation stage)
+
+Idea: activities only make your own character stronger (level, attributes; private). Characters compete in the arena; only arena results are public and rank the leaderboard. This keeps raw training data (and later Strava data) away from anything other users see.
+
+- **Disciplines** (`DISCIPLINES`): Stadion Sprint, Dolichos, Pale Wrestling, Pankration, Pentathlon, each with attribute weights (sum 1). A random discipline is drawn when a challenge is issued; the opponent sees it before fighting.
+- **Duel**: discipline score = Σ weight × attribute value (base + training). Performance = score × (0.75…1.25 luck, `ARENA.NOISE`). Higher performance wins, difference < 0.5 = draw. The open challenge card shows the viewer's estimated win chance (Monte Carlo of the same model).
+- **Rating** (`computeArenaRatings`): Elo, start 1000, K = 32, replayed chronologically from all completed duels (so everyone computes the same values). Titles: Novice < 950 ≤ Hoplite < 1050 ≤ Veteran < 1150 ≤ Champion < 1250 ≤ Legend.
+- **Limits**: max 5 duels per athlete per UTC day (created + joined), one open challenge per athlete, no fights against own account.
+- **Public data**: name, portrait, title, rating, record, 1–5 stars per attribute, discipline score inside a challenge. Exact attributes, level, FP and activities stay private.
+- **Known limitations of this stage**: duels are resolved and attributes computed in the browser (not cheat-proof); all challenges are loaded for the rating replay (`fetchAllChallenges`); profile is a live snapshot at challenge time. No Firestore rule change was needed.
+- **Next steps** (discussed, not built): server-side resolution + attribute calculation (Cloud Functions, needed for Strava anyway); weekly public snapshot of the arena profile; settings "Arena & privacy" (opt-in to compete, separate opt-in for Strava data); duel narration texts; then optional Strava import (only after Strava confirms the concept; plan B: Strava activities count privately only).
 
 ## Development workflow
 
@@ -163,7 +175,7 @@ Naming history: "Character" -> "Athlete" (also internally), "Academy" -> "Gymnas
 
 ## Open points
 
-- Stadium: more rules to come (currently pure dice, no effect on level/score/attributes); attributes could now influence duels.
+- Arena: see "Arena" section (next steps); tune discipline weights, luck factor, K and daily limit after real use.
 - Fitness model is a first draft: tune weights/constants after real use; Stats still charts km only (FP or reps per exercise would fit better).
 - Real level progression for Athleticus (replaces the manual level); level > 5 shows the level-5 image.
 - Item system: earning/unlocking (everyone gets the starter set now), item effects, more item images, name the fourth slot category.

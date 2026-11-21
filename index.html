@@ -285,6 +285,46 @@
   .duel-open .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
   .duel-result{ text-align:center; font-size:12px; color:var(--muted); margin-top:10px; }
 
+  .arena-me{ display:flex; flex-direction:column; gap:12px; background:radial-gradient(90% 80% at 0% 0%, rgba(242,179,61,.12), transparent 60%), var(--surface); }
+  .arena-me-top{ display:flex; gap:14px; align-items:center; }
+  .arena-me-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .arena-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .arena-rating{ text-align:center; flex-shrink:0; }
+  .arena-rating .num{ display:block; font-size:28px; font-weight:800; color:var(--gold-light); line-height:1; }
+  .arena-rating small{ font-size:10px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+  .arena-me-foot{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted); border-top:1px solid var(--border); padding-top:10px; }
+  .pips{ display:flex; gap:5px; }
+  .pips i{ width:16px; height:6px; border-radius:3px; background:var(--surface3); }
+  .pips i.on{ background:var(--gold-grad); }
+  .arena-portrait{ width:64px; height:80px; border-radius:14px; flex-shrink:0; overflow:hidden; display:flex; align-items:flex-end; justify-content:center;
+    background:radial-gradient(80% 60% at 50% 40%, rgba(242,179,61,.2), transparent 70%), var(--surface2); }
+  .arena-portrait img{ width:90%; height:auto; display:block; }
+  .arena-portrait.sm{ width:46px; height:58px; border-radius:12px; }
+  .arena-portrait.xs{ width:34px; height:42px; border-radius:10px; }
+  .star-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .sg{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .sg .ab{ font-size:9.5px; font-weight:700; color:var(--muted); letter-spacing:.06em; }
+  .sg .dots{ display:flex; gap:2px; }
+  .sg .dots i{ flex:1; height:4px; border-radius:2px; background:var(--surface3); max-width:9px; }
+  .sg .dots i.on{ background:var(--c); }
+  .duel-card{ display:flex; flex-direction:column; gap:12px; }
+  .duel-disc{ display:flex; align-items:center; gap:10px; }
+  .duel-disc .di{ width:36px; height:36px; border-radius:11px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .duel-disc b{ display:block; font-family:var(--font-display); font-size:14px; }
+  .duel-disc small{ display:block; font-size:11.5px; color:var(--muted); }
+  .duel-disc.small{ margin-bottom:10px; font-size:13px; }
+  .duel-disc.small .di{ width:28px; height:28px; font-size:14px; border-radius:9px; }
+  .duel-disc.small b{ display:inline; }
+  .delta{ margin-left:auto; font-family:var(--font-display); font-weight:700; font-size:13px; padding:3px 8px; border-radius:999px; }
+  .delta.up{ color:var(--green); background:rgba(61,214,140,.12); }
+  .delta.down{ color:var(--red); background:rgba(240,84,79,.12); }
+  .fighter{ display:flex; gap:12px; align-items:center; }
+  .fighter-info{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+  .duel-actions{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .duel-actions .sub{ font-size:12px; color:var(--muted); }
+  .duel-actions .sub b{ color:var(--gold-light); }
+  .duel-side .arena-portrait{ margin-bottom:2px; }
+
   /* ===== Leaderboard ===== */
   .lb-row{ display:flex; align-items:center; gap:14px; padding:12px 14px; }
   .lb-rank{ width:34px; height:34px; border-radius:11px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--muted); flex-shrink:0; }
@@ -734,14 +774,10 @@
         </div>
       </div>
 
-      <div class="card arena-hero">
-        <div class="em">⚔️</div>
-        <h3>Dice Duel</h3>
-        <p class="hint" style="margin:0 0 16px;">Roll 1–100 against another athlete. Highest roll wins.</p>
-        <button class="btn-primary" style="width:100%;" onclick="createChallenge()">Create Challenge</button>
-      </div>
+      <div class="card arena-me" id="arenaMeCard"></div>
+      <button class="btn-primary" onclick="createChallenge()">⚔️ Issue a Challenge</button>
+      <p class="hint" style="margin-top:-4px;">A random discipline is drawn. Your athlete's current form decides – with a little luck. Wins raise your rating, which ranks the leaderboard.</p>
 
-      <p class="section-title">Challenges</p>
       <div id="stadiumChallengeList" class="list">
         <p class="hint">Loading…</p>
       </div>
@@ -1577,13 +1613,25 @@ function seededRandom(seedStr) {
 }
 
 // Assigns base points once (stored on the athlete). Returns true if something was added.
+// Assigns base points once (stored on the athlete). Every athlete gets the same total
+// (BASE_TOTAL) in a different distribution, so the arena stays fair. Returns true if changed.
+const BASE_TOTAL = 150;
+const BASE_ATTRS_VERSION = 2;
 function ensureBaseAttrs(entry) {
-  if (entry.baseAttrs && ATTRIBUTES.every((at) => typeof entry.baseAttrs[at.key] === 'number')) return false;
+  if (entry.baseAttrsVersion === BASE_ATTRS_VERSION && entry.baseAttrs
+      && ATTRIBUTES.every((at) => typeof entry.baseAttrs[at.key] === 'number')) return false;
   const rand = seededRandom(entry.id || entry.name || 'athlete');
+  const vals = ATTRIBUTES.map(() => BASE_RANGE.min + Math.floor(rand() * (BASE_RANGE.max - BASE_RANGE.min + 1)));
+  // nudge random attributes up/down by 1 until the total matches, staying inside the range
+  let sum = vals.reduce((s, v) => s + v, 0), guard = 0;
+  while (sum !== BASE_TOTAL && guard++ < 1000) {
+    const i = Math.floor(rand() * vals.length);
+    if (sum < BASE_TOTAL && vals[i] < BASE_RANGE.max) { vals[i]++; sum++; }
+    else if (sum > BASE_TOTAL && vals[i] > BASE_RANGE.min) { vals[i]--; sum--; }
+  }
   entry.baseAttrs = {};
-  ATTRIBUTES.forEach((at) => {
-    entry.baseAttrs[at.key] = BASE_RANGE.min + Math.floor(rand() * (BASE_RANGE.max - BASE_RANGE.min + 1));
-  });
+  ATTRIBUTES.forEach((at, i) => { entry.baseAttrs[at.key] = vals[i]; });
+  entry.baseAttrsVersion = BASE_ATTRS_VERSION;
   return true;
 }
 
@@ -1647,16 +1695,16 @@ function syncLeaderboard() {
   if (!currentUid || !window.fb || !window.fb.saveLeaderboardEntry) return;
   syncActiveAthleteIntoRoster();
   const validIds = new Set(athletes.map((a) => a.id));
+  // Public entry: name, portrait and arena rating only. Level and FP stay private.
   athletes.forEach((a) => {
-    const level = athleteLevel(a);
-    const score = a.activities.reduce((sum, act) => sum + computeActivityScore(act), 0);
     window.fb.saveLeaderboardEntry(`${currentUid}_${a.id}`, {
       uid: currentUid,
       athleteId: a.id,
       athleteName: a.name,
       username: currentUsername,
-      level: level,
-      score: score,
+      portrait: portraitUrl(a),
+      ...(arenaLoaded ? { score: Math.round(ratingOf(currentUid, a.id)) } : {}),
+      level: null,
     }).catch((e) => console.error('Leaderboard update failed:', e));
   });
 
@@ -1685,22 +1733,30 @@ async function loadLeaderboard() {
     return;
   }
   try {
+    // Ratings are recomputed from the duel history so everyone sees the same, current values
+    if (window.fb.fetchChallenges) await refreshArenaData();
     const entries = await window.fb.fetchLeaderboard();
     if (!entries || entries.length === 0) {
       listEl.innerHTML = '<p class="hint">No entries yet.</p>';
       return;
     }
-    listEl.innerHTML = entries.map((e, i) => {
+    const rows = entries.map((e) => {
+      const r = arenaRatings[arenaKey(e.uid, e.athleteId)] || { rating: ARENA.START_RATING, wins: 0, losses: 0, ties: 0 };
+      return { e, r };
+    }).sort((x, y) => y.r.rating - x.r.rating || y.r.wins - x.r.wins);
+    listEl.innerHTML = rows.map(({ e, r }, i) => {
       const isMe = e.uid === currentUid;
       const owner = isMe ? 'You' : (e.username || '');
+      const fought = r.wins + r.losses + r.ties;
       return `
       <div class="card lb-row ${isMe ? 'highlight' : ''}">
         <div class="lb-rank ${i < 3 ? 'r' + (i + 1) : ''}">${i + 1}</div>
+        <div class="arena-portrait xs">${e.portrait ? `<img src="${e.portrait}" alt="" />` : ''}</div>
         <div style="flex:1;min-width:0;">
           <div class="lb-name">${e.athleteName || e.characterName || '???'}</div>
-          <div class="lb-sub">Level ${e.level || 1}${owner ? ' · ' + owner : ''}</div>
+          <div class="lb-sub">${arenaTitle(r.rating)} · ${fought ? arenaRecord(r) : 'No duels yet'}${owner ? ' · ' + owner : ''}</div>
         </div>
-        <div class="lb-score">${(e.score || 0).toLocaleString('en-US')}<small>FP</small></div>
+        <div class="lb-score">${Math.round(r.rating)}<small>Rating</small></div>
       </div>`;
     }).join('');
   } catch (err) {
@@ -2307,22 +2363,132 @@ function renderAthleteAndHero() {
   renderInventory();
 }
 
-// ---------- Stadium: simple 1-100 dice duels ----------
-let challengesCache = [];
+// ---------- Arena: attribute-based duels, Elo rating drives the leaderboard ----------
+// Simulation stage: duels are resolved in the browser. Before rating points matter for real,
+// resolution and attribute calculation must move to a server (see docs, "Arena").
+const ARENA = { START_RATING: 1000, K: 32, DAILY_DUELS: 5, NOISE: 0.25 };
+
+// Disciplines and how much each attribute counts (weights sum to 1)
+const DISCIPLINES = {
+  stadion:    { name: 'Stadion Sprint', icon: '🏃', desc: 'One length of the stadium, all-out speed', w: { pace: 0.6, endurance: 0.2, discipline: 0.2 } },
+  dolichos:   { name: 'Dolichos', icon: '🏛️', desc: 'The long-distance race', w: { endurance: 0.6, discipline: 0.25, mental: 0.15 } },
+  pale:       { name: 'Pale Wrestling', icon: '🤼', desc: 'Throw your opponent three times', w: { strength: 0.55, mental: 0.25, endurance: 0.2 } },
+  pankration: { name: 'Pankration', icon: '🥊', desc: 'Anything goes, almost', w: { strength: 0.4, pace: 0.2, endurance: 0.2, mental: 0.2 } },
+  pentathlon: { name: 'Pentathlon', icon: '🎖️', desc: 'Five events, the all-rounder wins', w: { endurance: 0.2, pace: 0.2, strength: 0.2, mental: 0.2, discipline: 0.2 } },
+};
+const DISCIPLINE_KEYS = Object.keys(DISCIPLINES);
+const ATTR_ABBR = { endurance: 'END', pace: 'PAC', strength: 'STR', mental: 'MEN', discipline: 'DIS' };
+
+let challengesCache = [];     // recent challenges (list in the Stadium)
+let arenaRatings = {};        // key `${uid}_${athleteId}` -> { rating, wins, losses, ties }
+let arenaDeltas = {};         // challengeId -> rating change for the creator
+let arenaLoaded = false;      // ratings are only published once the duel history was loaded
+
+function arenaKey(uid, athleteId) { return `${uid}_${athleteId}`; }
+
+// Current attribute values (base + training, unrounded) of an athlete
+function arenaAttrValues(entry) {
+  ensureBaseAttrs(entry);
+  const tp = computeTrainingPoints(entry.baseAttrs, entry.activities);
+  const v = {};
+  ATTRIBUTES.forEach((at) => { v[at.key] = entry.baseAttrs[at.key] + tp[at.key]; });
+  return v;
+}
+
+function disciplineScore(values, discKey) {
+  const w = DISCIPLINES[discKey].w;
+  return Object.entries(w).reduce((s, [k, wt]) => s + wt * (values[k] || 0), 0);
+}
+
+// Coarse public profile: 1-5 stars per attribute (no exact values are published)
+function starsFor(value) { return Math.max(1, Math.min(5, Math.round(value / 20))); }
+function publicProfile(entry) {
+  const v = arenaAttrValues(entry);
+  const stars = {};
+  ATTRIBUTES.forEach((at) => { stars[at.key] = starsFor(v[at.key]); });
+  return { stars, portrait: portraitUrl(entry) };
+}
+
+function arenaTitle(rating) {
+  if (rating >= 1250) return 'Legend';
+  if (rating >= 1150) return 'Champion';
+  if (rating >= 1050) return 'Veteran';
+  if (rating >= 950) return 'Hoplite';
+  return 'Novice';
+}
+
+// Performance in a duel: discipline score with ±NOISE luck
+function rollPerformance(score) {
+  return score * (1 - ARENA.NOISE + 2 * ARENA.NOISE * Math.random());
+}
+
+// Estimated win chance (Monte Carlo over the same luck model)
+function winChance(myScore, theirScore) {
+  let wins = 0; const n = 2000;
+  for (let i = 0; i < n; i++) if (rollPerformance(myScore) > rollPerformance(theirScore)) wins++;
+  return Math.round((wins / n) * 100);
+}
+
+// Replays all completed duels in order (Elo) -> ratings, records and per-duel rating changes
+function computeArenaRatings(challenges) {
+  const ratings = {}, deltas = {};
+  const get = (k) => (ratings[k] = ratings[k] || { rating: ARENA.START_RATING, wins: 0, losses: 0, ties: 0 });
+  challenges
+    .filter((ch) => ch.status === 'completed' && ch.opponentUid && ch.discipline)
+    .sort((x, y) => String(x.completedAt || x.createdAt).localeCompare(String(y.completedAt || y.createdAt)))
+    .forEach((ch) => {
+      const a = get(arenaKey(ch.creatorUid, ch.creatorAthleteId));
+      const b = get(arenaKey(ch.opponentUid, ch.opponentAthleteId));
+      const expA = 1 / (1 + Math.pow(10, (b.rating - a.rating) / 400));
+      const scoreA = ch.winner === 'creator' ? 1 : ch.winner === 'opponent' ? 0 : 0.5;
+      const d = ARENA.K * (scoreA - expA);
+      a.rating += d; b.rating -= d;
+      if (scoreA === 1) { a.wins++; b.losses++; } else if (scoreA === 0) { a.losses++; b.wins++; } else { a.ties++; b.ties++; }
+      deltas[ch.id] = d;
+    });
+  return { ratings, deltas };
+}
+
+function ratingOf(uid, athleteId) {
+  const r = arenaRatings[arenaKey(uid, athleteId)];
+  return r ? r.rating : ARENA.START_RATING;
+}
+
+function utcDayKey(iso) { return String(iso || '').slice(0, 10); }
+function duelsToday(athleteId) {
+  const today = new Date().toISOString().slice(0, 10);
+  return challengesCache.filter((ch) =>
+    (ch.creatorUid === currentUid && ch.creatorAthleteId === athleteId && utcDayKey(ch.createdAt) === today) ||
+    (ch.opponentUid === currentUid && ch.opponentAthleteId === athleteId && utcDayKey(ch.completedAt) === today)
+  ).length;
+}
 
 async function createChallenge() {
   if (!currentUid || !window.fb || !window.fb.createChallenge) return;
+  syncActiveAthleteIntoRoster();
   const entry = activeAthleteEntry();
   if (!entry) return;
-  const roll = Math.floor(Math.random() * 100) + 1;
+  if (challengesCache.some((ch) => ch.status === 'open' && ch.creatorUid === currentUid && ch.creatorAthleteId === entry.id)) {
+    alert(`${entry.name} already has an open challenge.`);
+    return;
+  }
+  if (duelsToday(entry.id) >= ARENA.DAILY_DUELS) {
+    alert(`${entry.name} has fought ${ARENA.DAILY_DUELS} duels today. Come back tomorrow (00:00 UTC).`);
+    return;
+  }
+  const discipline = DISCIPLINE_KEYS[Math.floor(Math.random() * DISCIPLINE_KEYS.length)];
   try {
     await window.fb.createChallenge({
       creatorUid: currentUid,
       creatorAthleteId: entry.id,
       creatorAthleteName: entry.name,
       creatorUsername: currentUsername,
-      creatorRoll: roll,
+      discipline: discipline,
+      creatorScore: Math.round(disciplineScore(arenaAttrValues(entry), discipline) * 10) / 10,
+      creatorProfile: publicProfile(entry),
+      creatorRoll: null,
     });
+    showToast(`${DISCIPLINES[discipline].icon} <b>${DISCIPLINES[discipline].name}</b> challenge issued`);
     loadChallenges();
   } catch (e) {
     console.error(e);
@@ -2332,26 +2498,37 @@ async function createChallenge() {
 
 async function joinChallenge(challengeId) {
   if (!currentUid || !window.fb || !window.fb.joinChallenge) return;
+  syncActiveAthleteIntoRoster();
   const entry = activeAthleteEntry();
   if (!entry) return;
-  const challenge = challengesCache.find((c) => c.id === challengeId);
-  if (!challenge) return;
-
-  const roll = Math.floor(Math.random() * 100) + 1;
-  let winner = 'tie';
-  if (roll > challenge.creatorRoll) winner = 'opponent';
-  else if (challenge.creatorRoll > roll) winner = 'creator';
-
+  const ch = challengesCache.find((x) => x.id === challengeId);
+  if (!ch || ch.status !== 'open' || ch.creatorUid === currentUid) return;
+  if (duelsToday(entry.id) >= ARENA.DAILY_DUELS) {
+    alert(`${entry.name} has fought ${ARENA.DAILY_DUELS} duels today. Come back tomorrow (00:00 UTC).`);
+    return;
+  }
+  const myScore = disciplineScore(arenaAttrValues(entry), ch.discipline);
+  const creatorPerf = Math.round(rollPerformance(ch.creatorScore || 0) * 10) / 10;
+  const myPerf = Math.round(rollPerformance(myScore) * 10) / 10;
+  const winner = Math.abs(myPerf - creatorPerf) < 0.5 ? 'tie' : (myPerf > creatorPerf ? 'opponent' : 'creator');
+  const before = ratingOf(currentUid, entry.id);
   try {
     await window.fb.joinChallenge(challengeId, {
       opponentUid: currentUid,
       opponentAthleteId: entry.id,
       opponentAthleteName: entry.name,
       opponentUsername: currentUsername,
-      opponentRoll: roll,
+      opponentScore: Math.round(myScore * 10) / 10,
+      opponentProfile: publicProfile(entry),
+      creatorRoll: creatorPerf,
+      opponentRoll: myPerf,
       winner: winner,
     });
-    loadChallenges();
+    await loadChallenges();
+    const d = Math.round(ratingOf(currentUid, entry.id) - before);
+    const label = winner === 'opponent' ? '🏆 <b>Victory!</b>' : winner === 'tie' ? '🤝 <b>Draw</b>' : '<b>Defeat</b>';
+    showToast(`${label} ${Math.round(myPerf)} vs ${Math.round(creatorPerf)} · Rating ${d >= 0 ? '+' : ''}${d}`);
+    syncLeaderboard();
   } catch (e) {
     console.error(e);
     alert('Could not join the challenge. Please try again.');
@@ -2368,6 +2545,15 @@ async function cancelChallenge(challengeId) {
   }
 }
 
+// Loads all challenges once: the recent ones for the list, all completed ones for the ratings
+async function refreshArenaData() {
+  const fetchAll = window.fb.fetchAllChallenges || window.fb.fetchChallenges;
+  const all = await fetchAll();
+  ({ ratings: arenaRatings, deltas: arenaDeltas } = computeArenaRatings(all));
+  challengesCache = all.slice().sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
+  arenaLoaded = true;
+}
+
 async function loadChallenges() {
   const listEl = document.getElementById('stadiumChallengeList');
   if (!listEl) return;
@@ -2377,7 +2563,8 @@ async function loadChallenges() {
   }
   listEl.innerHTML = '<p class="hint">Loading…</p>';
   try {
-    challengesCache = await window.fb.fetchChallenges();
+    await refreshArenaData();
+    renderArenaMe();
     renderChallengeList();
   } catch (e) {
     console.error(e);
@@ -2385,54 +2572,109 @@ async function loadChallenges() {
   }
 }
 
+function starsHtml(stars) {
+  return `<div class="star-grid">${ATTRIBUTES.map((at) => {
+    const n = (stars && stars[at.key]) || 1;
+    return `<div class="sg ${attrClass(at.name)}"><span class="ab">${ATTR_ABBR[at.key]}</span><span class="dots">${'<i class="on"></i>'.repeat(n)}${'<i></i>'.repeat(5 - n)}</span></div>`;
+  }).join('')}</div>`;
+}
+
+function arenaRecord(r) {
+  return `${r.wins}W · ${r.losses}L${r.ties ? ' · ' + r.ties + 'D' : ''}`;
+}
+
+function renderArenaMe() {
+  const el = document.getElementById('arenaMeCard');
+  const entry = activeAthleteEntry();
+  if (!el || !entry) return;
+  syncActiveAthleteIntoRoster();
+  const r = arenaRatings[arenaKey(currentUid, entry.id)] || { rating: ARENA.START_RATING, wins: 0, losses: 0, ties: 0 };
+  const left = Math.max(0, ARENA.DAILY_DUELS - duelsToday(entry.id));
+  el.innerHTML = `
+    <div class="arena-me-top">
+      <div class="arena-portrait"><img src="${portraitUrl(entry)}" alt="" /></div>
+      <div class="arena-me-info">
+        <div class="duel-name">${entry.name}</div>
+        <div class="arena-badges"><span class="badge gold">${arenaTitle(r.rating)}</span><span class="badge">${arenaRecord(r)}</span></div>
+        ${starsHtml(publicProfile(entry).stars)}
+      </div>
+      <div class="arena-rating"><span class="num">${Math.round(r.rating)}</span><small>Rating</small></div>
+    </div>
+    <div class="arena-me-foot"><span>Duels left today</span><span class="pips">${'<i class="on"></i>'.repeat(left)}${'<i></i>'.repeat(ARENA.DAILY_DUELS - left)}</span></div>`;
+}
+
+function fighterHtml(name, profile, rating, extraCls) {
+  const p = profile || {};
+  return `
+    <div class="fighter ${extraCls || ''}">
+      <div class="arena-portrait sm">${p.portrait ? `<img src="${p.portrait}" alt="" />` : ''}</div>
+      <div class="fighter-info">
+        <div class="duel-name">${name}</div>
+        <div class="arena-badges"><span class="badge gold">${arenaTitle(rating)}</span><span class="badge">${Math.round(rating)}</span></div>
+      </div>
+    </div>`;
+}
+
 function renderChallengeList() {
   const listEl = document.getElementById('stadiumChallengeList');
   if (!listEl) return;
-  if (challengesCache.length === 0) {
-    listEl.innerHTML = '<div class="empty"><span class="em">🏟️</span>No challenges yet.<br>Be the first to create one!</div>';
-    return;
-  }
-  listEl.innerHTML = challengesCache.map((c) => {
-    if (c.status === 'open') {
-      const isMine = c.creatorUid === currentUid;
-      if (isMine) {
-        return `
-        <div class="card duel-open">
-          <div class="info">
-            <div class="duel-name">${c.creatorAthleteName} <small>(You)</small></div>
-            <div class="sub">Waiting for an opponent…</div>
-          </div>
-          <button class="btn-secondary btn-sm" onclick="cancelChallenge('${c.id}')">Cancel</button>
-        </div>`;
-      }
-      return `
-      <div class="card duel-open">
-        <div class="info">
-          <div class="duel-name">${c.creatorAthleteName} <small>(${c.creatorUsername})</small></div>
-          <div class="sub">Challenges you to a duel!</div>
-        </div>
-        <button class="btn-primary btn-sm" onclick="joinChallenge('${c.id}')">🎲 Accept</button>
-      </div>`;
-    }
+  const entry = activeAthleteEntry();
+  const myValues = entry ? arenaAttrValues(entry) : null;
+  const open = challengesCache.filter((ch) => ch.status === 'open');
+  const done = challengesCache.filter((ch) => ch.status === 'completed').slice(0, 20);
+  const disc = (k) => DISCIPLINES[k] || { name: 'Dice Duel', icon: '🎲', desc: 'Legacy duel' };
 
-    const creatorWon = c.winner === 'creator';
-    const opponentWon = c.winner === 'opponent';
+  const openHtml = open.map((ch) => {
+    const d = disc(ch.discipline);
+    const isMine = ch.creatorUid === currentUid;
+    if (!ch.discipline && !isMine) return ''; // legacy dice challenge: can only be withdrawn by its creator
+    const rating = ratingOf(ch.creatorUid, ch.creatorAthleteId);
+    const chance = !isMine && myValues && ch.discipline ? winChance(disciplineScore(myValues, ch.discipline), ch.creatorScore || 0) : null;
     return `
-    <div class="card">
-      <div class="duel">
-        <div class="duel-side ${creatorWon ? 'win' : ''}">
-          <div class="nm">${c.creatorAthleteName}${creatorWon ? ' 🏆' : ''}</div>
-          <div class="duel-roll">${c.creatorRoll}</div>
-        </div>
-        <div class="vs">VS</div>
-        <div class="duel-side ${opponentWon ? 'win' : ''}">
-          <div class="nm">${c.opponentAthleteName}${opponentWon ? ' 🏆' : ''}</div>
-          <div class="duel-roll">${c.opponentRoll}</div>
-        </div>
+    <div class="card duel-card">
+      <div class="duel-disc"><span class="di">${d.icon}</span><span><b>${d.name}</b><small>${d.desc}</small></span></div>
+      ${fighterHtml(`${ch.creatorAthleteName} <small>(${isMine ? 'You' : ch.creatorUsername})</small>`, ch.creatorProfile, rating)}
+      ${ch.creatorProfile ? starsHtml(ch.creatorProfile.stars) : ''}
+      <div class="duel-actions">
+        ${isMine
+          ? `<span class="sub">Waiting for an opponent…</span><button class="btn-secondary btn-sm" onclick="cancelChallenge('${ch.id}')">Cancel</button>`
+          : `<span class="sub">${chance != null ? `Your odds as ${entry.name}: <b>${chance}%</b>` : ''}</span><button class="btn-primary btn-sm" onclick="joinChallenge('${ch.id}')">⚔️ Fight</button>`}
       </div>
-      ${c.winner === 'tie' ? '<p class="duel-result">A tie!</p>' : ''}
     </div>`;
   }).join('');
+
+  const doneHtml = done.map((ch) => {
+    const d = disc(ch.discipline);
+    const cw = ch.winner === 'creator', ow = ch.winner === 'opponent';
+    const delta = arenaDeltas[ch.id];
+    let mine = '';
+    if (delta != null && (ch.creatorUid === currentUid || ch.opponentUid === currentUid)) {
+      const myD = Math.round(ch.creatorUid === currentUid ? delta : -delta);
+      mine = `<span class="delta ${myD >= 0 ? 'up' : 'down'}">${myD >= 0 ? '+' : ''}${myD}</span>`;
+    }
+    const side = (name, profile, perf, win) => `
+      <div class="duel-side ${win ? 'win' : ''}">
+        <div class="arena-portrait sm">${profile && profile.portrait ? `<img src="${profile.portrait}" alt="" />` : ''}</div>
+        <div class="nm">${name}${win ? ' 🏆' : ''}</div>
+        <div class="duel-roll">${perf != null ? Math.round(perf) : '–'}</div>
+      </div>`;
+    return `
+    <div class="card">
+      <div class="duel-disc small"><span class="di">${d.icon}</span><b>${d.name}</b>${mine}</div>
+      <div class="duel">
+        ${side(ch.creatorAthleteName, ch.creatorProfile, ch.creatorRoll, cw)}
+        <div class="vs">VS</div>
+        ${side(ch.opponentAthleteName, ch.opponentProfile, ch.opponentRoll, ow)}
+      </div>
+      ${ch.winner === 'tie' ? '<p class="duel-result">A draw!</p>' : ''}
+    </div>`;
+  }).join('');
+
+  listEl.innerHTML =
+    `<p class="section-title">Open challenges</p>` +
+    (openHtml || '<div class="empty"><span class="em">🏟️</span>No open challenges.<br>Issue one and wait for a rival!</div>') +
+    `<p class="section-title">Recent duels</p>` +
+    (doneHtml || '<p class="hint">No duels fought yet.</p>');
 }
 
 function showScreen(name) {
@@ -3311,6 +3553,8 @@ window.handleAuthState = async function (user) {
     renderStats();
     renderAthleteAndHero();
     syncLeaderboard();
+    // Load the duel history in the background so the published arena rating is current
+    if (window.fb.fetchChallenges) refreshArenaData().then(syncLeaderboard).catch((e) => console.error(e));
     const lastScreen = localStorage.getItem(LS_PREFIX + 'lastScreen');
     const validScreen = lastScreen && document.getElementById('screen-' + lastScreen);
     showScreen(validScreen ? lastScreen : 'athlete');
@@ -3794,8 +4038,14 @@ if ('serviceWorker' in navigator) {
       const snap = await getDocs(q);
       return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     },
+    async fetchAllChallenges() {
+      // Simulation stage: ratings are replayed from the full duel history in the browser
+      const snap = await getDocs(collection(db, "challenges"));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    },
     async fetchLeaderboard() {
-      const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(50));
+      // Sorted in the app by the replayed arena rating
+      const q = query(collection(db, "leaderboard"), limit(500));
       const snap = await getDocs(q);
       return snap.docs.map((d) => ({ docId: d.id, ...d.data() }));
     },
