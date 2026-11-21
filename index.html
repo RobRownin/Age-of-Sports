@@ -850,7 +850,7 @@
       <div id="missionsScreenStatus"></div>
 
       <p class="section-title">Missions</p>
-      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them: reach the mission's training goal and the mission ends up to 30% sooner with better chances (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
+      <p class="hint" style="text-align:left;margin-top:-6px;">While your athlete is away, your own training supports them – only sessions started after the mission began count. Reach the mission's training goal and the mission ends up to 30% sooner with better chances (only you see your progress). Away athletes can't fight. Rarely a mission ends gloriously – or with an injury.</p>
       <div id="missionList" class="list"></div>
     </section>
 
@@ -2910,17 +2910,17 @@ function missionOdds(entry, missionId, support) {
 function ownsItem(id) { return accountInventory.includes(id); }
 
 // ----- Training support during a mission -----
-// Activities of this athlete that overlap the mission window count (an activity logged with its
-// start time shortly before the mission began still counts if it ended after the start)
+// Only activities that START after the mission started (and before its planned end) count:
+// start the mission first, then train for it. Compared at minute precision, because the
+// activity form only has minutes (a session logged in the same minute still counts).
 function missionGoalProgress(entry, now) {
   const mission = entry && entry.mission;
   const m = mission && MISSIONS[mission.id];
   if (!m || !m.goals) return { goals: [], support: 0 };
-  const start = Date.parse(mission.startedAt), end = Date.parse(mission.endsAt);
+  const start = Math.floor(Date.parse(mission.startedAt) / 60000) * 60000, end = Date.parse(mission.endsAt);
   const acts = (entry.activities || []).filter((a) => {
     const t = activitySortTime(a);
-    const tEnd = t + (a.type === 'sleep' ? 0 : (a.mins || 0) * 60000);
-    return t <= end && tEnd >= start;
+    return t >= start && t <= end;
   });
   const goals = m.goals.map((g) => {
     const value = g.measure(acts);
