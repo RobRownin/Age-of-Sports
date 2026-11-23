@@ -21,7 +21,7 @@ Sports-tracking PWA in a Greek/Roman RPG style: log activities, level up athlete
 - PWA: `manifest.json`, `service-worker.js` (network-first for HTML), `icon-192.png`, `icon-512.png`.
 - Fonts: Cinzel (headings/names), Inter (UI), JetBrains Mono (numbers).
 - Key state: `athletes`, `activeAthleteId`, `accountInventory`; working copies `ACTIVITIES`, `WEEK`, `athleteName` of the active athlete. `persist()` saves to Firestore and calls `syncLeaderboard()`.
-- Navigation: hamburger drawer; screens `athlete`, `inventory`, `activities`, `sleep`, `stats`, `gymnasium`, `stadium`, `leaderboard`, `account`. `showScreen(name)`; last screen kept in `localStorage` (`aos_lastScreen`).
+- Navigation: footer only (no side drawer). Tabs `athlete`, `activities`, `missions`, `stadium`, `inventory`; sub-screens `gymnasium` (from the athlete screen, `SCREEN_PARENT_TAB` keeps the Athlete tab active) and `leaderboard` (from the stadium); `account` via the settings icon top right (incl. Log Out). `showScreen(name)` maps old names via `SCREEN_ALIASES` (`stats`/`sleep` → `activities`); last screen kept in `localStorage` (`aos_lastScreen`).
 
 ## Environments (production / staging)
 
@@ -108,15 +108,15 @@ Migrations run on load: single-athlete -> `athletes[]`; per-athlete inventory ->
 
 - **Athlete:** portrait, level, 5 attribute bars, 4 labeled equip slots; name dropdown switches the active athlete (renaming only in Gymnasium).
 - **Inventory:** account-wide; shows which athlete wears an item. An item can be worn by one athlete at a time.
-- **Activities / Sleep:** day-grouped lists, add/edit/delete, read-only detail sheet with points breakdown, prev/next via buttons and swipe.
+- **Activities (incl. sleep and stats):** one screen: stats on top (type chips incl. Sleep × period Week/Month/Year/All-time, prev/next + swipe), below the day-grouped list of exactly the activities of the current filter (`renderFilteredActivityList`, called from `renderStats`; `renderActivities()` just calls `renderStats()`). Chart/tile unit follows the filter (`statsMetric`): km, hours for Sleep, reps for Strength. The "+" button logs the filtered type. Detail sheet prev/next follows the shown list (`viewListOrder`).
 - **Garmin import:** GPX and/or TCX, selectable together. TCX only knows `Running/Biking/Other` as sport, GPX has `<type>` (e.g. `rowing_v2`) but no trackpoints for indoor activities, so `mergeGarminResults` takes type from GPX and distance/duration/HR from TCX.
-- **Stats:** type filter x period filter (Week/Month/Year/All-time), prev/next via buttons and swipe, Monday-Sunday week buckets in month view (month total counts calendar-month days only), current bucket highlighted.
+- **Stats details:** Monday-Sunday week buckets in month view (month total counts calendar-month days only), current bucket highlighted.
 - **Gymnasium:** roster with attribute bars; dialog to rename and pick portrait; create new athlete.
 - **Stadium / Arena:** see "Arena" below.
 - **Leaderboard:** one entry per athlete of all accounts, ranked by arena rating (replayed from the duel history in the browser), shows portrait, title, W/L record; own marked "You". No level, no FP.
 - **Athleticus:** fixed test athlete, name/portrait locked, portrait follows level 1-5 (`athlete-level-N.png`), level set manually in the Gymnasium dialog for now.
 - **Items:** `ITEM_CATALOG` (clothing, equipment, supplies, slot4); items may have a real image (`image`), otherwise an emoji. Only `lion_sandals` has an image so far.
-- **Gestures:** swipe right opens the drawer, left closes it; disabled on Stats and in open dialogs to avoid conflicts.
+- **Gestures:** swipe left/right on the Activities screen changes the period; swipe in the detail sheet moves to the next/previous activity.
 
 ## Arena (simulation stage)
 
@@ -171,7 +171,7 @@ Modern dark UI (redesign 2026-11), the ancient theme lives in the content (athle
 - Tokens in `:root`: `--bg #0B0B0E`, `--surface #15151A`, `--surface2 #1C1C23`, `--surface3 #25252E`, `--border rgba(255,255,255,.07)`, `--text #F4F2EE`, `--muted #8E8B97`, `--faint`, `--gold #F2B33D` (+ `--gold-light`, `--gold-grad` gradient), `--red #F0544F`, `--green`. Radii `--radius-lg/--radius/--radius-sm`.
 - Fonts: Inter (UI), Sora (`--font-display`: headings, numbers with tabular figures), Cinzel only in the wordmark.
 - Icons: inline SVG sprite at the top of `<body>` (`<symbol id="i-…">`, used as `<svg class="i"><use href="#i-…"/></svg>`), line style. `#i-laurel` is the logo, `#i-tunic` (filled tunic silhouette) is the Clothing slot/category symbol, `#i-winged-sandal` (Hermes-style winged sandal, 48er viewBox) the Equipment symbol (`SLOT_ICONS` values may be emoji or SVG markup). Activity types and items still use emojis (stored in data).
-- Navigation: bottom nav (`.nav-item[data-nav]`: athlete, activities, stats, stadium, more). "More" opens the drawer with all screens; screens without their own tab highlight "More". `showScreen()` sets `body[data-screen]`, which also controls the floating "+" button (`.fab`, visible on Activities and Sleep).
+- Navigation: bottom nav (`.nav-item[data-nav]`: athlete, activities, missions, stadium, inventory), sub-screens show a `.back-btn`. `showScreen()` sets `body[data-screen]`, which also controls the floating "+" button (`.fab`, visible on Activities). Drawer CSS is still in the stylesheet but unused.
 - Colour coding: activity types via `.t-run/.t-ride/.t-walk/.t-row/.t-strength/.t-sleep` (sets `--tint`), attributes via `.a-endurance/.a-pace/.a-strength/.a-mental/.a-discipline` (sets `--c`, see `attrClass()`).
 - Components: `.card` (+ `.highlight`), `.btn-primary` (gradient), `.btn-secondary`, `.btn-danger`, `.list-btn`, `.chip-row`, `.metric-row` (segmented control), `.sheet` (bottom sheet with grab handle), `.settings-group`, `.empty` (empty state), `.badge`.
 - Patterns: edit via "Edit" text button with Save/Cancel; sensitive data masked (email) and password toggle; highlights in gold, not red; chart bars live in a fixed bar area so labels never clip; flex columns in charts need `min-width: 0`; mobile first, swipe gestures preferred over extra buttons; migrations stay backward compatible.

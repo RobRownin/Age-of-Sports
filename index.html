@@ -412,9 +412,13 @@
     background:var(--gold-grad); color:#1A1206; display:none; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 14px 30px -10px rgba(242,179,61,.75); }
   .fab .i{ width:26px; height:26px; stroke-width:2.4; }
   .fab:active{ transform:scale(.94); }
-  body[data-screen="activities"] .fab, body[data-screen="sleep"] .fab{ display:flex; }
+  body[data-screen="activities"] .fab{ display:flex; }
 
-  /* ===== Drawer (More) ===== */
+  .back-btn{ align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:none; border:none; color:var(--gold); font-size:14px; font-weight:600; cursor:pointer; padding:4px 0; margin-bottom:-6px; }
+  .back-btn .i{ width:18px; height:18px; }
+  .icon-btn.active{ border-color:rgba(242,179,61,.6); color:var(--gold); }
+
+  /* ===== Drawer (More) – no longer used ===== */
   .drawer-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); z-index:90; opacity:0; pointer-events:none; transition:opacity .25s; }
   .drawer-overlay.open{ opacity:1; pointer-events:auto; }
   .drawer{ position:fixed; top:0; left:0; height:100%; width:280px; max-width:84vw; background:#111116; border-right:1px solid var(--border);
@@ -603,67 +607,23 @@
 
 <div class="app" id="appRoot" style="display:none;">
 
-  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-  <nav class="drawer" id="drawerMenu">
-    <div class="drawer-brand">
-      <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
-      <span class="wordmark">Age of <span class="accent">Sports</span></span>
-    </div>
-    <p class="drawer-title">Train</p>
-    <button class="drawer-item" data-tab="athlete" onclick="showScreen('athlete')"><svg class="i"><use href="#i-athlete"/></svg>Athlete</button>
-    <button class="drawer-item" data-tab="activities" onclick="showScreen('activities')"><svg class="i"><use href="#i-activity"/></svg>Activities</button>
-    <button class="drawer-item" data-tab="sleep" onclick="showScreen('sleep')"><svg class="i"><use href="#i-moon"/></svg>Sleep</button>
-    <button class="drawer-item" data-tab="stats" onclick="showScreen('stats')"><svg class="i"><use href="#i-stats"/></svg>Stats</button>
-    <p class="drawer-title">Collect &amp; Compete</p>
-    <button class="drawer-item" data-tab="inventory" onclick="showScreen('inventory')"><svg class="i"><use href="#i-bag"/></svg>Inventory</button>
-    <button class="drawer-item" data-tab="gymnasium" onclick="showScreen('gymnasium')"><svg class="i"><use href="#i-temple"/></svg>Gymnasium</button>
-    <button class="drawer-item" data-tab="stadium" onclick="showScreen('stadium')"><svg class="i"><use href="#i-swords"/></svg>Stadium</button>
-    <button class="drawer-item" data-tab="missions" onclick="showScreen('missions')"><svg class="i"><use href="#i-map"/></svg>Missions</button>
-    <button class="drawer-item" data-tab="leaderboard" onclick="showScreen('leaderboard')"><svg class="i"><use href="#i-trophy"/></svg>Leaderboard</button>
-    <div class="drawer-spacer"></div>
-    <button class="drawer-item" data-tab="account" onclick="showScreen('account')"><svg class="i"><use href="#i-settings"/></svg>Account</button>
-    <button class="drawer-item danger" onclick="logout()"><svg class="i"><use href="#i-logout"/></svg>Log Out</button>
-  </nav>
-
   <div class="sticky-header" id="stickyHeader">
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark"><svg class="logo"><use href="#i-laurel"/></svg></div>
         <h1 class="wordmark">Age of <span class="accent">Sports</span></h1>
       </div>
-      <button class="icon-btn" onclick="showScreen('leaderboard')" aria-label="Leaderboard"><svg class="i"><use href="#i-trophy"/></svg></button>
+      <button class="icon-btn" id="accountBtn" onclick="showScreen('account')" aria-label="Account"><svg class="i"><use href="#i-settings"/></svg></button>
     </header>
   </div>
 
   <main>
-    <!-- ACTIVITIES -->
+    <!-- ACTIVITIES: stats on top, the matching activities (incl. sleep) below -->
     <section class="screen" id="screen-activities">
       <div class="screen-head">
         <div>
           <p class="label">Training log</p>
           <h1 class="title">Activities</h1>
-        </div>
-      </div>
-      <div id="activityList" class="list"></div>
-    </section>
-
-    <!-- SLEEP -->
-    <section class="screen" id="screen-sleep">
-      <div class="screen-head">
-        <div>
-          <p class="label">Recovery</p>
-          <h1 class="title">Sleep</h1>
-        </div>
-      </div>
-      <div id="sleepList" class="list"></div>
-    </section>
-
-    <!-- STATS -->
-    <section class="screen" id="screen-stats">
-      <div class="screen-head">
-        <div>
-          <p class="label">Overview</p>
-          <h1 class="title">Stats</h1>
         </div>
       </div>
 
@@ -708,6 +668,9 @@
           Weeks run Monday–Sunday. The monthly total above only counts days from the 1st to the last day of the calendar month, so the first/last week shown here may extend slightly beyond it.
         </p>
       </div>
+
+      <p class="section-title" id="activityListTitle">Activities</p>
+      <div id="activityList" class="list"></div>
     </section>
 
     <!-- ATHLETE -->
@@ -762,6 +725,15 @@
 
       <button class="btn-primary" onclick="openActivityModal('run')"><svg class="i"><use href="#i-plus"/></svg>Log Activity</button>
 
+      <button class="list-btn" onclick="showScreen('gymnasium')">
+        <span class="list-btn-ic"><svg class="i"><use href="#i-temple"/></svg></span>
+        <span class="list-btn-text">
+          <span class="t">Gymnasium</span>
+          <span class="s">All your athletes – rename, portraits, create new</span>
+        </span>
+        <span class="chevron"><svg class="i"><use href="#i-right"/></svg></span>
+      </button>
+
       <button class="list-btn" onclick="document.getElementById('garminFileInput').click()">
         <span class="list-btn-ic"><svg class="i"><use href="#i-upload"/></svg></span>
         <span class="list-btn-text">
@@ -809,6 +781,7 @@
 
     <!-- GYMNASIUM -->
     <section class="screen" id="screen-gymnasium">
+      <button class="back-btn" onclick="showScreen('athlete')"><svg class="i"><use href="#i-left"/></svg>Athlete</button>
       <div class="screen-head">
         <div>
           <p class="label">Your athletes</p>
@@ -832,6 +805,11 @@
 
       <div class="card arena-me" id="arenaMeCard"></div>
       <button class="btn-primary" onclick="createChallenge()">⚔️ Issue a Challenge</button>
+      <button class="list-btn" onclick="showScreen('leaderboard')">
+        <span class="list-btn-ic"><svg class="i"><use href="#i-trophy"/></svg></span>
+        <span class="list-btn-text"><span class="t">Leaderboard</span><span class="s">Ranked by arena rating</span></span>
+        <span class="chevron"><svg class="i"><use href="#i-right"/></svg></span>
+      </button>
       <p class="hint" style="margin-top:-4px;">A random discipline is drawn. Your athlete's current form decides – with a little luck. Wins raise your rating, which ranks the leaderboard.</p>
 
       <div id="stadiumChallengeList" class="list">
@@ -944,6 +922,7 @@
 
     <!-- LEADERBOARD -->
     <section class="screen" id="screen-leaderboard">
+      <button class="back-btn" onclick="showScreen('stadium')"><svg class="i"><use href="#i-left"/></svg>Stadium</button>
       <div class="screen-head">
         <div>
           <p class="label">Who's leading?</p>
@@ -960,15 +939,15 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <!-- FLOATING ACTION BUTTON (Activities / Sleep) -->
-  <button class="fab" onclick="openActivityModal(document.body.dataset.screen === 'sleep' ? 'sleep' : 'run')" aria-label="Log activity"><svg class="i"><use href="#i-plus"/></svg></button>
+  <button class="fab" onclick="openActivityModal(statsFilter !== 'all' ? statsFilter : 'run')" aria-label="Log activity"><svg class="i"><use href="#i-plus"/></svg></button>
 
   <!-- BOTTOM NAVIGATION -->
   <nav class="bottom-nav" id="bottomNav">
     <button class="nav-item" data-nav="athlete" onclick="showScreen('athlete')"><svg class="i"><use href="#i-athlete"/></svg>Athlete</button>
     <button class="nav-item" data-nav="activities" onclick="showScreen('activities')"><svg class="i"><use href="#i-activity"/></svg>Activities</button>
-    <button class="nav-item" data-nav="stats" onclick="showScreen('stats')"><svg class="i"><use href="#i-stats"/></svg>Stats</button>
+    <button class="nav-item" data-nav="missions" onclick="showScreen('missions')"><svg class="i"><use href="#i-map"/></svg>Missions</button>
     <button class="nav-item" data-nav="stadium" onclick="showScreen('stadium')"><svg class="i"><use href="#i-swords"/></svg>Stadium</button>
-    <button class="nav-item" data-nav="more" onclick="openDrawer()"><svg class="i"><use href="#i-grid"/></svg>More</button>
+    <button class="nav-item" data-nav="inventory" onclick="showScreen('inventory')"><svg class="i"><use href="#i-bag"/></svg>Inventory</button>
   </nav>
 
   <!-- ITEM PICKER (equip slot) -->
@@ -2175,19 +2154,11 @@ function buildGroupedActivityHtml(items) {
 }
 
 function renderActivities() {
-  const withIndex = ACTIVITIES.map((a, realIndex) => ({ a, realIndex }));
-  const sorted = withIndex.slice().sort((x, y) => activitySortTime(y.a) - activitySortTime(x.a));
-
-  const list = document.getElementById('activityList');
-  list.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type !== 'sleep'))
-    || '<div class="empty"><span class="em">🏃</span>No activities yet.<br>Tap + to log your first one.</div>';
-
-  const sleepListEl = document.getElementById('sleepList');
-  sleepListEl.innerHTML = buildGroupedActivityHtml(sorted.filter(({ a }) => a.type === 'sleep'))
-    || '<div class="empty"><span class="em">🌙</span>No sleep logged yet.<br>Tap + to add a night.</div>';
+  renderStats(); // stats and the filtered list live on one screen
 }
 
 let statsFilter = 'all';
+let viewListOrder = []; // realIndexes in the order the filtered list shows them (for prev/next in the detail view)
 let statsPeriodType = 'week'; // 'week' | 'month' | 'year' | 'alltime'
 let statsPeriodOffset = 0;    // 0 = current period, -1 = previous, etc. (never > 0, can't view the future)
 
@@ -2298,7 +2269,7 @@ function buildChartBuckets(type, offset, list) {
     const bucket = buckets.find((b) => t >= b.start.getTime() && t < b.end.getTime());
     if (!bucket) return;
     bucket.count = (bucket.count || 0) + 1;
-    if (a.km) bucket.km += a.km;
+    bucket.km += statsMetric().value(a); // field name kept: holds the value of the current metric
   });
   return buckets;
 }
@@ -2330,6 +2301,13 @@ function statsPeriodNext() {
   renderStats();
 }
 
+// What the stats measure for the current type filter: hours for sleep, reps for strength, else km
+function statsMetric() {
+  if (statsFilter === 'sleep') return { unit: 'h', title: 'Sleep Hours', value: (a) => (a.type === 'sleep' ? (a.mins || 0) / 60 : 0) };
+  if (statsFilter === 'strength') return { unit: 'reps', title: 'Reps', value: (a) => (a.reps || 0), digits: 0 };
+  return { unit: 'km', title: 'Kilometers', value: (a) => (a.km || 0) };
+}
+
 function renderStats() {
   const typeFiltered = statsFilter === 'all' ? ACTIVITIES : ACTIVITIES.filter((a) => a.type === statsFilter);
   const periodFiltered = statsPeriodType === 'alltime'
@@ -2341,7 +2319,9 @@ function renderStats() {
       });
 
   const periodLabels = { week: 'This Week', month: 'This Month', year: 'This Year', alltime: 'All-time' };
-  const chartTitles = { week: 'Kilometers per Day', month: 'Kilometers per Week', year: 'Kilometers per Month', alltime: 'Kilometers per Year' };
+  const metric = statsMetric();
+  const digits = metric.digits != null ? metric.digits : 1;
+  const chartTitles = { week: `${metric.title} per Day`, month: `${metric.title} per Week`, year: `${metric.title} per Month`, alltime: `${metric.title} per Year` };
   document.getElementById('statPeriodLabel').textContent = statsPeriodOffset === 0 || statsPeriodType === 'alltime'
     ? periodLabels[statsPeriodType]
     : 'Selected Period';
@@ -2350,24 +2330,40 @@ function renderStats() {
   document.getElementById('statsPeriodLabel').textContent = formatPeriodLabel(statsPeriodType, statsPeriodOffset);
   document.getElementById('statsPeriodNextBtn').disabled = statsPeriodOffset >= 0;
 
-  document.getElementById('statWeekKm').innerHTML = totalKm(periodFiltered).toFixed(1) + ' <span>km</span>';
+  document.getElementById('statWeekKm').innerHTML = periodFiltered.reduce((s, a) => s + metric.value(a), 0).toFixed(digits) + ` <span>${metric.unit}</span>`;
   document.getElementById('statCount').textContent = periodFiltered.length;
 
   const buckets = buildChartBuckets(statsPeriodType, statsPeriodOffset, typeFiltered);
   const max = Math.max(...buckets.map((d) => d.km), 1);
   document.getElementById('chartRow').innerHTML = buckets.map(d => `
     <div class="chart-col ${d.isCurrent ? 'current' : ''} ${d.km ? '' : 'nodata'}">
-      <div class="chart-value">${d.count ? `<span>${d.km.toFixed(1)}</span><span style="opacity:.7;">(${d.count})</span>` : ''}</div>
+      <div class="chart-value">${d.count ? `<span>${d.km.toFixed(digits)}</span><span style="opacity:.7;">(${d.count})</span>` : ''}</div>
       <div class="chart-bar-area">
         <div class="chart-bar" style="height:${Math.max(4, (d.km / max) * 100)}%;"></div>
       </div>
       <div class="chart-day">${d.label}</div>
     </div>`).join('') || '<p class="hint">No data for this period.</p>';
+
+  renderFilteredActivityList(periodFiltered);
+}
+
+// The list under the chart: exactly the activities of the current type + period filter
+function renderFilteredActivityList(filtered) {
+  const list = document.getElementById('activityList');
+  if (!list) return;
+  const sorted = filtered.map((a) => ({ a, realIndex: ACTIVITIES.indexOf(a) }))
+    .sort((x, y) => activitySortTime(y.a) - activitySortTime(x.a));
+  viewListOrder = sorted.map(({ realIndex }) => realIndex);
+  const typeName = statsFilter === 'all' ? 'Activities' : (TYPE_LABEL[statsFilter] || 'Activities');
+  document.getElementById('activityListTitle').innerHTML = `${typeName} <small class="title-note">${sorted.length}</small>`;
+  const emptyIcon = statsFilter === 'sleep' ? '🌙' : '🏃';
+  list.innerHTML = buildGroupedActivityHtml(sorted)
+    || `<div class="empty"><span class="em">${emptyIcon}</span>Nothing logged in this period.<br>Tap + to add an entry.</div>`;
 }
 
 // Swipe-Navigation auf dem Statistik-Reiter: links = nächster Zeitraum, rechts = vorheriger
 function setupStatsSwipeNav() {
-  const el = document.getElementById('screen-stats');
+  const el = document.getElementById('screen-activities');
   let startX = 0, startY = 0, tracking = false;
 
   el.addEventListener('touchstart', (e) => {
@@ -3178,35 +3174,30 @@ setInterval(() => {
   else if (s === 'athlete') renderMissionStatus();
 }, 30000);
 
+// Screens that were merged or moved, and which footer tab a sub-screen belongs to
+const SCREEN_ALIASES = { stats: 'activities', sleep: 'activities' };
+const SCREEN_PARENT_TAB = { gymnasium: 'athlete', leaderboard: 'stadium' };
+
 function showScreen(name) {
+  name = SCREEN_ALIASES[name] || name;
+  if (!document.getElementById('screen-' + name)) name = 'athlete';
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
-  document.querySelectorAll('.drawer-item').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === name);
-  });
-  // Bottom navigation: screens without their own tab are reached via "More"
-  const navTarget = document.querySelector(`.nav-item[data-nav="${name}"]`) ? name : 'more';
+  const navTarget = SCREEN_PARENT_TAB[name] || name;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
+  const accBtn = document.getElementById('accountBtn');
+  if (accBtn) accBtn.classList.toggle('active', name === 'account');
   document.body.dataset.screen = name;
   window.scrollTo(0, 0);
-  closeDrawer();
   localStorage.setItem(LS_PREFIX + 'lastScreen', name);
   if (name === 'leaderboard') loadLeaderboard();
   if (name === 'inventory') renderInventory();
+  if (name === 'activities') renderStats();
   if (name === 'stadium') loadChallenges();
   if (name === 'account') loadAccountScreen();
   if (name === 'missions') { renderMissions(); if (!arenaLoaded && window.fb && window.fb.fetchChallenges) refreshArenaData().then(renderMissions).catch(() => {}); }
 }
 
-function openDrawer() {
-  document.getElementById('drawerMenu').classList.add('open');
-  document.getElementById('drawerOverlay').classList.add('open');
-}
-
-function closeDrawer() {
-  document.getElementById('drawerMenu').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('open');
-}
 
 // ---------- Add/Edit-activity sheet ----------
 let selectedType = "run";
@@ -3296,6 +3287,7 @@ function resetForm(defaultType) {
 function openActivityModal(defaultType) {
   editingIndex = null;
   document.getElementById('sheetTitle').textContent = defaultType === 'sleep' ? 'Log Sleep' : 'Log Activity';
+  if (!document.querySelector(`#typeRow .type-btn[data-type="${defaultType}"]`)) defaultType = 'run';
   document.getElementById('sheetSubmitBtn').textContent = 'Save';
   document.getElementById('sheetDeleteBtn').style.display = 'none';
   resetForm(defaultType);
@@ -3366,7 +3358,7 @@ function renderViewModal(index) {
 function openViewModal(index) {
   const a = ACTIVITIES[index];
   if (!a) return;
-  viewContext = buildViewContext(a.type === 'sleep');
+  viewContext = viewListOrder.includes(index) ? viewListOrder.slice() : buildViewContext(a.type === 'sleep');
   viewPos = viewContext.indexOf(index);
   renderViewModal(index);
   document.getElementById('activityViewOverlay').classList.add('open');
@@ -3395,41 +3387,6 @@ function editFromView() {
   const idx = viewingIndex;
   closeViewModal();
   openEditModal(idx);
-}
-
-// Swipe-Gesten für das Burger-Menü: von links reinwischen öffnet, nach links wischen schließt
-function setupDrawerSwipeNav() {
-  let startX = 0, startY = 0, tracking = false;
-
-  document.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1) return;
-    if (document.getElementById('appRoot').style.display === 'none') return; // nicht auf dem Login-Screen
-    // Während ein Aktivitäts-Dialog offen ist, soll dessen eigene Wisch-Navigation (vor/zurück)
-    // nicht mit dem Menü-Öffnen kollidieren
-    if (e.target.closest && e.target.closest('.overlay.open')) { tracking = false; return; }
-    // Der Statistik-Reiter hat seine eigene Wisch-Navigation (Zeitraum vor/zurück) - dort soll
-    // ein Wisch niemals zusätzlich das Menü öffnen
-    if (e.target.closest && e.target.closest('#screen-stats')) { tracking = false; return; }
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    tracking = true;
-  }, { passive: true });
-
-  document.addEventListener('touchend', (e) => {
-    if (!tracking) return;
-    tracking = false;
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // keine eindeutig horizontale Geste
-
-    const drawerOpen = document.getElementById('drawerMenu').classList.contains('open');
-    if (!drawerOpen && dx > 0) {
-      openDrawer();
-    } else if (drawerOpen && dx < 0) {
-      closeDrawer();
-    }
-  }, { passive: true });
 }
 
 // Swipe-Navigation im Ansichts-Dialog: links = weiter zur nächsten, rechts = zurück zur vorherigen
@@ -4378,7 +4335,6 @@ populateTimeSelects();
 setBedTime('23:00');
 setWakeTime('07:00');
 setupViewSwipeNav();
-setupDrawerSwipeNav();
 setupStatsSwipeNav();
 window.addEventListener('scroll', () => {
   const h = document.getElementById('stickyHeader');
