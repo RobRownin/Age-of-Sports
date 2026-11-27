@@ -29,6 +29,11 @@ jobs:
           ref: main
           path: main
 
+      - name: Check whitepaper is in sync with the game code (warning only)
+        run: |
+          node main/tools/whitepaper-sync.js main --check \
+            || echo "::warning title=Whitepaper out of date::Numbers or tables in whitepaper.html differ from index.html. Run 'node tools/whitepaper-sync.js --fix' and review the prose."
+
       - name: Check out staging
         id: staging
         continue-on-error: true
@@ -42,7 +47,7 @@ jobs:
           set -e
           copy_app() {
             cp -a "$1/." "$2/"
-            rm -rf "$2/.git" "$2/.github" "$2/docs" "$2/CLAUDE.md"
+            rm -rf "$2/.git" "$2/.github" "$2/docs" "$2/tools" "$2/CLAUDE.md"
           }
           mkdir -p _site
           copy_app main _site

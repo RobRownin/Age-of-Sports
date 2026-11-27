@@ -92,7 +92,7 @@ Activity: type, km, reps, `exercises` (Strength only: `[{id, reps}]`, ids `pushu
 
 **Fitness Points (FP)** per activity (`activityFPParts` / `computeActivityScore`): 10/km, 1/min, 0.3/bpm, 0.2/m elevation; sleep 5/h capped at 9 h; Strength exercises per rep: push-up 0.6, sit-up 0.4, pull-up 1.5, burpee 1.0, other 0.5 (`EXERCISES`). FP are the leaderboard score and drive the level.
 
-**Level** (`levelFromFP`): each level needs 100 FP more than the previous one (step = 300 + 100·(L−1); Level 2 at 300 FP, 5 at 1,500, 10 at 6,300). Athleticus keeps its manual level.
+**Level** (`levelFromFP`): each level needs 100 FP more than the previous one (step = 300 + 100·(L−1); Level 2 at 300 FP, 5 at 1,800, 10 at 6,300). Athleticus keeps its manual level.
 
 **Attributes** = base + training (`computeAttrs(entry)`), keys `endurance, pace, strength, mental, discipline` (`ATTRIBUTES`):
 - Base points: assigned once per athlete in `ensureBaseAttrs`, deterministic from the athlete id (seeded PRNG) so all devices agree; stored as `baseAttrs` + `baseAttrsVersion`. Version 2: every athlete gets the same total (`BASE_TOTAL` = 150, each 22–38) in a different distribution, for a fair arena; older versions are regenerated on load.
@@ -146,10 +146,23 @@ Missions make a character stronger for the arena; the leaderboard stays arena-on
 
 ## Whitepaper
 
-- `whitepaper.html` (repo root, standalone page in the app's design) is deployed with the app: production `https://robrownin.github.io/Age-of-Sports/whitepaper.html`, staging `/staging/whitepaper.html`. Linked from the login screen and the Account screen.
-- Structure follows move-to-earn whitepapers (e.g. STEPN): abstract, problem, vision, core loop, game systems, fairness/anti-cheat, privacy, economy, roadmap, disclaimer. Deliberately **no token/NFT economy** – the economy section lists the in-game values.
+- `whitepaper.html` (repo root, standalone page in the app's design) is deployed with the app: production `https://robrownin.github.io/Age-of-Sports/whitepaper.html`, staging `/staging/whitepaper.html`. Linked from the login screen and the Account screen. Short version (8 sections), structured like move-to-earn whitepapers but deliberately **without token/NFT economy**.
+- **Sync tool** `tools/whitepaper-sync.js` (Node, no dependencies; not deployed): runs the app's classic script in a `vm` sandbox with a stubbed DOM and reads the game constants/functions. `--fix` replaces every `<span data-sync="key">` value and regenerates every `<!-- sync:name -->…<!-- /sync:name -->` block (tables: `fp-table`, `tiers-table`, `missions-table`, `loot-table`, `disciplines-table`, `titles-table`), stamps `<meta name="wp-synced-commit">` and prints the app commits since the last sync plus coverage notes (attributes/activity types not mentioned). `--check` only reports (exit 1 if out of date). The GitHub deploy workflow runs `--check` on `main` and emits a warning (non-blocking). New `data-sync` keys/blocks are added in the tool's `values`/`blocks`.
+- **Release ritual** (token-efficient, see CLAUDE.md): `--fix` → read only the commit messages since the last sync → edit only affected prose using the section map below → roadmap → screenshots only if the UI changed → version bump → `--check`.
+- **Section map** (prose ↔ systems; also noted as HTML comments in the whitepaper):
+
+| Section | Depends on |
+|---|---|
+| 01 Overview | overall concept, principles |
+| 02 Core loop | activities, attributes, missions, arena (big new systems) |
+| 03 Athletes & training | `ATTRIBUTES`, base points, `TYPE_TRAINING`, `TRAINING`, FP (`activityFPParts`, `EXERCISES`), levels, activity types, Garmin import |
+| 04 Items | `ITEM_CATALOG` tiers/bonuses, `ITEM_TIERS`, `ITEM_BONUS_CAP`, `STARTER_ITEMS`, slots |
+| 05 Missions & Kleos | `MISSIONS`/goals, `missionTier`, `LOOT_TABLES`, `MISSION_RULES`, `KLEOS`, `KLEOS_WEIGHT` |
+| 06 Arena & leaderboard | `DISCIPLINES`, `weightedScore`, `ARENA`, ratings, `arenaTitle`, leaderboard |
+| 07 Fairness, privacy & economy | `publicProfile`, leaderboard fields, anything public, monetisation (none), anti-cheat status, data storage, third-party imports |
+| 08 Roadmap | `docs/KNOWLEDGE.md` open points – update at every release |
+
 - **Screenshots** in `img/whitepaper/*.webp` (540 px wide, WebP): taken from the app with sample data (no real user data, no staging badge) via a Playwright script that injects a mock `window.fb`, sets a sample game state (equipped items, Kleos, a running mission with partial support) and shoots each screen at 390×844 @2x. Retake them when the UI changes noticeably.
-- **Keep it in sync**: all numbers (FP rates, level formula, training model, item tiers, mission table, loot tables, arena weights, Elo, limits) are copied from `index.html`. When game constants change, update the whitepaper too and bump its version.
 
 ## Development workflow
 

@@ -8,3 +8,8 @@ Essentials:
 - Bump `AVATAR_VERSION` whenever an image changes.
 - New Firestore collections or doc-ID changes need a rules update in the Firebase Console of **both** projects (owner does this; provide the rule text).
 - Never write tokens or secrets into the repo.
+- Whitepaper (`whitepaper.html`, public): update it at every **production release** (merge to `main`), token-efficiently:
+  1. `node tools/whitepaper-sync.js --fix` – regenerates all numbers (`data-sync`) and tables (`sync:` blocks) from `index.html` and lists the app commits since the last sync.
+  2. Read only those commit messages; for each, check the section map in `docs/KNOWLEDGE.md` ("Whitepaper") and edit only the affected prose sections (each section's HTML comment names the systems it depends on). Update the roadmap.
+  3. Retake screenshots only if the UI changed noticeably; bump the whitepaper version; run `--check` (must report up to date).
+
