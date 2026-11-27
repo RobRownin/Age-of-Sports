@@ -144,6 +144,12 @@ Missions make a character stronger for the arena; the leaderboard stays arena-on
 - Data lives in the athlete entry (`mission {id, startedAt, endsAt}`, `missionLog`); no Firestore rule change needed. Simulation stage: outcomes are decided in the browser (not cheat-proof), like the arena.
 - Ideas for later: festival games series (Isthmian, Nemean, Pythian, Olympic → title "Periodonikes"), Labours of Heracles for high levels, relay missions with several athletes, more items/real item images.
 
+## Whitepaper
+
+- `whitepaper.html` (repo root, standalone page in the app's design) is deployed with the app: production `https://robrownin.github.io/Age-of-Sports/whitepaper.html`, staging `/staging/whitepaper.html`. Linked from the login screen and the Account screen.
+- Structure follows move-to-earn whitepapers (e.g. STEPN): abstract, problem, vision, core loop, game systems, fairness/anti-cheat, privacy, economy, roadmap, disclaimer. Deliberately **no token/NFT economy** – the economy section lists the in-game values.
+- **Keep it in sync**: all numbers (FP rates, level formula, training model, item tiers, mission table, loot tables, arena weights, Elo, limits) are copied from `index.html`. When game constants change, update the whitepaper too and bump its version.
+
 ## Development workflow
 
 1. Edit `index.html` (and assets).

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Age of Sports Whitepaper</title>
+<meta name="description" content="Age of Sports: a train-to-play fitness RPG. Real training makes ancient athletes stronger; they earn glory on missions and compete in the arena." />
+<meta name="theme-color" content="#0B0B0E" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0B0B0E; --surface:#15151A; --surface2:#1C1C23; --surface3:#25252E;
+    --border:rgba(255,255,255,.08); --text:#F4F2EE; --muted:#A09DA8; --faint:#6A6874;
+    --gold:#F2B33D; --gold-light:#FFD583; --gold-grad:linear-gradient(135deg,#FFD683 0%,#F2B33D 48%,#DE8A1C 100%);
+    --red:#F0544F; --green:#3DD68C;
+    --c-end:#2EC4B6; --c-pac:#5B8CFF; --c-str:#FF7A45; --c-men:#A685FF; --c-dis:#F2B33D; --c-kle:#E8C26B;
+    --t1:#A7ADB7; --t2:#4CC27A; --t3:#4C8DFF; --t4:#A66BFF; --t5:#FF9A3C;
+    --font-display:'Sora','Inter',system-ui,sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html{ background:var(--bg); scroll-behavior:smooth; }
+  body{ margin:0; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1000px 500px at 50% -200px, rgba(242,179,61,.12), transparent 70%), var(--bg); }
+  a{ color:var(--gold-light); }
+  .wrap{ max-width:820px; margin:0 auto; padding:0 20px 80px; }
+
+  /* top bar */
+  .bar{ position:sticky; top:0; z-index:10; background:rgba(11,11,14,.8); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+  .bar-in{ max-width:820px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+  .mark{ width:30px; height:30px; border-radius:9px; background:var(--gold-grad); display:flex; align-items:center; justify-content:center; }
+  .mark svg{ width:21px; height:21px; color:#1A1206; }
+  .word{ font-size:12.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; }
+  .word b{ font-family:'Cinzel',serif; color:var(--gold); font-weight:600; }
+  .cta{ display:inline-flex; align-items:center; gap:6px; background:var(--gold-grad); color:#1A1206; font-weight:700; font-size:13.5px; text-decoration:none; padding:9px 14px; border-radius:12px; white-space:nowrap; }
+
+  /* hero */
+  .hero{ padding:56px 0 28px; text-align:center; }
+  .eyebrow{ font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin:0 0 12px; }
+  h1{ font-family:var(--font-display); font-size:clamp(34px, 7vw, 52px); line-height:1.08; letter-spacing:-.025em; margin:0 0 16px; }
+  h1 span{ background:var(--gold-grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .lead{ font-size:18px; color:var(--muted); max-width:620px; margin:0 auto 22px; }
+  .meta{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .pill{ font-size:12px; font-weight:600; color:var(--muted); border:1px solid var(--border); border-radius:999px; padding:5px 11px; background:var(--surface); }
+
+  /* toc */
+  .toc{ background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px 20px; margin:12px 0 8px; }
+  .toc p{ margin:0 0 8px; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .toc ol{ margin:0; padding-left:20px; columns:2; column-gap:28px; font-size:14.5px; }
+  .toc li{ break-inside:avoid; margin:3px 0; }
+  .toc a{ color:var(--text); text-decoration:none; }
+  .toc a:hover{ color:var(--gold-light); }
+  @media (max-width:560px){ .toc ol{ columns:1; } }
+
+  /* sections */
+  section{ padding-top:44px; scroll-margin-top:24px; }
+  h2{ font-family:var(--font-display); font-size:26px; letter-spacing:-.015em; margin:0 0 6px; display:flex; align-items:baseline; gap:12px; }
+  h2 .n{ font-size:14px; color:var(--gold); font-weight:700; }
+  h3{ font-family:var(--font-display); font-size:18px; margin:26px 0 6px; }
+  p{ margin:10px 0; }
+  .muted{ color:var(--muted); }
+  ul.clean{ padding-left:20px; margin:8px 0; }
+  ul.clean li{ margin:4px 0; }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; margin:16px 0; }
+  .note{ border-left:3px solid var(--gold); background:rgba(242,179,61,.07); border-radius:0 14px 14px 0; padding:12px 16px; margin:16px 0; font-size:15px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:640px){ .grid2, .grid3{ grid-template-columns:1fr; } }
+  .feat h4{ margin:4px 0 4px; font-family:var(--font-display); font-size:15.5px; }
+  .feat p{ margin:0; font-size:14px; color:var(--muted); }
+  .feat .ic{ font-size:22px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:14px; margin:14px 0; }
+  .tbl{ overflow-x:auto; border:1px solid var(--border); border-radius:14px; margin:14px 0; }
+  .tbl table{ margin:0; }
+  th, td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th{ font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); background:var(--surface2); font-weight:700; white-space:nowrap; }
+  tr:last-child td{ border-bottom:none; }
+  td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  code, .formula{ font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13.5px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:1px 6px; }
+  .formula{ display:block; padding:10px 14px; margin:12px 0; overflow-x:auto; white-space:nowrap; }
+
+  .tag{ display:inline-block; font-size:11px; font-weight:700; border-radius:6px; padding:1px 7px; color:var(--tc); background:color-mix(in srgb, var(--tc) 16%, transparent); white-space:nowrap; }
+  .a-end{ --tc:var(--c-end); } .a-pac{ --tc:var(--c-pac); } .a-str{ --tc:var(--c-str); } .a-men{ --tc:var(--c-men); } .a-dis{ --tc:var(--c-dis); } .a-kle{ --tc:var(--c-kle); }
+  .t1{ --tc:var(--t1); } .t2{ --tc:var(--t2); } .t3{ --tc:var(--t3); } .t4{ --tc:var(--t4); } .t5{ --tc:var(--t5); }
+
+  /* loop diagram */
+  .loop{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:18px 0 6px; position:relative; }
+  .step{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 12px; text-align:center; position:relative; }
+  .step .ic{ font-size:24px; }
+  .step b{ display:block; font-family:var(--font-display); font-size:14.5px; margin:4px 0 2px; }
+  .step small{ display:block; color:var(--muted); font-size:12.5px; line-height:1.4; }
+  .step:not(:last-child)::after{ content:'→'; position:absolute; right:-10px; top:50%; transform:translate(50%,-50%); color:var(--gold); font-weight:700; z-index:1; }
+  .loop-back{ text-align:center; font-size:12.5px; color:var(--muted); margin-top:4px; }
+  @media (max-width:640px){
+    .loop{ grid-template-columns:1fr; }
+    .step:not(:last-child)::after{ content:'↓'; right:50%; top:auto; bottom:-14px; transform:translate(50%,0); }
+  }
+
+  .roadmap{ display:grid; gap:12px; margin-top:14px; }
+  .phase{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px 18px; }
+  .phase h4{ margin:0 0 6px; font-family:var(--font-display); font-size:16px; display:flex; align-items:center; gap:8px; }
+  .phase .st{ font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:999px; }
+  .st.done{ color:var(--green); background:rgba(61,214,140,.14); } .st.next{ color:var(--gold-light); background:rgba(242,179,61,.14); } .st.later{ color:var(--muted); background:var(--surface3); }
+  .phase ul{ margin:0; padding-left:18px; font-size:14.5px; color:var(--muted); }
+
+  footer{ margin-top:56px; padding-top:22px; border-top:1px solid var(--border); font-size:13px; color:var(--faint); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="laurel" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10.5 20.5C5.5 19 3.2 14 4.6 7.5"/><path d="M13.5 20.5C18.5 19 20.8 14 19.4 7.5"/></g>
+    <g fill="currentColor">
+      <ellipse cx="3.3" cy="9.4" rx="1.05" ry="2.1" transform="rotate(-18 3.3 9.4)"/><ellipse cx="6.3" cy="8.6" rx="1.05" ry="2.1" transform="rotate(32 6.3 8.6)"/>
+      <ellipse cx="3.4" cy="13.6" rx="1.05" ry="2.1" transform="rotate(-40 3.4 13.6)"/><ellipse cx="6.7" cy="12.9" rx="1.05" ry="2.1" transform="rotate(18 6.7 12.9)"/>
+      <ellipse cx="5.4" cy="17.4" rx="1.05" ry="2.1" transform="rotate(-62 5.4 17.4)"/><ellipse cx="8.4" cy="16.4" rx="1.05" ry="2.1"/>
+      <ellipse cx="5.1" cy="5.2" rx="1" ry="1.9" transform="rotate(8 5.1 5.2)"/>
+      <ellipse cx="20.7" cy="9.4" rx="1.05" ry="2.1" transform="rotate(18 20.7 9.4)"/><ellipse cx="17.7" cy="8.6" rx="1.05" ry="2.1" transform="rotate(-32 17.7 8.6)"/>
+      <ellipse cx="20.6" cy="13.6" rx="1.05" ry="2.1" transform="rotate(40 20.6 13.6)"/><ellipse cx="17.3" cy="12.9" rx="1.05" ry="2.1" transform="rotate(-18 17.3 12.9)"/>
+      <ellipse cx="18.6" cy="17.4" rx="1.05" ry="2.1" transform="rotate(62 18.6 17.4)"/><ellipse cx="15.6" cy="16.4" rx="1.05" ry="2.1"/>
+      <ellipse cx="18.9" cy="5.2" rx="1" ry="1.9" transform="rotate(-8 18.9 5.2)"/>
+    </g>
+  </symbol>
+</defs></svg>
+
+<div class="bar"><div class="bar-in">
+  <a class="brand" href="./"><span class="mark"><svg><use href="#laurel"/></svg></span><span class="word">Age of <b>Sports</b></span></a>
+  <a class="cta" href="./">Open the app →</a>
+</div></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Whitepaper</p>
+    <h1>Train like an Olympian.<br><span>Level up your legend.</span></h1>
+    <p class="lead">Age of Sports is a train-to-play fitness RPG. Your real training makes an ancient athlete stronger. Athletes earn glory on missions and prove themselves in the arena – no tokens, no pay-to-win, just your effort.</p>
+    <div class="meta"><span class="pill">Version 0.1 · Draft</span><span class="pill">November 2026</span><span class="pill">Web app (PWA)</span></div>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#problem">The problem</a></li>
+      <li><a href="#vision">Vision &amp; principles</a></li>
+      <li><a href="#loop">The core loop</a></li>
+      <li><a href="#athletes">Athletes &amp; attributes</a></li>
+      <li><a href="#fitness">Activities &amp; Fitness Points</a></li>
+      <li><a href="#training">The training model</a></li>
+      <li><a href="#items">Equipment &amp; item tiers</a></li>
+      <li><a href="#missions">Missions &amp; Kleos</a></li>
+      <li><a href="#arena">The arena</a></li>
+      <li><a href="#fairness">Fairness &amp; anti-cheat</a></li>
+      <li><a href="#privacy">Privacy &amp; data</a></li>
+      <li><a href="#economy">Economy</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#disclaimer">Disclaimer</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="abstract">
+    <h2><span class="n">01</span>Abstract</h2>
+    <p>Move-to-earn apps showed that game mechanics can get people moving. Many of them, however, tied that motivation to tradable crypto tokens and NFTs, so the reason to train depended on market prices – and faded when prices did.</p>
+    <p><strong>Age of Sports</strong> keeps what works – a game layer on top of real activity – and removes what doesn't. You log runs, rides, walks, rowing, strength workouts and sleep. That activity earns <strong>Fitness Points</strong> and trains the <strong>attributes</strong> of your athlete. Athletes go on <strong>missions</strong> to win equipment and <strong>Kleos</strong> (glory) and fight <strong>duels in the arena</strong>, whose results alone decide the public leaderboard.</p>
+    <p>The progression model is built to reward consistency over volume: training gains slow down as an athlete approaches its potential, and they fade if you stop. Nothing can be bought.</p>
+  </section>
+
+  <!-- 2 -->
+  <section id="problem">
+    <h2><span class="n">02</span>The problem</h2>
+    <div class="grid3">
+      <div class="card feat"><div class="ic">📉</div><h4>Motivation fades</h4><p>Most fitness trackers show numbers, but numbers alone rarely keep people going after the first weeks.</p></div>
+      <div class="card feat"><div class="ic">💸</div><h4>Rewards become speculation</h4><p>Token-based move-to-earn models link the reason to train to prices, entry costs and market cycles.</p></div>
+      <div class="card feat"><div class="ic">🏁</div><h4>Leaderboards favour volume</h4><p>Ranking by kilometres or minutes rewards whoever has the most time, not whoever trains smartly and regularly.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="vision">
+    <h2><span class="n">03</span>Vision &amp; principles</h2>
+    <p>Age of Sports turns training into the story of an ancient athlete – from novice to legend of the stadium. Four principles guide every design decision:</p>
+    <div class="grid2">
+      <div class="card feat"><div class="ic">🏋️</div><h4>Real effort only</h4><p>Athletic attributes grow exclusively from real activity. Missions and items add on top, but never replace training.</p></div>
+      <div class="card feat"><div class="ic">📆</div><h4>Consistency beats volume</h4><p>Diminishing gains and a daily fade make regular training more valuable than occasional extremes.</p></div>
+      <div class="card feat"><div class="ic">⚖️</div><h4>Fair by design</h4><p>Every athlete starts with the same base total. Items are earned, never bought. The leaderboard ranks arena results, not raw data.</p></div>
+      <div class="card feat"><div class="ic">🔒</div><h4>Private by default</h4><p>Your activities, exact values and progress stay yours. Others only see your athlete as a coarse, game-level profile.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="loop">
+    <h2><span class="n">04</span>The core loop</h2>
+    <div class="loop">
+      <div class="step"><div class="ic">🏃</div><b>Train</b><small>Log activities or import Garmin files</small></div>
+      <div class="step"><div class="ic">📈</div><b>Grow</b><small>Fitness Points raise your level, training raises attributes</small></div>
+      <div class="step"><div class="ic">🗺️</div><b>Quest</b><small>Missions earn items and Kleos – your training boosts them</small></div>
+      <div class="step"><div class="ic">⚔️</div><b>Compete</b><small>Arena duels decide your rating and leaderboard rank</small></div>
+    </div>
+    <p class="loop-back">↺ Training fades without practice – so the loop starts again tomorrow.</p>
+  </section>
+
+  <!-- 5 -->
+  <section id="athletes">
+    <h2><span class="n">05</span>Athletes &amp; attributes</h2>
+    <p>Each account manages a roster of athletes in the <em>Gymnasium</em>. One athlete is active at a time; activities are logged for the active athlete. Every athlete has five athletic attributes and one glory value:</p>
+    <div class="tbl"><table>
+      <tr><th>Attribute</th><th>Trained mainly by</th><th>Matters most in</th></tr>
+      <tr><td><span class="tag a-end">Endurance</span></td><td>Running, cycling, rowing, walking</td><td>Dolichos, long missions</td></tr>
+      <tr><td><span class="tag a-pac">Pace</span></td><td>Running, cycling, burpees</td><td>Stadion Sprint</td></tr>
+      <tr><td><span class="tag a-str">Strength</span></td><td>Strength exercises, rowing</td><td>Wrestling, Pankration</td></tr>
+      <tr><td><span class="tag a-men">Mental power</span></td><td>Sleep, walking, running</td><td>Wrestling, Delphi pilgrimage</td></tr>
+      <tr><td><span class="tag a-dis">Discipline</span></td><td>Every activity, a little</td><td>Spartan Agoge, Dolichos</td></tr>
+      <tr><td><span class="tag a-kle">Kleos</span></td><td>Missions (not sport)</td><td>Every duel and mission</td></tr>
+    </table></div>
+    <p>An attribute is the sum of three parts:</p>
+    <span class="formula">attribute = base points + training points + equipment bonus</span>
+    <ul class="clean">
+      <li><strong>Base points</strong> are assigned once when an athlete is created: 22–38 per attribute, always <strong>150 in total</strong>. Every athlete is equally strong overall, just shaped differently – a sprinter, a wrestler, an all-rounder.</li>
+      <li><strong>Training points</strong> come from real activity and change daily (see <a href="#training">section 7</a>).</li>
+      <li><strong>Equipment bonus</strong> comes from items worn in four slots (see <a href="#items">section 8</a>).</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section id="fitness">
+    <h2><span class="n">06</span>Activities &amp; Fitness Points</h2>
+    <p>Activities can be entered manually or imported from Garmin GPX/TCX files. Supported types: run, ride, walk, rowing, strength and sleep. Strength workouts contain individual bodyweight exercises with repetitions. Every activity earns <strong>Fitness Points (FP)</strong>:</p>
+    <div class="grid2">
+      <div class="tbl"><table>
+        <tr><th>Component</th><th class="num">FP</th></tr>
+        <tr><td>Distance</td><td class="num">10 per km</td></tr>
+        <tr><td>Duration</td><td class="num">1 per minute</td></tr>
+        <tr><td>Average heart rate</td><td class="num">0.3 per bpm</td></tr>
+        <tr><td>Elevation gain</td><td class="num">0.2 per m</td></tr>
+        <tr><td>Sleep (max. 9 h)</td><td class="num">5 per hour</td></tr>
+      </table></div>
+      <div class="tbl"><table>
+        <tr><th>Strength exercise</th><th class="num">FP per rep</th></tr>
+        <tr><td>Sit-up</td><td class="num">0.4</td></tr>
+        <tr><td>Push-up</td><td class="num">0.6</td></tr>
+        <tr><td>Burpee</td><td class="num">1.0</td></tr>
+        <tr><td>Pull-up</td><td class="num">1.5</td></tr>
+        <tr><td>Other</td><td class="num">0.5</td></tr>
+      </table></div>
+    </div>
+    <p>Example: a 5 km run in 30 minutes earns 80 FP; 50 push-ups and 10 pull-ups in 15 minutes earn 60 FP.</p>
+    <h3>Levels</h3>
+    <p>FP accumulate over an athlete's lifetime and determine its <strong>level</strong>. Each level needs 100 FP more than the previous one:</p>
+    <span class="formula">FP needed for the next level = 300 + 100 × (level − 1)</span>
+    <p class="muted">Level 2 at 300 FP · Level 5 at 1,500 FP · Level 10 at 6,300 FP. Levels unlock harder missions. Level and FP are private – they are your personal progress, not a public ranking.</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="training">
+    <h2><span class="n">07</span>The training model</h2>
+    <p>Training points model a real training effect: quick gains at the start, slower gains as you approach your potential, and a gradual loss when you stop.</p>
+    <h3>Gain</h3>
+    <p>Each activity produces a training <em>stimulus</em> for every attribute it trains: its FP components multiplied by attribute weights (for example, a run trains Endurance at 1.0 and Pace at 0.7; rowing trains Endurance and Strength at 0.8 each). The stimulus moves training points towards a maximum:</p>
+    <span class="formula">gain = (max − current) × (1 − e<sup>−stimulus / 2000</sup>) &nbsp;&nbsp;with&nbsp; max = 1.5 × base points</span>
+    <p>A higher base therefore also means a higher potential. Gains shrink automatically as an attribute nears its maximum.</p>
+    <h3>Fade</h3>
+    <p>At <strong>00:00 UTC every day</strong>, every attribute loses <strong>1 %</strong> of the training points it has at that moment. During the day, values only change through training.</p>
+    <div class="card">
+      <p style="margin-top:0"><strong>Reference</strong> (base 30, maximum +45): daily 50 push-ups and three 5 km runs per week</p>
+      <div class="tbl" style="margin-bottom:0"><table>
+        <tr><th>After</th><th class="num">1 week</th><th class="num">4 weeks</th><th class="num">8 weeks</th><th class="num">+4 weeks break</th><th class="num">+8 weeks break</th></tr>
+        <tr><td>Strength training points</td><td class="num">≈ +6</td><td class="num">≈ +16</td><td class="num">≈ +22</td><td class="num">≈ +17</td><td class="num">≈ +13</td></tr>
+      </table></div>
+    </div>
+    <p class="muted">Training points are not stored but recalculated from the activity history, so they are identical on every device and stay correct when past activities are edited.</p>
+  </section>
+
+  <!-- 8 -->
+  <section id="items">
+    <h2><span class="n">08</span>Equipment &amp; item tiers</h2>
+    <p>Athletes wear items in four slots: <em>Clothing</em>, <em>Equipment</em>, <em>Supplies</em> and a fourth slot for charms and wreaths. The inventory is shared across the account; an item can be worn by one athlete at a time. Reward items carry attribute bonuses that count in missions and the arena – capped at <strong>+6 per attribute</strong> so training always matters more than gear.</p>
+    <div class="tbl"><table>
+      <tr><th>Tier</th><th class="num">Typical total bonus</th><th>Examples</th></tr>
+      <tr><td><span class="tag t1">Common</span></td><td class="num">≈ +2</td><td>Messenger Sandals, Rowing Gloves, Honey Water</td></tr>
+      <tr><td><span class="tag t2">Uncommon</span></td><td class="num">≈ +3</td><td>Delphic Amulet, Spartan Hand Wraps, Fine Linen Chiton</td></tr>
+      <tr><td><span class="tag t3">Rare</span></td><td class="num">≈ +5</td><td>Isthmian Pine Wreath, Thessalian Javelin</td></tr>
+      <tr><td><span class="tag t4">Epic</span></td><td class="num">≈ +7</td><td>Golden Laurel, Olympic Olive Crown</td></tr>
+      <tr><td><span class="tag t5">Legendary</span></td><td class="num">≈ +9</td><td>Talaria of Hermes, Ambrosia of the Gods</td></tr>
+    </table></div>
+    <p>Every athlete starts with a basic set; all other items must be earned on missions. New items join the reward pool of their tier automatically, so the catalogue can grow without changing the mission system.</p>
+  </section>
+
+  <!-- 9 -->
+  <section id="missions">
+    <h2><span class="n">09</span>Missions &amp; Kleos</h2>
+    <p>Athletes can be sent on missions lasting from two hours to four days. While away, an athlete cannot fight in the arena. Each mission has a level requirement, an attribute focus, a difficulty and a <strong>tier</strong> derived from how demanding it is (difficulty and duration).</p>
+    <div class="tbl"><table>
+      <tr><th>Mission</th><th class="num">Duration</th><th class="num">Level</th><th>Focus</th><th>Tier</th><th>Training goal</th></tr>
+      <tr><td>📜 Courier to Corinth</td><td class="num">2 h</td><td class="num">1</td><td><span class="tag a-end">END</span> <span class="tag a-pac">PAC</span></td><td><span class="tag t1">Common</span></td><td>Run or walk 3 km</td></tr>
+      <tr><td>🚣 Regatta at Piraeus</td><td class="num">6 h</td><td class="num">2</td><td><span class="tag a-end">END</span> <span class="tag a-str">STR</span></td><td><span class="tag t1">Common</span></td><td>Train 30 min</td></tr>
+      <tr><td>🏔️ Pilgrimage to Delphi</td><td class="num">1 d</td><td class="num">3</td><td><span class="tag a-end">END</span> <span class="tag a-men">MEN</span></td><td><span class="tag t2">Uncommon</span></td><td>Run or walk 10 km</td></tr>
+      <tr><td>🛡️ Spartan Agoge</td><td class="num">2 d</td><td class="num">5</td><td><span class="tag a-dis">DIS</span> <span class="tag a-men">MEN</span></td><td><span class="tag t3">Rare</span></td><td>200 strength reps, 2 active days</td></tr>
+      <tr><td>🌲 Isthmian Games</td><td class="num">3 d</td><td class="num">7</td><td>all</td><td><span class="tag t4">Epic</span></td><td>3 different sports, 90 min</td></tr>
+      <tr><td>🦁 Nemean Games</td><td class="num">4 d</td><td class="num">10</td><td><span class="tag a-str">STR</span> <span class="tag a-end">END</span></td><td><span class="tag t5">Legendary</span></td><td>30 km, 300 strength reps</td></tr>
+    </table></div>
+
+    <h3>Your training supports the mission</h3>
+    <p>Each mission comes with a training goal for <em>you</em>. Only sessions that start after the mission began and end before it is over count. The share of the goal you reach is the <strong>support level</strong> (0–100 %). At full support:</p>
+    <ul class="clean">
+      <li>success chance +25 percentage points (capped at 98 %),</li>
+      <li>injury risk halved,</li>
+      <li>+3 percentage points chance of a glorious result,</li>
+      <li>+25 % Kleos.</li>
+    </ul>
+    <p>The duration never changes. Progress towards the goal is visible only to you.</p>
+
+    <h3>Outcomes</h3>
+    <div class="tbl"><table>
+      <tr><th>Result</th><th>Frequency</th><th>Effect</th></tr>
+      <tr><td>🌟 Glorious</td><td>rare (≈ 1–4 %)</td><td>double Kleos, item one tier better</td></tr>
+      <tr><td>✅ Success</td><td>depends on strength vs. difficulty</td><td>Kleos and one item of a rolled tier</td></tr>
+      <tr><td>Failure</td><td>depends on strength vs. difficulty</td><td>a quarter of the Kleos</td></tr>
+      <tr><td>🩹 Injury</td><td>rare (≈ 1–4 %)</td><td>−10 % attributes for 3 days, unavailable for 1–2 days</td></tr>
+    </table></div>
+    <p>The success chance follows the ratio of the athlete's weighted score (attributes, equipment, Kleos) to the mission difficulty. On success, the item tier is rolled from the mission's loot table – mostly the mission's own tier, sometimes one below or above:</p>
+    <div class="tbl"><table>
+      <tr><th>Mission tier</th><th class="num"><span class="tag t1">Common</span></th><th class="num"><span class="tag t2">Uncommon</span></th><th class="num"><span class="tag t3">Rare</span></th><th class="num"><span class="tag t4">Epic</span></th><th class="num"><span class="tag t5">Legendary</span></th></tr>
+      <tr><td>Common</td><td class="num"><b>80 %</b></td><td class="num">17 %</td><td class="num">3 %</td><td class="num">–</td><td class="num">–</td></tr>
+      <tr><td>Uncommon</td><td class="num">20 %</td><td class="num"><b>62 %</b></td><td class="num">15 %</td><td class="num">3 %</td><td class="num">–</td></tr>
+      <tr><td>Rare</td><td class="num">5 %</td><td class="num">22 %</td><td class="num"><b>58 %</b></td><td class="num">13 %</td><td class="num">2 %</td></tr>
+      <tr><td>Epic</td><td class="num">–</td><td class="num">8 %</td><td class="num">27 %</td><td class="num"><b>55 %</b></td><td class="num">10 %</td></tr>
+      <tr><td>Legendary</td><td class="num">–</td><td class="num">–</td><td class="num">10 %</td><td class="num">35 %</td><td class="num"><b>55 %</b></td></tr>
+    </table></div>
+
+    <h3>Kleos</h3>
+    <p><strong>Kleos</strong> – the glory an ancient hero earned through deeds – is a separate value earned on missions. It approaches a maximum of 50, fades by 1 % every day at 00:00 UTC, and adds experience to every duel and mission (<code>+0.2 × Kleos</code> to the score). Kleos is public as a 0–5 star rating.</p>
+  </section>
+
+  <!-- 10 -->
+  <section id="arena">
+    <h2><span class="n">10</span>The arena</h2>
+    <p>In the stadium, athletes challenge each other in classical disciplines. A discipline is drawn at random when a challenge is issued, so opponents know what they are signing up for:</p>
+    <div class="tbl"><table>
+      <tr><th>Discipline</th><th>Attribute weights</th></tr>
+      <tr><td>🏃 Stadion Sprint</td><td><span class="tag a-pac">PAC 60 %</span> <span class="tag a-end">END 20 %</span> <span class="tag a-dis">DIS 20 %</span></td></tr>
+      <tr><td>🏛️ Dolichos</td><td><span class="tag a-end">END 60 %</span> <span class="tag a-dis">DIS 25 %</span> <span class="tag a-men">MEN 15 %</span></td></tr>
+      <tr><td>🤼 Pale Wrestling</td><td><span class="tag a-str">STR 55 %</span> <span class="tag a-men">MEN 25 %</span> <span class="tag a-end">END 20 %</span></td></tr>
+      <tr><td>🥊 Pankration</td><td><span class="tag a-str">STR 40 %</span> <span class="tag a-pac">PAC 20 %</span> <span class="tag a-end">END 20 %</span> <span class="tag a-men">MEN 20 %</span></td></tr>
+      <tr><td>🎖️ Pentathlon</td><td>all five attributes, 20 % each</td></tr>
+    </table></div>
+    <span class="formula">score = Σ (weight × attribute) + 0.2 × Kleos &nbsp;·&nbsp; performance = score × luck (0.75 … 1.25)</span>
+    <p>The higher performance wins; the stronger athlete usually wins, but not always. Challengers see their estimated odds before accepting.</p>
+    <h3>Rating &amp; titles</h3>
+    <p>Results feed an <strong>Elo rating</strong> (start 1000, K = 32): beating a stronger opponent earns more, losing costs points. The rating determines the athlete's title:</p>
+    <div class="tbl"><table>
+      <tr><th>Title</th><td>Novice</td><td>Hoplite</td><td>Veteran</td><td>Champion</td><td>Legend</td></tr>
+      <tr><th>Rating</th><td>&lt; 950</td><td>950–1049</td><td>1050–1149</td><td>1150–1249</td><td>≥ 1250</td></tr>
+    </table></div>
+    <p>Each athlete can fight up to <strong>5 duels per day</strong> and keep one open challenge. <strong>The public leaderboard ranks athletes by arena rating only</strong> – not by kilometres, minutes or Fitness Points.</p>
+  </section>
+
+  <!-- 11 -->
+  <section id="fairness">
+    <h2><span class="n">11</span>Fairness &amp; anti-cheat</h2>
+    <ul class="clean">
+      <li><strong>Equal start:</strong> every athlete has the same base total (150).</li>
+      <li><strong>Bounded progress:</strong> training points saturate at 1.5 × base and fade daily; equipment bonuses are capped; Kleos saturates at 50.</li>
+      <li><strong>No purchases:</strong> nothing that affects strength can be bought.</li>
+      <li><strong>Volume isn't everything:</strong> the leaderboard reflects arena results, daily duel limits prevent grinding.</li>
+    </ul>
+    <div class="note"><strong>Current status:</strong> Age of Sports is in an early stage. Duels and missions are currently resolved on the user's device, which is not yet cheat-proof. Server-side resolution and validation of attributes is the next major step on the <a href="#roadmap">roadmap</a>. Plausibility checks of activities (e.g. speed per activity type) are planned on top.</div>
+  </section>
+
+  <!-- 12 -->
+  <section id="privacy">
+    <h2><span class="n">12</span>Privacy &amp; data</h2>
+    <div class="grid2">
+      <div class="card"><h4 style="margin:0 0 6px;font-family:var(--font-display)">Visible to others</h4>
+        <ul class="clean" style="margin:0"><li>Athlete name and portrait</li><li>Arena title, rating and duel record</li><li>Coarse 1–5 star profile per attribute and Kleos</li><li>Discipline score inside an open challenge</li></ul></div>
+      <div class="card"><h4 style="margin:0 0 6px;font-family:var(--font-display)">Private</h4>
+        <ul class="clean" style="margin:0"><li>All activities, distances, times, heart rate, sleep</li><li>Exact attribute values and training points</li><li>Level and Fitness Points</li><li>Mission goals and support progress</li></ul></div>
+    </div>
+    <p>Data is stored in Google Firebase (authentication and Firestore). Activities are entered manually or imported from files exported by the user. Integrations with third-party platforms will only be added if their terms allow the way data is used here.</p>
+  </section>
+
+  <!-- 13 -->
+  <section id="economy">
+    <h2><span class="n">13</span>Economy</h2>
+    <p>Unlike token-based move-to-earn projects, Age of Sports has <strong>no cryptocurrency, no NFTs and no in-app purchases</strong>. Its values are purely in-game:</p>
+    <div class="tbl"><table>
+      <tr><th>Value</th><th>Source</th><th>Used for</th><th>Visibility</th></tr>
+      <tr><td>Fitness Points</td><td>every activity</td><td>level, unlocking missions</td><td>private</td></tr>
+      <tr><td>Training points</td><td>activities (fade daily)</td><td>attributes</td><td>private (stars public)</td></tr>
+      <tr><td>Items</td><td>missions</td><td>attribute bonuses</td><td>worn items</td></tr>
+      <tr><td>Kleos</td><td>missions (fades daily)</td><td>bonus in duels and missions</td><td>stars public</td></tr>
+      <tr><td>Arena rating</td><td>duels</td><td>title, leaderboard rank</td><td>public</td></tr>
+    </table></div>
+    <p>This keeps the motivation where it belongs: in your own progress and in friendly competition.</p>
+  </section>
+
+  <!-- 14 -->
+  <section id="roadmap">
+    <h2><span class="n">14</span>Roadmap</h2>
+    <div class="roadmap">
+      <div class="phase"><h4>Foundation <span class="st done">Done</span></h4>
+        <ul><li>Activity log incl. sleep, strength exercises and Garmin GPX/TCX import</li><li>Fitness Points, levels, base + training attributes with daily fade</li><li>Multiple athletes, portraits, equipment slots, tiered items</li><li>Missions with training goals, Kleos, arena duels with Elo leaderboard</li><li>Modern mobile UI, installable as PWA; separate staging environment</li></ul></div>
+      <div class="phase"><h4>Next <span class="st next">Planned</span></h4>
+        <ul><li>Server-side duel and mission resolution, validated attributes</li><li>Weekly public snapshot of the arena profile</li><li>"Arena &amp; privacy" settings with explicit opt-in to compete</li><li>Scalable data model (activities in their own collection)</li><li>Item artwork and new athlete portraits</li></ul></div>
+      <div class="phase"><h4>Later <span class="st later">Ideas</span></h4>
+        <ul><li>Festival series – Isthmian, Nemean, Pythian and Olympic Games – with the title "Periodonikes"</li><li>Labours of Heracles for high-level athletes, relay missions with several athletes</li><li>Optional activity imports from third-party platforms (subject to their terms)</li><li>Native app wrapper with background GPS tracking</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section id="disclaimer">
+    <h2><span class="n">15</span>Disclaimer</h2>
+    <p class="muted">This whitepaper describes an early-stage, non-commercial project and its current game design. All values, formulas and features are subject to change and may be adjusted as the game is balanced. Age of Sports is not a financial product and offers no monetary rewards. The app does not provide medical advice; consult a professional before starting a new training programme and listen to your body.</p>
+  </section>
+
+  <footer>
+    <span>© 2026 Age of Sports · Whitepaper v0.1</span>
+    <a href="./">Open the app →</a>
+  </footer>
+</div>
+</body>
+</html>
