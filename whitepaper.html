@@ -108,6 +108,24 @@
   .st.done{ color:var(--green); background:rgba(61,214,140,.14); } .st.next{ color:var(--gold-light); background:rgba(242,179,61,.14); } .st.later{ color:var(--muted); background:var(--surface3); }
   .phase ul{ margin:0; padding-left:18px; font-size:14.5px; color:var(--muted); }
 
+  /* app screenshots */
+  .shots{ display:grid; grid-template-columns:repeat(2, minmax(0, 250px)); justify-content:center; gap:18px; margin:20px 0 8px; }
+  .shots.one{ grid-template-columns:minmax(0, 270px); }
+  .shots.three{ grid-template-columns:repeat(3, minmax(0, 230px)); }
+  .shot{ margin:0; text-align:center; }
+  .shot img{ width:100%; height:auto; display:block; border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 24px 48px -24px rgba(0,0,0,.85), 0 0 0 6px rgba(255,255,255,.03); background:var(--surface); }
+  .shot figcaption{ font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.4; }
+  .showcase{ margin:6px 0 18px; }
+  .showcase .shot:nth-child(2){ transform:translateY(-14px); }
+  @media (max-width:640px){
+    .shots.three{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:14px; margin:12px -20px 6px; padding:6px 20px 14px; justify-content:flex-start; }
+    .shots.three .shot{ flex:0 0 62%; scroll-snap-align:center; }
+    .showcase .shot:nth-child(2){ transform:none; }
+    .shots{ gap:12px; }
+  }
+  .shot-note{ text-align:center; font-size:12px; color:var(--faint); margin:0 0 4px; }
+
   footer{ margin-top:56px; padding-top:22px; border-top:1px solid var(--border); font-size:13px; color:var(--faint); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 </style>
 </head>
@@ -140,8 +158,15 @@
     <p class="eyebrow">Whitepaper</p>
     <h1>Train like an Olympian.<br><span>Level up your legend.</span></h1>
     <p class="lead">Age of Sports is a train-to-play fitness RPG. Your real training makes an ancient athlete stronger. Athletes earn glory on missions and prove themselves in the arena – no tokens, no pay-to-win, just your effort.</p>
-    <div class="meta"><span class="pill">Version 0.1 · Draft</span><span class="pill">November 2026</span><span class="pill">Web app (PWA)</span></div>
+    <div class="meta"><span class="pill">Version 0.2 · Draft</span><span class="pill">November 2026</span><span class="pill">Web app (PWA)</span></div>
   </header>
+
+  <div class="shots three showcase">
+    <figure class="shot"><img src="img/whitepaper/athlete.webp" width="540" height="1169" loading="lazy" alt="Athlete screen with portrait, equipment slots and level" /><figcaption>Your athlete</figcaption></figure>
+    <figure class="shot"><img src="img/whitepaper/mission_running.webp" width="540" height="1169" loading="lazy" alt="Running mission with training support progress" /><figcaption>Missions boosted by your training</figcaption></figure>
+    <figure class="shot"><img src="img/whitepaper/stadium.webp" width="540" height="1169" loading="lazy" alt="Stadium with arena rating and open challenges" /><figcaption>Duels in the arena</figcaption></figure>
+  </div>
+  <p class="shot-note">Screenshots with sample data.</p>
 
   <nav class="toc" aria-label="Contents">
     <p>Contents</p>
@@ -226,6 +251,10 @@
       <li><strong>Training points</strong> come from real activity and change daily (see <a href="#training">section 7</a>).</li>
       <li><strong>Equipment bonus</strong> comes from items worn in four slots (see <a href="#items">section 8</a>).</li>
     </ul>
+    <div class="shots">
+      <figure class="shot"><img src="img/whitepaper/athlete.webp" width="540" height="1169" loading="lazy" alt="Athlete screen" /><figcaption>Active athlete with equipment slots, level and Fitness Points</figcaption></figure>
+      <figure class="shot"><img src="img/whitepaper/attributes.webp" width="540" height="1169" loading="lazy" alt="Attribute bars" /><figcaption>Attributes split into base, training (colour) and gear (striped); the tick marks the maximum</figcaption></figure>
+    </div>
   </section>
 
   <!-- 6 -->
@@ -251,6 +280,9 @@
       </table></div>
     </div>
     <p>Example: a 5 km run in 30 minutes earns 80 FP; 50 push-ups and 10 pull-ups in 15 minutes earn 60 FP.</p>
+    <div class="shots one">
+      <figure class="shot"><img src="img/whitepaper/activities.webp" width="540" height="1169" loading="lazy" alt="Activities screen with weekly chart and activity list" /><figcaption>Activities: statistics by type and period, with the matching activities below</figcaption></figure>
+    </div>
     <h3>Levels</h3>
     <p>FP accumulate over an athlete's lifetime and determine its <strong>level</strong>. Each level needs 100 FP more than the previous one:</p>
     <span class="formula">FP needed for the next level = 300 + 100 × (level − 1)</span>
@@ -289,6 +321,9 @@
       <tr><td><span class="tag t4">Epic</span></td><td class="num">≈ +7</td><td>Golden Laurel, Olympic Olive Crown</td></tr>
       <tr><td><span class="tag t5">Legendary</span></td><td class="num">≈ +9</td><td>Talaria of Hermes, Ambrosia of the Gods</td></tr>
     </table></div>
+    <div class="shots one">
+      <figure class="shot"><img src="img/whitepaper/inventory.webp" width="540" height="1169" loading="lazy" alt="Inventory with items, bonuses and tier colours" /><figcaption>The shared inventory: who wears what, bonuses and tier colours</figcaption></figure>
+    </div>
     <p>Every athlete starts with a basic set; all other items must be earned on missions. New items join the reward pool of their tier automatically, so the catalogue can grow without changing the mission system.</p>
   </section>
 
@@ -315,6 +350,10 @@
       <li>+25 % Kleos.</li>
     </ul>
     <p>The duration never changes. Progress towards the goal is visible only to you.</p>
+    <div class="shots">
+      <figure class="shot"><img src="img/whitepaper/missions.webp" width="540" height="1169" loading="lazy" alt="Mission list with tiers, training goals and loot odds" /><figcaption>Mission cards: tier, training goal, loot odds and success chance</figcaption></figure>
+      <figure class="shot"><img src="img/whitepaper/mission_running.webp" width="540" height="1169" loading="lazy" alt="Running mission" /><figcaption>A running mission: 6.4 of 10 km reached – 64 % support</figcaption></figure>
+    </div>
 
     <h3>Outcomes</h3>
     <div class="tbl"><table>
@@ -358,6 +397,10 @@
       <tr><th>Title</th><td>Novice</td><td>Hoplite</td><td>Veteran</td><td>Champion</td><td>Legend</td></tr>
       <tr><th>Rating</th><td>&lt; 950</td><td>950–1049</td><td>1050–1149</td><td>1150–1249</td><td>≥ 1250</td></tr>
     </table></div>
+    <div class="shots">
+      <figure class="shot"><img src="img/whitepaper/stadium.webp" width="540" height="1169" loading="lazy" alt="Stadium screen" /><figcaption>Your arena card and open challenges with estimated odds</figcaption></figure>
+      <figure class="shot"><img src="img/whitepaper/leaderboard.webp" width="540" height="1169" loading="lazy" alt="Leaderboard ranked by arena rating" /><figcaption>The leaderboard ranks by arena rating only</figcaption></figure>
+    </div>
     <p>Each athlete can fight up to <strong>5 duels per day</strong> and keep one open challenge. <strong>The public leaderboard ranks athletes by arena rating only</strong> – not by kilometres, minutes or Fitness Points.</p>
   </section>
 
@@ -420,7 +463,7 @@
   </section>
 
   <footer>
-    <span>© 2026 Age of Sports · Whitepaper v0.1</span>
+    <span>© 2026 Age of Sports · Whitepaper v0.2</span>
     <a href="./">Open the app →</a>
   </footer>
 </div>

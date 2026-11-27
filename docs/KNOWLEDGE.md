@@ -148,6 +148,7 @@ Missions make a character stronger for the arena; the leaderboard stays arena-on
 
 - `whitepaper.html` (repo root, standalone page in the app's design) is deployed with the app: production `https://robrownin.github.io/Age-of-Sports/whitepaper.html`, staging `/staging/whitepaper.html`. Linked from the login screen and the Account screen.
 - Structure follows move-to-earn whitepapers (e.g. STEPN): abstract, problem, vision, core loop, game systems, fairness/anti-cheat, privacy, economy, roadmap, disclaimer. Deliberately **no token/NFT economy** – the economy section lists the in-game values.
+- **Screenshots** in `img/whitepaper/*.webp` (540 px wide, WebP): taken from the app with sample data (no real user data, no staging badge) via a Playwright script that injects a mock `window.fb`, sets a sample game state (equipped items, Kleos, a running mission with partial support) and shoots each screen at 390×844 @2x. Retake them when the UI changes noticeably.
 - **Keep it in sync**: all numbers (FP rates, level formula, training model, item tiers, mission table, loot tables, arena weights, Elo, limits) are copied from `index.html`. When game constants change, update the whitepaper too and bump its version.
 
 ## Development workflow
